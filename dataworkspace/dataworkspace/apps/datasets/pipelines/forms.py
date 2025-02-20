@@ -90,7 +90,7 @@ class SQLPipelineCreateForm(BasePipelineCreateForm):
         widget=GOVUKDesignSystemTextareaWidget(
             label_is_heading=False,
             extra_label_classes="govuk-!-font-weight-bold",
-            attrs={"rows": 5},
+            attrs={"rows": 5, "id": "original-sql"},
         ),
         error_messages={"required": "Enter an SQL query."},
     )
@@ -110,14 +110,13 @@ class SQLPipelineCreateForm(BasePipelineCreateForm):
         query = self.cleaned_data["sql"].strip().rstrip(";")
         try:
             statements = pglast.parse_sql(query)
-        except pglast.parser.ParseError as e:  # pylint: disable=c-extension-no-member
-            raise ValidationError(e) from e
-        else:
             if len(statements) > 1:
                 raise ValidationError("Enter a single statement")
             statement_dict = statements[0].stmt()
             if statement_dict["@"] != "SelectStmt":
                 raise ValidationError("Only SELECT statements are supported")
+        except pglast.parser.ParseError as e:  # pylint: disable=c-extension-no-member
+            raise ValidationError(str(e))
 
         # Check that the query runs
         with connections[list(settings.DATABASES_DATA.items())[0][0]].cursor() as cursor:
@@ -128,11 +127,11 @@ class SQLPipelineCreateForm(BasePipelineCreateForm):
                     "Error running query. Please check the query runs successfully before saving."
                 ) from e
 
-        columns = [x.name for x in cursor.description if x.name is not None]
-        if len(set(columns)) != len(columns):
-            raise ValidationError("Duplicate column names found")
+            columns = [x.name for x in cursor.description if x.name is not None]
+            if len(set(columns)) != len(columns):
+                raise ValidationError("Duplicate column names found")
 
-        return self.cleaned_data["sql"]
+        return query
 
 
 class SQLPipelineEditForm(SQLPipelineCreateForm):

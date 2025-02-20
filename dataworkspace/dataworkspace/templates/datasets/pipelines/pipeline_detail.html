@@ -1,5 +1,9 @@
 {% extends '_main.html' %}
+{% load static %}
+
+
 {% block page_title %}{% if form.instance.id %}Edit{% else %}New{% endif %} pipeline - {{ block.super }}{% endblock page_title %}
+
 {% block breadcrumbs %}
   <div class="govuk-breadcrumbs">
     <ol class="govuk-breadcrumbs__list">
@@ -14,7 +18,9 @@
     </ol>
   </div>
 {% endblock breadcrumbs %}
+
 {% block content %}
+  {{ schema_tables|json_script:"schema_tables" }}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-xl">
@@ -25,13 +31,48 @@
         {% csrf_token %}
         {{ form.type }}
         {{ form.table_name }}
-        {{ form.sql }}
+
+        {% if form.sql %}
+        <div id="id_sql" class="govuk-form-group {% if form.sql.errors %} govuk-form-group--error {% endif %}">
+          <label class="govuk-label" for="original-sql">
+            SQL Query
+          </label>
+          {% if form.sql.errors %}
+            {% for error in form.sql.errors %}
+              <span id="sql-error" class="govuk-error-message">
+                <span class="govuk-visually-hidden">Error:</span> {{ error|escape }}
+              </span>
+            {% endfor %}
+          {% endif %}
+          <div class="govuk-textarea" id="gov-uk-sql-wrapper">
+            <div id="ace-sql-editor">{{ form.sql.value|default_if_none:"" }}</div>
+          </div>
+          <textarea aria-label="Sql" style="display: none;"
+                    name="sql" id="original-sql">{{ form.sql.value|default_if_none:"" }}</textarea>
+
+          <button class="govuk-button govuk-button--secondary"
+                  data-module="govuk-button"
+                  type="button"
+                  id="format_button">
+            Format SQL
+          </button>
+        </div>
+        {% endif %}
+
         {{ form.schedule }}
         {{ form.notes }}
         {{ form.site_name }}
         {{ form.list_name }}
+
         <button class="govuk-button" data-module="govuk-button">Save</button>
       </form>
     </div>
   </div>
 {% endblock content %}
+
+{% block footer_scripts %}
+  {{ block.super }}
+  <script src="{% static 'assets/vendor/ace/ace-multiple-1.4.12.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/sql-formatter/sql-formatter-2.3.3.min.js' %}"></script>
+  <script src="{% static 'explorer_query.js' %}"></script>
+{% endblock %}

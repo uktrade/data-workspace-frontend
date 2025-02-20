@@ -11,6 +11,8 @@ from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateVi
 from django.views.generic.list import ListView
 from requests import RequestException
 
+from dataworkspace.apps.explorer.schema import get_user_schema_info
+
 from dataworkspace.apps.core.errors import PipelineBuilderPermissionDeniedError
 from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.apps.datasets.pipelines.forms import PipelineTypeForm, SQLPipelineEditForm
@@ -67,6 +69,17 @@ class PipelineCreateView(IsAdminMixin, CreateView):
         messages.success(self.request, "Pipeline created successfully.")
         return super().form_valid(form)
 
+    def form_invalid(self, form):
+        if "sql" in form.errors:
+            messages.error(self.request, "Please fix the SQL errors before continuing.")
+        return super().form_invalid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        schema, tables_columns = get_user_schema_info(self.request)
+        context["schema_tables"] = tables_columns
+        return context
+
 
 class PipelineUpdateView(IsAdminMixin, UpdateView):
     model = Pipeline
@@ -98,6 +111,17 @@ class PipelineUpdateView(IsAdminMixin, UpdateView):
 
         messages.success(self.request, "Pipeline updated successfully.")
         return super().form_valid(form)
+
+    def form_invalid(self, form):
+        if "sql" in form.errors:
+            messages.error(self.request, "Please fix the SQL errors before continuing.")
+        return super().form_invalid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        schema, tables_columns = get_user_schema_info(self.request)
+        context["schema_tables"] = tables_columns
+        return context
 
 
 class PipelineListView(IsAdminMixin, ListView):
