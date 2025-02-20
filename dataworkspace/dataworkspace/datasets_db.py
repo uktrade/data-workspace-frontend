@@ -342,7 +342,7 @@ def get_pipeline_last_success_date(pipeline_name):
                     """
                     WITH dag_runs AS (
                         SELECT *
-                        FROM dataflow.pipeline_dag_runs_v2
+                        FROM dataflow.pipeline_dag_runs_data_workspace
                         WHERE pipeline_name = {}
                         AND pipeline_active = 'active'
                     )
@@ -493,7 +493,7 @@ def get_last_run_state_for_pipeline(pipeline_name):
                     """
                     WITH dag_runs AS (
                         SELECT *
-                        FROM dataflow.pipeline_dag_runs_v2
+                        FROM dataflow.pipeline_dag_runs_data_workspace
                         WHERE pipeline_name = {}
                         AND pipeline_active = 'active'
                     )
