@@ -13,6 +13,7 @@ from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
 )
+from dataworkspace.apps.applications.fixtures.utils import get_fixture
 
 logger = logging.getLogger("app")
 
@@ -20,6 +21,7 @@ ECR_PROJECT_ID = settings.GITLAB_ECR_PROJECT_ID
 RUNNING_PIPELINE_STATUSES = ("running", "pending")
 SUCCESS_PIPELINE_STATUSES = ("success",)
 DEVELOPER_ACCESS_LEVEL = "30"
+MAINTAINER_ACCESS_LEVEL = "40"
 
 
 def gitlab_api_v4(method, path, params=()):
@@ -125,6 +127,12 @@ def is_dataworkspace_team_member(user, gitlab_project_id) -> bool:
     return bool(user.is_superuser and gitlab_has_developer_access(user, gitlab_project_id))
 
 
+def is_peer_reviewer(user, gitlab_project_id) -> bool:
+    return bool(
+        user.is_superuser is False and gitlab_has_developer_access(user, gitlab_project_id)
+    )
+
+
 def _ensure_user_has_manage_unpublish_perm(user):
     # Update the django permission controlling whether the user can preview unpublished visualisation catalogue pages.
     perm_codename = dataset_type_to_manage_unpublished_permission_codename(
@@ -145,3 +153,24 @@ def _ensure_user_has_manage_unpublish_perm(user):
                 action_flag=ADDITION,
                 change_message="Added 'manage unpublished visualisations' permission",
             )
+
+
+def gitlab_is_project_owner(gitlab_user, gitlab_project_id):
+    if settings.GITLAB_FIXTURES:
+        (current_gitlab_project_user,) = get_fixture("project_member_fixture.json")
+    else:
+        (current_gitlab_project_user,) = gitlab_api_v4(
+            "GET",
+            f"/projects/{gitlab_project_id}/members/all",
+            params=(("user_ids", str(gitlab_user["id"])),),
+        )
+
+    return bool(current_gitlab_project_user["access_level"] == int(MAINTAINER_ACCESS_LEVEL))
+
+
+def gitlab_project_members(gitlab_project_id):
+    if settings.GITLAB_FIXTURES:
+        project_members = get_fixture("project_members_fixture.json")
+    else:
+        project_members = gitlab_api_v4("GET", f"/projects/{gitlab_project_id}/members/all")
+    return project_members
