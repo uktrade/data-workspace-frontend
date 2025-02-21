@@ -44,6 +44,8 @@ from dataworkspace.apps.applications.gitlab import (
     gitlab_api_v4,
     gitlab_api_v4_with_status,
     gitlab_has_developer_access,
+    gitlab_is_project_owner,
+    gitlab_project_members,
 )
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
@@ -53,7 +55,6 @@ from dataworkspace.apps.applications.models import (
     VisualisationApproval,
     VisualisationTemplate,
 )
-from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import (
     application_options,
     fetch_visualisation_log_events,
@@ -61,6 +62,7 @@ from dataworkspace.apps.applications.utils import (
     stop_spawner_and_application,
     sync_quicksight_permissions,
 )
+from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils_tools import get_grouped_tools
 from dataworkspace.apps.core.errors import (
     DeveloperPermissionRequiredError,
@@ -89,6 +91,7 @@ from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.datasets_db import extract_queried_tables_from_sql_query
 from dataworkspace.notify import decrypt_token, send_email
 from dataworkspace.zendesk import update_zendesk_ticket
+from .fixtures.utils import get_fixture
 
 logger = logging.getLogger("app")
 TOOL_LOADING_MESSAGES = [
@@ -694,7 +697,10 @@ def visualisation_users_give_access_html_view(request, gitlab_project_id):
             "manage visualisations", "To request access"
         )
 
-    gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+    if settings:
+        gitlab_project = get_fixture("project_fixture.json")
+    else:
+        gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
         raise DeveloperPermissionRequiredError(gitlab_project["name"])
@@ -1039,17 +1045,15 @@ def visualisation_catalogue_item_html_POST(request, gitlab_project):
 
 
 def visualisation_approvals_html_view(request, gitlab_project_id):
-    if waffle.flag_is_active(request, "THIRD_APPROVER"):
-        pass
     if not request.user.has_perm("applications.develop_visualisations"):
         raise ManageVisualisationsPermissionDeniedError(
             "manage visualisations", "To request access"
         )
 
-    gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
-
-    if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        raise DeveloperPermissionRequiredError(gitlab_project["name"])
+    if settings.GITLAB_FIXTURES:
+        gitlab_project = get_fixture("project_fixture.json")
+    else:
+        gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if request.method == "GET":
         return visualisation_approvals_html_GET(request, gitlab_project)
@@ -1066,7 +1070,35 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         visualisation=application_template, approved=True
     ).all()
 
+    if settings.GITLAB_FIXTURES:
+        project_members = get_fixture("project_members_fixture.json")
+    else:
+        project_members = gitlab_project_members(gitlab_project)
+
     approval = next(filter(lambda a: a.approver == request.user, approvals), None)
+
+    if settings.GITLAB_FIXTURES:
+        current_gitlab_user = get_fixture("user_fixture.json")
+    else:
+        current_gitlab_user = gitlab_api_v4(
+            "GET",
+            "/users",
+            params=(
+                ("extern_uid", request.user.profile.sso_id),
+                ("provider", "oauth2_generic"),
+            ),
+        )
+
+    if settings.GITLAB_FIXTURES:
+        visualisation_branches = get_fixture("visualisation_branches_fixture.json")
+    else:
+        visualisation_branches = _visualisation_branches(gitlab_project)
+
+    if waffle.flag_is_active(request, settings.THIRD_APPROVER):
+        is_owner = gitlab_is_project_owner(current_gitlab_user[0], gitlab_project["id"])
+
+    approved_users = [d.approver.get_full_name() for d in approvals]
+    project_approvals = [member for member in project_members if member["name"] in approved_users]
 
     form = VisualisationApprovalForm(
         instance=approval,
@@ -1082,10 +1114,17 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         "applications/visualisation_approvals.html",
         gitlab_project,
         application_template,
-        _visualisation_branches(gitlab_project),
+        visualisation_branches,
         current_menu_item="approvals",
         template_specific_context={
-            "approvals": approvals,
+            "is_owner": (
+                is_owner if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None
+            ),
+            "approvals": (
+                project_approvals
+                if waffle.flag_is_active(request, settings.THIRD_APPROVER)
+                else approvals
+            ),
             "already_approved": approval.approved if approval else False,
             "form": form,
         },
