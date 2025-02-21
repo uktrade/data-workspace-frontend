@@ -33,7 +33,7 @@ pipeline {
               volumes:
               - name: jenkins-docker-cfg  
                 secret:
-                  secretName: jenkins-data-workspace-frontend-dev-b
+                  secretName: jenkins-data-workspace
                   items:
                   - key: config.json
                     path: config.json
