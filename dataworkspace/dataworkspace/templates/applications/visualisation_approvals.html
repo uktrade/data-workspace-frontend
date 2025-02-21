@@ -11,8 +11,35 @@
 {% block page_title %}{% if form.errors %}Error: {% endif %}Catalogue item - {{ block.super }}{% endblock %}
 
 {% block content %}
+  <h1 class="govuk-heading-l govuk-!-margin-bottom-6">
+    <span class="govuk-caption-l">{{ gitlab_project.name }}</span>
+    Approvals
+  </h1>
 {% flag THIRD_APPROVER %}
-    <p>REMOVE ME</p>
+   <p class="govuk-body">Currently {{ approvals | length }} out of 3 have approved this visualisation.</p>
+  {% if is_owner  %}
+     {% include './visualisation_approvals/owner.html' %}
+   {% endif %}
+   <h2 class="govuk-heading-m">Approve this visualisation</h2>
+    <p class="govuk-body">By clicking the button below you’re confirming that this visualisation:</p>
+    <ul class="govuk-list govuk-list--bullet" data-test="generic_approval_list">
+      <li>has been reviewed by yourself</li>
+      <li>is ready to be published</li>
+      <li>follows our visualisation guidance</li>
+      <li>only uses data that's published to the Data Workspace catalogue</li>
+    </ul>
+    <form method="POST" action="{{ request.path }}" novalidate>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {{ form.visualisation }}
+    {{ form.approver }}
+    {% if already_approved %}
+      <button type="submit" class="govuk-button" name="action" value="unapprove">Unapprove</button>
+    {% else %}
+      {{ form.approved }}
+      <button type="submit" class="govuk-button" name="action" value="approve">Approve</button>
+    {% endif %}
+    </form> 
 {% else %}
   {% if form_errors %}
   <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
