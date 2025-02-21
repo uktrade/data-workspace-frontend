@@ -1070,10 +1070,11 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         visualisation=application_template, approved=True
     ).all()
 
-    if settings.GITLAB_FIXTURES:
-        project_members = get_fixture("project_members_fixture.json")
-    else:
-        project_members = gitlab_project_members(gitlab_project)
+    if waffle.flag_is_active(request, settings.THIRD_APPROVER):
+        if settings.GITLAB_FIXTURES:
+            project_members = get_fixture("project_members_fixture.json")
+        else:
+            project_members = gitlab_project_members(gitlab_project)
 
     approval = next(filter(lambda a: a.approver == request.user, approvals), None)
 
@@ -1096,9 +1097,8 @@ def visualisation_approvals_html_GET(request, gitlab_project):
 
     if waffle.flag_is_active(request, settings.THIRD_APPROVER):
         is_owner = gitlab_is_project_owner(current_gitlab_user[0], gitlab_project["id"])
-
-    approved_users = [d.approver.get_full_name() for d in approvals]
-    project_approvals = [member for member in project_members if member["name"] in approved_users]
+        approved_users = [d.approver.get_full_name() for d in approvals]
+        project_approvals = [member for member in project_members if member["name"] in approved_users]
 
     form = VisualisationApprovalForm(
         instance=approval,
