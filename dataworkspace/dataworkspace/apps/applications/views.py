@@ -44,8 +44,10 @@ from dataworkspace.apps.applications.gitlab import (
     gitlab_api_v4,
     gitlab_api_v4_with_status,
     gitlab_has_developer_access,
-    gitlab_is_project_owner,
     gitlab_project_members,
+    is_dataworkspace_team_member,
+    is_project_owner,
+    is_peer_reviewer,
 )
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
@@ -427,7 +429,7 @@ def visualisations_html_GET(request):
             "projects",
             params=(
                 ("archived", "false"),
-                ("min_access_level", DEVELOPER_ACCESS_LEVEL),
+                ("min_access_level", str(DEVELOPER_ACCESS_LEVEL)),
                 ("sudo", gitlab_user["id"]),
                 ("per_page", "100"),
             ),
@@ -1064,8 +1066,8 @@ def visualisation_approvals_html_view(request, gitlab_project_id):
     return HttpResponse(status=405)
 
 
-def visualisation_approvals_html_GET(request, gitlab_project):
-    application_template = _application_template(gitlab_project)
+def visualisation_approvals_html_GET(request, gitlab_project_id):
+    application_template = _application_template(gitlab_project_id)
     approvals = VisualisationApproval.objects.filter(
         visualisation=application_template, approved=True
     ).all()
@@ -1074,29 +1076,19 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         if settings.GITLAB_FIXTURES:
             project_members = get_fixture("project_members_fixture.json")
         else:
-            project_members = gitlab_project_members(gitlab_project)
+            project_members = gitlab_project_members(gitlab_project_id)
 
     approval = next(filter(lambda a: a.approver == request.user, approvals), None)
 
     if settings.GITLAB_FIXTURES:
-        current_gitlab_user = get_fixture("user_fixture.json")
-    else:
-        current_gitlab_user = gitlab_api_v4(
-            "GET",
-            "/users",
-            params=(
-                ("extern_uid", request.user.profile.sso_id),
-                ("provider", "oauth2_generic"),
-            ),
-        )
-
-    if settings.GITLAB_FIXTURES:
         visualisation_branches = get_fixture("visualisation_branches_fixture.json")
     else:
-        visualisation_branches = _visualisation_branches(gitlab_project)
+        visualisation_branches = _visualisation_branches(gitlab_project_id)
 
     if waffle.flag_is_active(request, settings.THIRD_APPROVER):
-        is_owner = gitlab_is_project_owner(current_gitlab_user[0], gitlab_project["id"])
+        owner = is_project_owner(request.user, gitlab_project_id)
+        team_member = is_dataworkspace_team_member(request.user, gitlab_project_id)
+        peer_reviewer = is_peer_reviewer(request.user, gitlab_project_id)
         approved_users = [d.approver.get_full_name() for d in approvals]
         project_approvals = [
             member for member in project_members if member["name"] in approved_users
@@ -1114,13 +1106,19 @@ def visualisation_approvals_html_GET(request, gitlab_project):
     return _render_visualisation(
         request,
         "applications/visualisation_approvals.html",
-        gitlab_project,
+        gitlab_project_id,
         application_template,
         visualisation_branches,
         current_menu_item="approvals",
         template_specific_context={
             "is_owner": (
-                is_owner if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None
+                owner if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None
+            ),
+            "is_team_member": (
+                team_member if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None
+            ),
+            "is_peer_reviewer": (
+                peer_reviewer if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None
             ),
             "approvals": (
                 project_approvals
