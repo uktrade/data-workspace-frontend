@@ -697,7 +697,7 @@ def visualisation_users_give_access_html_view(request, gitlab_project_id):
             "manage visualisations", "To request access"
         )
 
-    if settings:
+    if settings.GITLAB_FIXTURES:
         gitlab_project = get_fixture("project_fixture.json")
     else:
         gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
