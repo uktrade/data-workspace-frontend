@@ -15,7 +15,6 @@ from django.urls import reverse
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     UserToolConfiguration,
-    VisualisationApproval,
 )
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import Pipeline
@@ -189,131 +188,6 @@ class TestDataVisualisationUICataloguePage:
         assert "The visualisation must have an enquiries contact" in response.content.decode(
             response.charset
         )
-
-
-class TestDataVisualisationUIApprovalPage:
-    @pytest.mark.django_db
-    def test_approve_visualisation_successfully(self):
-        develop_visualisations_permission = Permission.objects.get(
-            codename="develop_visualisations",
-            content_type=ContentType.objects.get_for_model(ApplicationInstance),
-        )
-        user = factories.UserFactory.create(
-            username="visualisation.creator@test.com",
-            is_staff=False,
-        )
-        user.user_permissions.add(develop_visualisations_permission)
-        visualisation = factories.VisualisationCatalogueItemFactory.create(
-            published=False, visualisation_template__gitlab_project_id=1
-        )
-
-        # Login to admin site
-        client = Client(**get_http_sso_data(user))
-        client.post(reverse("admin:index"), follow=True)
-
-        with _visualisation_ui_gitlab_mocks():
-            response = client.post(
-                reverse(
-                    "visualisations:approvals",
-                    args=(visualisation.visualisation_template.gitlab_project_id,),
-                ),
-                {
-                    "action": "approve",
-                    "approved": "on",
-                    "approver": user.id,
-                    "visualisation": str(visualisation.visualisation_template.id),
-                },
-                follow=True,
-            )
-
-        assert response.status_code == 200
-        assert len(VisualisationApproval.objects.all()) == 1
-
-    @pytest.mark.django_db
-    def test_bad_post_data_approved_box_not_checked(self):
-        develop_visualisations_permission = Permission.objects.get(
-            codename="develop_visualisations",
-            content_type=ContentType.objects.get_for_model(ApplicationInstance),
-        )
-        user = factories.UserFactory.create(
-            username="visualisation.creator@test.com",
-            is_staff=False,
-            is_superuser=False,
-        )
-        user.user_permissions.add(develop_visualisations_permission)
-        visualisation = factories.VisualisationCatalogueItemFactory.create(
-            published=False, visualisation_template__gitlab_project_id=1
-        )
-
-        # Login to admin site
-        client = Client(**get_http_sso_data(user))
-        client.post(reverse("admin:index"), follow=True)
-
-        with _visualisation_ui_gitlab_mocks():
-            response = client.post(
-                reverse(
-                    "visualisations:approvals",
-                    args=(visualisation.visualisation_template.gitlab_project_id,),
-                ),
-                {
-                    "action": "approve",
-                    "approver": user.id,
-                    "visualisation": str(visualisation.visualisation_template.id),
-                },
-                follow=True,
-            )
-
-        visualisation.refresh_from_db()
-        assert response.status_code == 400
-        assert (
-            "You must confirm that you have reviewed this visualisation"
-            in response.content.decode(response.charset)
-        )
-        assert len(VisualisationApproval.objects.all()) == 0
-
-    @pytest.mark.django_db
-    def test_unapprove_visualisation_successfully(self):
-        develop_visualisations_permission = Permission.objects.get(
-            codename="develop_visualisations",
-            content_type=ContentType.objects.get_for_model(ApplicationInstance),
-        )
-        user = factories.UserFactory.create(
-            username="visualisation.creator@test.com",
-            is_staff=False,
-            is_superuser=False,
-        )
-        user.user_permissions.add(develop_visualisations_permission)
-        vis_cat_item = factories.VisualisationCatalogueItemFactory.create(
-            published=False, visualisation_template__gitlab_project_id=1
-        )
-        approval = factories.VisualisationApprovalFactory.create(
-            approved=True,
-            approver=user,
-            visualisation=vis_cat_item.visualisation_template,
-        )
-
-        # Login to admin site
-        client = Client(**get_http_sso_data(user))
-        client.post(reverse("admin:index"), follow=True)
-
-        with _visualisation_ui_gitlab_mocks():
-            response = client.post(
-                reverse(
-                    "visualisations:approvals",
-                    args=(vis_cat_item.visualisation_template.gitlab_project_id,),
-                ),
-                {
-                    "action": "unapprove",
-                    "approver": user.id,
-                    "visualisation": str(vis_cat_item.visualisation_template.id),
-                },
-                follow=True,
-            )
-
-        approval.refresh_from_db()
-        assert response.status_code == 200
-        assert len(VisualisationApproval.objects.all()) == 1
-        assert approval.approved is False
 
 
 class TestDataVisualisationUIDatasetsPage:

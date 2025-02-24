@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "name": "Ian Leggett",
+    "username": "ian.leggett",
+    "state": "active",
+    "access_level": 40
+  },
+  {
+    "id": 2,
+    "name": "Ledia Luli",
+    "username": "ledia.luli",
+    "state": "active",
+    "access_level": 30
+  },
+  {
+    "id": 3,
+    "name": "James Robinson",
+    "username": "james.robinson",
+    "state": "active",
+    "access_level": 30
+  }
+]
