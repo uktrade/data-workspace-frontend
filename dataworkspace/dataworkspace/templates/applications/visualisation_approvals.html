@@ -75,7 +75,7 @@
 
   <ul class="govuk-list govuk-list--bullet">
     {% for approval in approvals %}
-      <li>{% if request.user == approval.approver %}You{% else %}{{ approval.approver.get_full_name }}{% endif %} approved this visualisation at {{ approval.created_date }}</li>
+      <li>{% if request.user == approval.approver %}You{% else %}{{ approval.approver.get_full_name }}{% endif %} ({{ approval.approver_type | title }}) approved this visualisation at {{ approval.created_date }}</li>
     {% endfor %}
   </ul>
 
@@ -94,6 +94,7 @@
 
     {{ form.visualisation }}
     {{ form.approver }}
+    {{ form.approver_type }}
 
     {% if already_approved %}
       <button type="submit" class="govuk-button" name="action" value="unapprove">Unapprove</button>

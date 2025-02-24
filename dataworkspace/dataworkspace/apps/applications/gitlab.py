@@ -1,4 +1,5 @@
 import logging
+from typing import Union
 
 import requests
 from django.conf import settings
@@ -24,11 +25,20 @@ DEVELOPER_ACCESS_LEVEL = 30
 MAINTAINER_ACCESS_LEVEL = 40
 
 
-def gitlab_api_v4(method, path, params=()):
+def get_approver_type(user: User, gitlab_project_id: int) -> Union[str, None]:
+    if is_project_owner(user, gitlab_project_id):
+        return "Owner"
+    elif is_dataworkspace_team_member(user, gitlab_project_id):
+        return "Team Member"
+    elif is_peer_reviewer(user, gitlab_project_id):
+        return "Peer-reviewer"
+
+
+def gitlab_api_v4(method: str, path: str, params: tuple = ()):
     return gitlab_api_v4_with_status(method, path, params)[0]
 
 
-def gitlab_api_v4_with_status(method, path, params=()):
+def gitlab_api_v4_with_status(method: str, path: str, params: tuple = ()):
     if path.startswith("/"):
         path = path.lstrip("/")
 

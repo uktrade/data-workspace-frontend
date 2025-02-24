@@ -41,13 +41,11 @@ from dataworkspace.apps.applications.forms import (
 )
 from dataworkspace.apps.applications.gitlab import (
     DEVELOPER_ACCESS_LEVEL,
+    get_approver_type,
     gitlab_api_v4,
     gitlab_api_v4_with_status,
     gitlab_has_developer_access,
     gitlab_project_members,
-    is_dataworkspace_team_member,
-    is_project_owner,
-    is_peer_reviewer,
 )
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
@@ -1071,38 +1069,32 @@ def visualisation_approvals_html_GET(request, gitlab_project_id):
     approvals = VisualisationApproval.objects.filter(
         visualisation=application_template, approved=True
     ).all()
-
     if waffle.flag_is_active(request, settings.THIRD_APPROVER):
         if settings.GITLAB_FIXTURES:
             project_members = get_fixture("project_members_fixture.json")
         else:
             project_members = gitlab_project_members(gitlab_project_id)
-
     approval = next(filter(lambda a: a.approver == request.user, approvals), None)
-
     if settings.GITLAB_FIXTURES:
         visualisation_branches = get_fixture("visualisation_branches_fixture.json")
     else:
         visualisation_branches = _visualisation_branches(gitlab_project_id)
-
+    approver_type = None
     if waffle.flag_is_active(request, settings.THIRD_APPROVER):
-        owner = is_project_owner(request.user, gitlab_project_id)
-        team_member = is_dataworkspace_team_member(request.user, gitlab_project_id)
-        peer_reviewer = is_peer_reviewer(request.user, gitlab_project_id)
+        approver_type = get_approver_type(request.user, gitlab_project_id)
         approved_users = [d.approver.get_full_name() for d in approvals]
         project_approvals = [
             member for member in project_members if member["name"] in approved_users
         ]
-
     form = VisualisationApprovalForm(
         instance=approval,
         initial={
             "visualisation": application_template,
             "approver": request.user,
             "approved": False,
+            "approver_type": approver_type,
         },
     )
-
     return _render_visualisation(
         request,
         "applications/visualisation_approvals.html",
@@ -1111,15 +1103,7 @@ def visualisation_approvals_html_GET(request, gitlab_project_id):
         visualisation_branches,
         current_menu_item="approvals",
         template_specific_context={
-            "is_owner": (
-                owner if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None
-            ),
-            "is_team_member": (
-                team_member if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None
-            ),
-            "is_peer_reviewer": (
-                peer_reviewer if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None
-            ),
+            "approver_type": approver_type,
             "approvals": (
                 project_approvals
                 if waffle.flag_is_active(request, settings.THIRD_APPROVER)
@@ -1131,35 +1115,37 @@ def visualisation_approvals_html_GET(request, gitlab_project_id):
     )
 
 
-def visualisation_approvals_html_POST(request, gitlab_project):
-    application_template = _application_template(gitlab_project)
+def visualisation_approvals_html_POST(request, gitlab_project_id):
+    application_template = _application_template(gitlab_project_id)
     approvals = VisualisationApproval.objects.filter(
         visualisation=application_template, approved=True
     ).all()
-
     approval = next(filter(lambda a: a.approver == request.user, approvals), None)
-
+    approver_type = get_approver_type(request.user, gitlab_project_id)
     form = VisualisationApprovalForm(
         request.POST,
         instance=approval,
         initial={
             "visualisation": application_template,
             "approver": request.user,
+            "approver_type": approver_type,
             "approved": False,
         },
     )
     if form.is_valid():
         form.save()
         return redirect(request.path)
-
     form_errors = [(field.id_for_label, field.errors[0]) for field in form if field.errors]
-
+    if settings.GITLAB_FIXTURES:
+        visualisation_branches = get_fixture("visualisation_branches_fixture.json")
+    else:
+        visualisation_branches = _visualisation_branches(gitlab_project_id)
     return _render_visualisation(
         request,
         "applications/visualisation_approvals.html",
-        gitlab_project,
+        gitlab_project_id,
         application_template,
-        _visualisation_branches(gitlab_project),
+        visualisation_branches,
         current_menu_item="approvals",
         template_specific_context={"form": form, "form_errors": form_errors},
         status=400 if form_errors else 200,

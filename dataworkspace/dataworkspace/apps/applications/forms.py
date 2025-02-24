@@ -205,10 +205,11 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
 class VisualisationApprovalForm(GOVUKDesignSystemModelForm):
     class Meta:
         model = VisualisationApproval
-        fields = ["approved", "visualisation", "approver"]
+        fields = ["approved", "visualisation", "approver", "approver_type"]
         widgets = {
             "visualisation": HiddenInput,
             "approver": HiddenInput,
+            "approver_type": HiddenInput,
         }
 
     approved = GOVUKDesignSystemBooleanField(
