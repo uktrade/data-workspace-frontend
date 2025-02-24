@@ -11,15 +11,13 @@
 {% block page_title %}{% if form.errors %}Error: {% endif %}Catalogue item - {{ block.super }}{% endblock %}
 
 {% block content %}
-  <h1 class="govuk-heading-l govuk-!-margin-bottom-6">
-    <span class="govuk-caption-l">{{ gitlab_project.name }}</span>
-    Approvals
-  </h1>
 {% flag THIRD_APPROVER %}
    <p class="govuk-body">Currently {{ approvals | length }} out of 3 have approved this visualisation.</p>
   {% if is_owner  %}
      {% include './visualisation_approvals/owner.html' %}
-   {% endif %}
+  {% elif is_team_member  %}
+     {% include './visualisation_approvals/team_member.html' %}
+  {% endif %}
    <h2 class="govuk-heading-m">Approve this visualisation</h2>
     <p class="govuk-body">By clicking the button below you’re confirming that this visualisation:</p>
     <ul class="govuk-list govuk-list--bullet" data-test="generic_approval_list">
