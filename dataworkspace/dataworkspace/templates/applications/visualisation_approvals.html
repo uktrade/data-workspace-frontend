@@ -16,6 +16,7 @@
     Approvals
   </h1>
 {% flag THIRD_APPROVER %}
+
    <p class="govuk-body">Currently {{ approvals | length }} out of 3 have approved this visualisation.</p>
      <ul class="govuk-list govuk-list--bullet" data-test="approvals-list">
       {% for approver in approvals %}
@@ -28,7 +29,10 @@
    </ul>
   {% if type_of_user.is_owner  %}
      {% include './visualisation_approvals/owner.html' %}
-   {% endif %}
+  {% endif %} 
+  {% if type_of_user.is_peer_reviewer  %}
+     {% include './visualisation_approvals/peer_reviewer.html' %}
+  {% endif %}
    <h2 class="govuk-heading-m">Approve this visualisation</h2>
     <p class="govuk-body">By clicking the button below you’re confirming that this visualisation:</p>
     <ul class="govuk-list govuk-list--bullet" data-test="generic_approval_list">

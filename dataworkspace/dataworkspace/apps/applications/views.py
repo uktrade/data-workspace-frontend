@@ -44,6 +44,8 @@ from dataworkspace.apps.applications.gitlab import (
     gitlab_api_v4,
     gitlab_api_v4_with_status,
     gitlab_has_developer_access,
+    gitlab_is_dataworkspace_team_member,
+    gitlab_is_peer_reviewer,
     gitlab_is_project_owner,
     gitlab_project_members,
 )
@@ -1097,6 +1099,8 @@ def visualisation_approvals_html_GET(request, gitlab_project):
 
     if waffle.flag_is_active(request, settings.THIRD_APPROVER):
         is_owner = gitlab_is_project_owner(current_gitlab_user[0], gitlab_project["id"])
+        is_peer_reviewer = gitlab_is_peer_reviewer(request.user, gitlab_project["id"])
+        is_dataworkspace_team_member = gitlab_is_dataworkspace_team_member(request.user, gitlab_project["id"])
 
         # Create a list of approvers based on the list from dataworkspace
         approvers = []
@@ -1173,9 +1177,9 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         current_menu_item="approvals",
         template_specific_context={
             "type_of_user": {
-                "is_owner": (
-                    is_owner if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None
-                ),
+                "is_owner": is_owner if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None,
+                "is_peer_reviewer": is_peer_reviewer if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None,
+                "is_dataworkspace_team_member": is_dataworkspace_team_member if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None,
             },
             "approvals": (
                 project_approvals

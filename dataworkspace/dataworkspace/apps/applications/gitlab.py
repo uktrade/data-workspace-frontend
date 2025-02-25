@@ -123,14 +123,20 @@ def gitlab_has_developer_access(user, gitlab_project_id):
     return has_access
 
 
-def is_dataworkspace_team_member(user, gitlab_project_id) -> bool:
-    return bool(user.is_superuser and gitlab_has_developer_access(user, gitlab_project_id))
+def gitlab_is_dataworkspace_team_member(user, gitlab_project_id) -> bool:
+    if settings.GITLAB_FIXTURES:
+        (current_gitlab_project_user,) = get_fixture("project_member_fixture.json")
+        return bool(user.is_superuser and current_gitlab_project_user["access_level"] == int(DEVELOPER_ACCESS_LEVEL))
+    else:
+        return bool(user.is_superuser and gitlab_has_developer_access(user, gitlab_project_id))
 
 
-def is_peer_reviewer(user, gitlab_project_id) -> bool:
-    return bool(
-        user.is_superuser is False and gitlab_has_developer_access(user, gitlab_project_id)
-    )
+def gitlab_is_peer_reviewer(user, gitlab_project_id) -> bool:
+    if settings.GITLAB_FIXTURES:
+        (current_gitlab_project_user,) = get_fixture("project_member_fixture.json")
+        return bool(user.is_superuser is False and current_gitlab_project_user["access_level"] == int(DEVELOPER_ACCESS_LEVEL))
+    else:
+        return bool(user.is_superuser is False and gitlab_has_developer_access(user, gitlab_project_id))
 
 
 def _ensure_user_has_manage_unpublish_perm(user):
