@@ -1064,50 +1064,120 @@ def visualisation_approvals_html_view(request, gitlab_project_id):
     return HttpResponse(status=405)
 
 
-def visualisation_approvals_html_GET(request, gitlab_project_id):
-    application_template = _application_template(gitlab_project_id)
-    approvals = VisualisationApproval.objects.filter(
+def visualisation_approvals_html_GET(request, gitlab_project):
+    application_template = _application_template(gitlab_project)
+    dw_approvals = VisualisationApproval.objects.filter(
         visualisation=application_template, approved=True
     ).all()
     if waffle.flag_is_active(request, settings.THIRD_APPROVER):
         if settings.GITLAB_FIXTURES:
             project_members = get_fixture("project_members_fixture.json")
         else:
-            project_members = gitlab_project_members(gitlab_project_id)
-    approval = next(filter(lambda a: a.approver == request.user, approvals), None)
+            project_members = gitlab_project_members(gitlab_project)
+
+    approval = next(filter(lambda a: a.approver == request.user, dw_approvals), None)
+
+    if settings.GITLAB_FIXTURES:
+        current_gitlab_user = get_fixture("user_fixture.json")
+    else:
+        current_gitlab_user = gitlab_api_v4(
+            "GET",
+            "/users",
+            params=(
+                ("extern_uid", request.user.profile.sso_id),
+                ("provider", "oauth2_generic"),
+            ),
+        )
+
     if settings.GITLAB_FIXTURES:
         visualisation_branches = get_fixture("visualisation_branches_fixture.json")
     else:
-        visualisation_branches = _visualisation_branches(gitlab_project_id)
-    approver_type = None
+        visualisation_branches = _visualisation_branches(gitlab_project)
+    current_user_type = None
     if waffle.flag_is_active(request, settings.THIRD_APPROVER):
-        approver_type = get_approver_type(request.user, gitlab_project_id)
-        approved_users = [d.approver.get_full_name() for d in approvals]
+        current_user_type = get_approver_type(gitlab_project["id"], request.user, current_gitlab_user)
+        approved_users = [d.approver.get_full_name() for d in dw_approvals]
         project_approvals = [
             member for member in project_members if member["name"] in approved_users
         ]
+
+        # Create a list of approvers based on the list from dataworkspace
+        approvers = []
+        for a in dw_approvals:
+            if a.approved:
+                approvers.append(
+                    {
+                        "name": a.approver.get_full_name(),
+                        "date_approved": a.created_date,
+                        "is_superuser": a.approver.is_superuser,
+                        "status": None,
+                    }
+                )
+
+        # Based on the previous list create a new list that only includes Gitlab project members
+        list_of_approvals = []
+
+        for approver in approvers:
+            for member in project_members:
+                if approver["name"] == member["name"]:
+                    if approver["is_superuser"] and member["access_level"] == 30:
+                        approver["status"] = "team member"
+                    elif member["access_level"] == 40:
+                        approver["status"] = "owner"
+                    elif member["access_level"] == 30:
+                        approver["status"] = "peer reviewer"
+                    else:
+                        approver["status"] = None
+            list_of_approvals.append(approver)
+
+        # Split the list into all the owners, peer reviewers and team members that have approved.
+        # Sort them by the person who approved first
+        owners = sorted(
+            [approver for approver in list_of_approvals if approver["status"] == "owner"],
+            key=lambda obj: obj["date_approved"],
+        )
+        peer_reviewers = sorted(
+            [approver for approver in list_of_approvals if approver["status"] == "peer reviewer"],
+            key=lambda obj: obj["date_approved"],
+        )
+        team_member_reviewers = sorted(
+            [approver for approver in list_of_approvals if approver["status"] == "team member"],
+            key=lambda obj: obj["date_approved"],
+        )
+        # Patch them back together
+        project_approvals = []
+
+        # If we have sorted lists then use the first one
+        if owners:
+            project_approvals.append(owners[0])
+
+        if peer_reviewers:
+            project_approvals.append(peer_reviewers[0])
+
+        if team_member_reviewers:
+            project_approvals.append(team_member_reviewers[0])
+
     form = VisualisationApprovalForm(
         instance=approval,
         initial={
             "visualisation": application_template,
             "approver": request.user,
             "approved": False,
-            "approver_type": approver_type,
         },
     )
     return _render_visualisation(
         request,
         "applications/visualisation_approvals.html",
-        gitlab_project_id,
+        gitlab_project,
         application_template,
         visualisation_branches,
         current_menu_item="approvals",
         template_specific_context={
-            "approver_type": approver_type,
+            "current_user_type": current_user_type,
             "approvals": (
                 project_approvals
                 if waffle.flag_is_active(request, settings.THIRD_APPROVER)
-                else approvals
+                else dw_approvals
             ),
             "already_approved": approval.approved if approval else False,
             "form": form,
@@ -1121,14 +1191,12 @@ def visualisation_approvals_html_POST(request, gitlab_project_id):
         visualisation=application_template, approved=True
     ).all()
     approval = next(filter(lambda a: a.approver == request.user, approvals), None)
-    approver_type = get_approver_type(request.user, gitlab_project_id)
     form = VisualisationApprovalForm(
         request.POST,
         instance=approval,
         initial={
             "visualisation": application_template,
             "approver": request.user,
-            "approver_type": approver_type,
             "approved": False,
         },
     )

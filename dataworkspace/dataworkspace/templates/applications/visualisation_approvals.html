@@ -11,13 +11,26 @@
 {% block page_title %}{% if form.errors %}Error: {% endif %}Catalogue item - {{ block.super }}{% endblock %}
 
 {% block content %}
+  <h1 class="govuk-heading-l govuk-!-margin-bottom-6">
+    <span class="govuk-caption-l">{{ gitlab_project.name }}</span>
+    Approvals
+  </h1>
 {% flag THIRD_APPROVER %}
    <p class="govuk-body">Currently {{ approvals | length }} out of 3 have approved this visualisation.</p>
-  {% if is_owner  %}
+     <ul class="govuk-list govuk-list--bullet" data-test="approvals-list">
+      {% for approver in approvals %}
+        {% if approver.status == 'team member' %}
+        <li>A member of the Data Workspace team approved this visualisation on {{ approver.date_approved }}</li>
+        {% else %}
+         <li>{% if request.user.get_full_name == approver %}You{% else %}{{ approver.name }} ({{approver.status}}){% endif %} approved this visualisation at {{ approver.date_approved }}</li>
+        {% endif %}
+      {% endfor %}
+   </ul>
+  {% if current_user_type == 'Owner'  %}
      {% include './visualisation_approvals/owner.html' %}
-  {% elif is_team_member  %}
+  {% elif current_user_type == 'Team Member'  %}
      {% include './visualisation_approvals/team_member.html' %}
-  {% endif %}
+   {% endif %}
    <h2 class="govuk-heading-m">Approve this visualisation</h2>
     <p class="govuk-body">By clicking the button below you’re confirming that this visualisation:</p>
     <ul class="govuk-list govuk-list--bullet" data-test="generic_approval_list">
@@ -31,7 +44,6 @@
     {{ form.non_field_errors }}
     {{ form.visualisation }}
     {{ form.approver }}
-    {{ form.approver_type }}
     {% if already_approved %}
       <button type="submit" class="govuk-button" name="action" value="unapprove">Unapprove</button>
     {% else %}
@@ -57,11 +69,6 @@
   </div>
   {% endif %}
 
-  <h1 class="govuk-heading-l govuk-!-margin-bottom-6">
-    <span class="govuk-caption-l">{{ gitlab_project.name }}</span>
-    Approvals
-  </h1>
-
   <p class="govuk-body">
     In order to publish this visualisation, at least two users must approve it. One approver must be the creator of the visualisation, and a different approver must have completed a peer review of the visualisation.
   </p>
@@ -76,7 +83,7 @@
 
   <ul class="govuk-list govuk-list--bullet">
     {% for approval in approvals %}
-      <li>{% if request.user == approval.approver %}You{% else %}{{ approval.approver.get_full_name }}{% endif %} ({{ approval.approver_type | title }}) approved this visualisation at {{ approval.created_date }}</li>
+      <li>{% if request.user == approval.approver %}You{% else %}{{ approval.approver.get_full_name }}{% endif %} approved this visualisation at {{ approval.created_date }}</li>
     {% endfor %}
   </ul>
 
@@ -95,7 +102,6 @@
 
     {{ form.visualisation }}
     {{ form.approver }}
-    {{ form.approver_type }}
 
     {% if already_approved %}
       <button type="submit" class="govuk-button" name="action" value="unapprove">Unapprove</button>

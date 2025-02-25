@@ -1,8 +1,8 @@
 [
   {
     "id": 1,
-    "name": "Ian Leggett",
-    "username": "ian.leggett",
+    "name": "Vyvyan Holland",
+    "username": "vyvyan.holland",
     "state": "active",
     "access_level": 40
   },
@@ -16,6 +16,13 @@
   {
     "id": 3,
     "name": "James Robinson",
+    "username": "james.robinson",
+    "state": "active",
+    "access_level": 30
+  },
+  {
+    "id": 4,
+    "name": "Bob Testerten",
     "username": "james.robinson",
     "state": "active",
     "access_level": 30

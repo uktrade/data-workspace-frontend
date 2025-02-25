@@ -21,7 +21,7 @@ from dataworkspace.tests.common import get_http_sso_data
 
 
 @contextmanager
-def _visualisation_ui_gitlab_mocks(owner_access=True):
+def _visualisation_ui_gitlab_mocks(owner_access=True, access_level=30, project_members=None):
     with mock.patch(
         "dataworkspace.apps.applications.views._visualisation_gitlab_project"
     ) as projects_mock, mock.patch(
@@ -49,15 +49,19 @@ def _visualisation_ui_gitlab_mocks(owner_access=True):
             }
         ]
         owner_access_mock.return_value = owner_access
-        project_members_mock.return_value = [
-            {
-                "id": 2,
-                "name": "Ledia Luli",
-                "username": "ledia.luli",
-                "state": "active",
-                "access_level": 30,
-            }
-        ]
+        project_members_mock.return_value = (
+            project_members
+            if project_members
+            else [
+                {
+                    "id": 2,
+                    "name": "Ledia Luli",
+                    "username": "ledia.luli",
+                    "state": "active",
+                    "access_level": access_level,
+                }
+            ]
+        )
         user_mock.return_value = [{"id": 1}]
 
         yield projects_mock, branches_mock, access_mock, owner_access_mock, user_mock, project_members_mock
@@ -101,6 +105,50 @@ class TestDataVisualisationOwnerUIApprovalPage:
     @override_flag(settings.THIRD_APPROVER, active=True)
     @override_settings(GITLAB_FIXTURES=False)
     @pytest.mark.django_db
+    def test_owner_view_with_owner_approval(self):
+        develop_visualisations_permission = Permission.objects.get(
+            codename="develop_visualisations",
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+        user = factories.UserFactory.create(
+            first_name="Ledia", last_name="Luli", is_staff=False, is_superuser=False
+        )
+        user.user_permissions.add(develop_visualisations_permission)
+
+        v = factories.VisualisationTemplateFactory.create(gitlab_project_id=1)
+        factories.VisualisationCatalogueItemFactory.create(
+            name="test-gitlab-project",
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            visualisation_template=v,
+        )
+        factories.VisualisationApprovalFactory.create(
+            approved=True, visualisation=v, approver=user
+        )
+
+        client = Client(**get_http_sso_data(user))
+        with _visualisation_ui_gitlab_mocks(access_level=40):
+            response = client.get(
+                reverse("visualisations:approvals", args=(1,)),
+                follow=True,
+            )
+        soup = BeautifulSoup(response.content.decode(response.charset), features="lxml")
+        approval_count_text = soup.find("p").contents
+        approval_list = soup.find(attrs={"data-test": "approvals-list"})
+        approval_list_items = approval_list.find_all("li")
+
+        self.assert_common_content(soup)
+        assert len(approval_list_items) == 1
+        assert (
+            approval_list_items[0]
+            .get_text()
+            .startswith("Ledia Luli (owner) approved this visualisation at")
+        )
+        assert "Currently 1 out of 3 have approved this visualisation." in approval_count_text
+        assert response.status_code == 200
+
+    @override_flag(settings.THIRD_APPROVER, active=True)
+    @override_settings(GITLAB_FIXTURES=False)
+    @pytest.mark.django_db
     def test_owner_view_with_one_peer_reviewer_approval(self):
         develop_visualisations_permission = Permission.objects.get(
             codename="develop_visualisations",
@@ -131,9 +179,155 @@ class TestDataVisualisationOwnerUIApprovalPage:
             )
         soup = BeautifulSoup(response.content.decode(response.charset), features="lxml")
         approval_count_text = soup.find("p").contents
+        approval_list = soup.find(attrs={"data-test": "approvals-list"})
+        approval_list_items = approval_list.find_all("li")
 
         self.assert_common_content(soup)
+        assert len(approval_list_items) == 1
+        assert (
+            approval_list_items[0]
+            .get_text()
+            .startswith("Ledia Luli (peer reviewer) approved this visualisation at")
+        )
         assert "Currently 1 out of 3 have approved this visualisation." in approval_count_text
+        assert response.status_code == 200
+
+    @override_flag(settings.THIRD_APPROVER, active=True)
+    @override_settings(GITLAB_FIXTURES=False)
+    @pytest.mark.django_db
+    def test_owner_view_with_one_team_member_approval(self):
+        develop_visualisations_permission = Permission.objects.get(
+            codename="develop_visualisations",
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+        user = factories.UserFactory.create(is_staff=False, is_superuser=False)
+        user.user_permissions.add(develop_visualisations_permission)
+
+        team_member_reviewer = factories.UserFactory.create(
+            first_name="Ledia", last_name="Luli", is_staff=False, is_superuser=True
+        )
+
+        v = factories.VisualisationTemplateFactory.create(gitlab_project_id=1)
+        factories.VisualisationCatalogueItemFactory.create(
+            name="test-gitlab-project",
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            visualisation_template=v,
+        )
+        factories.VisualisationApprovalFactory.create(
+            approved=True, visualisation=v, approver=team_member_reviewer
+        )
+
+        client = Client(**get_http_sso_data(user))
+        with _visualisation_ui_gitlab_mocks():
+            response = client.get(
+                reverse("visualisations:approvals", args=(1,)),
+                follow=True,
+            )
+        soup = BeautifulSoup(response.content.decode(response.charset), features="lxml")
+        approval_count_text = soup.find("p").contents
+        approval_list = soup.find(attrs={"data-test": "approvals-list"})
+        approval_list_items = approval_list.find_all("li")
+
+        self.assert_common_content(soup)
+        assert len(approval_list_items) == 1
+        assert (
+            approval_list_items[0]
+            .get_text()
+            .startswith("A member of the Data Workspace team approved this visualisation on")
+        )
+        assert "Currently 1 out of 3 have approved this visualisation." in approval_count_text
+        assert response.status_code == 200
+
+    @override_flag(settings.THIRD_APPROVER, active=True)
+    @override_settings(GITLAB_FIXTURES=False)
+    @pytest.mark.django_db
+    def test_owner_view_with_all_approvals(self):
+        develop_visualisations_permission = Permission.objects.get(
+            codename="develop_visualisations",
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+        user = factories.UserFactory.create(
+            first_name="Ledia", last_name="Luli", is_staff=False, is_superuser=False
+        )
+        user.user_permissions.add(develop_visualisations_permission)
+
+        team_member_reviewer = factories.UserFactory.create(
+            first_name="James", last_name="Robinson", is_staff=False, is_superuser=True
+        )
+
+        peer_reviewer = factories.UserFactory.create(
+            first_name="Ian", last_name="Leggett", is_staff=False, is_superuser=False
+        )
+
+        v = factories.VisualisationTemplateFactory.create(gitlab_project_id=1)
+        factories.VisualisationCatalogueItemFactory.create(
+            name="test-gitlab-project",
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            visualisation_template=v,
+        )
+        factories.VisualisationApprovalFactory.create(
+            approved=True, visualisation=v, approver=team_member_reviewer
+        )
+        factories.VisualisationApprovalFactory.create(
+            approved=True, visualisation=v, approver=peer_reviewer
+        )
+        factories.VisualisationApprovalFactory.create(
+            approved=True, visualisation=v, approver=user
+        )
+
+        project_members = [
+            {
+                "id": 1,
+                "name": "Ian Leggett",
+                "username": "ian.leggett",
+                "state": "active",
+                "access_level": 30,
+            },
+            {
+                "id": 2,
+                "name": "Ledia Luli",
+                "username": "ledia.luli",
+                "state": "active",
+                "access_level": 40,
+            },
+            {
+                "id": 3,
+                "name": "James Robinson",
+                "username": "james.robinson",
+                "state": "active",
+                "access_level": 30,
+            },
+        ]
+
+        client = Client(**get_http_sso_data(user))
+        with _visualisation_ui_gitlab_mocks(project_members=project_members):
+            response = client.get(
+                reverse("visualisations:approvals", args=(1,)),
+                follow=True,
+            )
+        soup = BeautifulSoup(response.content.decode(response.charset), features="lxml")
+        approval_count_text = soup.find("p").contents
+        approval_list = soup.find(attrs={"data-test": "approvals-list"})
+        approval_list_items = approval_list.find_all("li")
+
+        self.assert_common_content(soup)
+        assert len(approval_list_items) == 3
+        assert (
+            approval_list_items[0]
+            .get_text()
+            .startswith("Ledia Luli (owner) approved this visualisation at")
+        )
+        assert (
+            approval_list_items[1]
+            .get_text()
+            .startswith("Ian Leggett (peer reviewer) approved this visualisation at")
+        )
+        assert (
+            approval_list_items[2]
+            .get_text()
+            .startswith("A member of the Data Workspace team approved this visualisation on")
+        )
+        assert "Currently 3 out of 3 have approved this visualisation." in approval_count_text
         assert response.status_code == 200
 
     @pytest.mark.django_db

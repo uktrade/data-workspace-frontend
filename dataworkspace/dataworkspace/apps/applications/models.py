@@ -180,10 +180,6 @@ class VisualisationApproval(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     approved = models.BooleanField(default=True)
     approver = models.ForeignKey(get_user_model(), on_delete=models.PROTECT)
-    approver_type = models.CharField(
-        choices=(("Owner", "Owner"), ("Peer-reviewer", "Peer-reviewer"), ("Team Member", "Team Member")),
-        default="Owner",
-    )
     visualisation = models.ForeignKey(VisualisationTemplate, on_delete=models.CASCADE)
 
     def __init__(self, *args, **kwargs):
