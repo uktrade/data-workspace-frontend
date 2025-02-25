@@ -9,6 +9,7 @@ from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.test import Client, override_settings
 from django.urls import reverse
+from freezegun import freeze_time
 
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.applications.models import (
@@ -71,14 +72,14 @@ class TestDataVisualisationMemberUIApprovalPage:
         generic_approval_list = soup.find_all(attrs={"data-test": "generic_approval_list"})
         owner_approval_list = soup.find_all(attrs={"data-test": "owner_approval_list"})
 
-        assert "Who needs to approve this visualisation" in first_header_two_text
+        assert "You're a Data Workspace team member" in first_header_two_text
         assert "Approve this visualisation" in second_header_two_text
         assert owner_approval_list
         assert generic_approval_list
 
     @override_flag(settings.THIRD_APPROVER, active=True)
     @pytest.mark.django_db
-    def test_owner_view_with_no_approvals(self):
+    def test_member_view_with_no_approvals(self):
         develop_visualisations_permission = Permission.objects.get(
             codename="develop_visualisations",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
@@ -98,10 +99,11 @@ class TestDataVisualisationMemberUIApprovalPage:
         assert "Currently 0 out of 3 have approved this visualisation." in approval_count_text
         assert response.status_code == 200
 
+    @freeze_time("2025-01-01 01:01:01")
     @override_flag(settings.THIRD_APPROVER, active=True)
     @override_settings(GITLAB_FIXTURES=False)
     @pytest.mark.django_db
-    def test_owner_view_with_one_peer_reviewer_approval(self):
+    def test_member_view_with_one_peer_reviewer_approval(self):
         develop_visualisations_permission = Permission.objects.get(
             codename="develop_visualisations",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
@@ -134,6 +136,7 @@ class TestDataVisualisationMemberUIApprovalPage:
 
         self.assert_common_content(soup)
         assert "Currently 1 out of 3 have approved this visualisation." in approval_count_text
+        assert "Ledia Luli (peer reviewer) approved this visualisation on 1 January 2025, 1:01am"
         assert response.status_code == 200
 
     @pytest.mark.django_db
