@@ -21,7 +21,7 @@ from dataworkspace.tests.common import get_http_sso_data
 
 
 @contextmanager
-def _visualisation_ui_gitlab_mocks(owner_access=True, peer_reviwer=False):
+def _visualisation_ui_gitlab_mocks(peer_reviewer=True):
     with mock.patch(
         "dataworkspace.apps.applications.views._visualisation_gitlab_project"
     ) as projects_mock, mock.patch(
@@ -50,8 +50,7 @@ def _visualisation_ui_gitlab_mocks(owner_access=True, peer_reviwer=False):
                 "commit": {"committed_date": "2020-04-14T21:25:22.000+00:00"},
             }
         ]
-        owner_access_mock.return_value = False
-        peer_reviewer_access_mock.return_value = True
+        peer_reviewer_access_mock.return_value = peer_reviewer
         project_members_mock.return_value = [
             {
                 "id": 2,
@@ -63,20 +62,19 @@ def _visualisation_ui_gitlab_mocks(owner_access=True, peer_reviwer=False):
         ]
         user_mock.return_value = [{"id": 1}]
 
-        yield projects_mock, branches_mock, access_mock, owner_access_mock, user_mock, project_members_mock
+        yield projects_mock, branches_mock, access_mock, owner_access_mock, user_mock, project_members_mock, peer_reviewer_access_mock
 
 
 class TestDataVisualisationOwnerUIApprovalPage:
+
     def assert_common_content(self, soup):
         peer_reviewer_header = soup.find_all("h2")
-        peer_reviewer_header_text = peer_reviewer_header[0].contents
-        peer_reviewer_body_text = header_two[1].contents
+        peer_reviewer_body = soup.find_all("p")
+        peer_reviewer_header_text = peer_reviewer_header[1].contents
+        peer_reviewer_body_text = peer_reviewer_body[2].contents
         generic_approval_list = soup.find_all(attrs={"data-test": "generic_approval_list"})
-        owner_approval_list = soup.find_all(attrs={"data-test": "owner_approval_list"})
-
-        assert "You're a peer reviewer for this visualisation" in first_header_two_text
-        assert "Approve this visualisation" in second_header_two_text
-        assert owner_approval_list
+        assert "You're a peer reviewer for this visualisation" in peer_reviewer_header_text
+        assert "Once you have peer reviewed this visualisation, you can approve it below." in peer_reviewer_body_text
         assert generic_approval_list
 
     @override_flag(settings.THIRD_APPROVER, active=True)
@@ -104,7 +102,7 @@ class TestDataVisualisationOwnerUIApprovalPage:
     @override_flag(settings.THIRD_APPROVER, active=True)
     @override_settings(GITLAB_FIXTURES=False)
     @pytest.mark.django_db
-    def test_owner_view_with_one_peer_reviewer_approval(self):
+    def test_peer_reviewer_view_with_an_owner_approval(self):
         develop_visualisations_permission = Permission.objects.get(
             codename="develop_visualisations",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
@@ -112,7 +110,7 @@ class TestDataVisualisationOwnerUIApprovalPage:
         user = factories.UserFactory.create(is_staff=False, is_superuser=False)
         user.user_permissions.add(develop_visualisations_permission)
 
-        peer_reviewer = factories.UserFactory.create(
+        owner = factories.UserFactory.create(
             first_name="Ledia", last_name="Luli", is_staff=False, is_superuser=False
         )
 
@@ -123,7 +121,7 @@ class TestDataVisualisationOwnerUIApprovalPage:
             visualisation_template=v,
         )
         factories.VisualisationApprovalFactory.create(
-            approved=True, visualisation=v, approver=peer_reviewer
+            approved=True, visualisation=v, approver=owner
         )
 
         client = Client(**get_http_sso_data(user))
