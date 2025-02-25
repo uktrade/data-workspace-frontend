@@ -17,7 +17,16 @@
   </h1>
 {% flag THIRD_APPROVER %}
    <p class="govuk-body">Currently {{ approvals | length }} out of 3 have approved this visualisation.</p>
-  {% if is_owner  %}
+     <ul class="govuk-list govuk-list--bullet" data-test="approvals-list">
+      {% for approver in approvals %}
+        {% if approver.status == 'team member' %}
+        <li>A member of the Data Workspace team approved this visualisation on {{ approver.date_approved }}</li>
+        {% else %}
+         <li>{% if request.user.get_full_name == approver %}You{% else %}{{ approver.name }} ({{approver.status}}){% endif %} approved this visualisation at {{ approver.date_approved }}</li>
+        {% endif %}
+      {% endfor %}
+   </ul>
+  {% if type_of_user.is_owner  %}
      {% include './visualisation_approvals/owner.html' %}
    {% endif %}
    <h2 class="govuk-heading-m">Approve this visualisation</h2>

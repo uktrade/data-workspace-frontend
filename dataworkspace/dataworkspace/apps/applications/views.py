@@ -1066,7 +1066,7 @@ def visualisation_approvals_html_view(request, gitlab_project_id):
 
 def visualisation_approvals_html_GET(request, gitlab_project):
     application_template = _application_template(gitlab_project)
-    approvals = VisualisationApproval.objects.filter(
+    dw_approvals = VisualisationApproval.objects.filter(
         visualisation=application_template, approved=True
     ).all()
 
@@ -1076,7 +1076,7 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         else:
             project_members = gitlab_project_members(gitlab_project)
 
-    approval = next(filter(lambda a: a.approver == request.user, approvals), None)
+    approval = next(filter(lambda a: a.approver == request.user, dw_approvals), None)
 
     if settings.GITLAB_FIXTURES:
         current_gitlab_user = get_fixture("user_fixture.json")
@@ -1097,10 +1097,63 @@ def visualisation_approvals_html_GET(request, gitlab_project):
 
     if waffle.flag_is_active(request, settings.THIRD_APPROVER):
         is_owner = gitlab_is_project_owner(current_gitlab_user[0], gitlab_project["id"])
-        approved_users = [d.approver.get_full_name() for d in approvals]
-        project_approvals = [
-            member for member in project_members if member["name"] in approved_users
-        ]
+
+        # Create a list of approvers based on the list from dataworkspace
+        approvers = []
+
+        for a in dw_approvals:
+            if a.approved:
+                approvers.append(
+                    {
+                        "name": a.approver.get_full_name(),
+                        "date_approved": a.created_date,
+                        "is_superuser": a.approver.is_superuser,
+                        "status": None,
+                    }
+                )
+
+        # Based on the previous list create a new list that only includes Gitlab project members
+        list_of_approvals = []
+
+        for approver in approvers:
+            for member in project_members:
+                if approver["name"] == member["name"]:
+                    if approver["is_superuser"] and member["access_level"] == 30:
+                        approver["status"] = "team member"
+                    elif member["access_level"] == 40:
+                        approver["status"] = "owner"
+                    elif member["access_level"] == 30:
+                        approver["status"] = "peer reviewer"
+                    else:
+                        approver["status"] = None
+            list_of_approvals.append(approver)
+
+        # Split the list into all the owners, peer reviewers and team members that have approved.
+        # Sort them by the person who approved first
+        owners = sorted(
+            [approver for approver in list_of_approvals if approver["status"] == "owner"],
+            key=lambda obj: obj["date_approved"],
+        )
+        peer_reviewers = sorted(
+            [approver for approver in list_of_approvals if approver["status"] == "peer reviewer"],
+            key=lambda obj: obj["date_approved"],
+        )
+        team_member_reviewers = sorted(
+            [approver for approver in list_of_approvals if approver["status"] == "team member"],
+            key=lambda obj: obj["date_approved"],
+        )
+        # Patch them back together
+        project_approvals = []
+
+        # If we have sorted lists then use the first one
+        if owners:
+            project_approvals.append(owners[0])
+
+        if peer_reviewers:
+            project_approvals.append(peer_reviewers[0])
+
+        if team_member_reviewers:
+            project_approvals.append(team_member_reviewers[0])
 
     form = VisualisationApprovalForm(
         instance=approval,
@@ -1119,13 +1172,15 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         visualisation_branches,
         current_menu_item="approvals",
         template_specific_context={
-            "is_owner": (
-                is_owner if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None
-            ),
+            "type_of_user": {
+                "is_owner": (
+                    is_owner if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None
+                ),
+            },
             "approvals": (
                 project_approvals
                 if waffle.flag_is_active(request, settings.THIRD_APPROVER)
-                else approvals
+                else dw_approvals
             ),
             "already_approved": approval.approved if approval else False,
             "form": form,
