@@ -24,6 +24,8 @@ amqp==5.1.1
     #   kombu
 appdirs==1.4.4
     # via pyppeteer
+appnope==0.1.4
+    # via ipython
 asgiref==3.7.2
     # via
     #   -r requirements.txt
@@ -138,7 +140,7 @@ colorama==0.4.6
     # via djlint
 coverage==5.4
     # via pytest-cov
-cryptography==43.0.1
+cryptography==44.0.1
     # via -r requirements.txt
 debugpy==1.2.1
     # via -r requirements-dev.in
@@ -254,7 +256,6 @@ greenlet==3.0.1
     # via
     #   -r requirements.txt
     #   gevent
-    #   sqlalchemy
 h11==0.13.0
     # via wsproto
 hawk-server-asyncio==0.0.13
@@ -546,7 +547,6 @@ sentry-sdk==2.8.0
 six==1.15.0
     # via
     #   -r requirements.txt
-    #   asttokens
     #   bleach
     #   click-repl
     #   django-compressor
