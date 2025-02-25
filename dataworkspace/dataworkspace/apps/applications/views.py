@@ -1099,11 +1099,6 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         current_user_type = get_approver_type(
             gitlab_project["id"], request.user, current_gitlab_user
         )
-        approved_users = [d.approver.get_full_name() for d in dw_approvals]
-        project_approvals = [
-            member for member in project_members if member["name"] in approved_users
-        ]
-
         # Create a list of approvers based on the list from dataworkspace
         approvers = []
         for a in dw_approvals:
