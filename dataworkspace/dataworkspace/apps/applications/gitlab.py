@@ -4,7 +4,7 @@ from typing import Union
 import requests
 from django.conf import settings
 from django.contrib.admin.models import ADDITION, LogEntry
-from django.contrib.auth.models import Permission, User
+from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.db import transaction
@@ -26,14 +26,15 @@ MAINTAINER_ACCESS_LEVEL = 40
 
 
 def get_approver_type(
-    gitlab_project_id: int, user_django: User = None, user_gitlab: dict = None
+    gitlab_project_id: int, user_django=None, user_gitlab: dict = None
 ) -> Union[str, None]:
     if is_project_owner(user_gitlab, gitlab_project_id):
-        return "Owner"
+        return "owner"
     elif is_dataworkspace_team_member(user_django, gitlab_project_id):
-        return "Team Member"
+        return "team member"
     elif is_peer_reviewer(user_django, user_gitlab, gitlab_project_id):
-        return "Peer Reviewer"
+        return "peer reviewer"
+    return None
 
 
 def gitlab_api_v4(method: str, path: str, params: tuple = ()):
@@ -76,7 +77,7 @@ def gitlab_api_v4_ecr_pipeline_trigger(
     return pipeline
 
 
-def gitlab_has_developer_access(user: User, gitlab_project_id: int) -> bool:
+def gitlab_has_developer_access(user, gitlab_project_id: int) -> bool:
     # Having developer access to a project is cached to mitigate slow requests
     # to GitLab. _Not_ having developer access to not cached to allow granting
     # of access to have an immediate effect
@@ -135,16 +136,16 @@ def gitlab_has_developer_access(user: User, gitlab_project_id: int) -> bool:
     return has_access
 
 
-def is_dataworkspace_team_member(user: User, gitlab_project_id: int) -> bool:
+def is_dataworkspace_team_member(user, gitlab_project_id: int) -> bool:
     return bool(user.is_superuser and gitlab_has_developer_access(user, gitlab_project_id))
 
 
-def is_project_owner(user: User, gitlab_project_id: int) -> bool:
+def is_project_owner(user, gitlab_project_id: int) -> bool:
     current_gitlab_project_user = gitlab_project_member_by_id(user, gitlab_project_id)
     return bool(current_gitlab_project_user["access_level"] == MAINTAINER_ACCESS_LEVEL)
 
 
-def is_peer_reviewer(user_django: User, user_gitlab: dict, gitlab_project_id: int) -> bool:
+def is_peer_reviewer(user_django, user_gitlab: dict, gitlab_project_id: int) -> bool:
     if settings.GITLAB_FIXTURES:
         current_gitlab_project_user = gitlab_project_member_by_id(user_gitlab, gitlab_project_id)
         return bool(
@@ -158,7 +159,7 @@ def is_peer_reviewer(user_django: User, user_gitlab: dict, gitlab_project_id: in
         )
 
 
-def _ensure_user_has_manage_unpublish_perm(user: User):
+def _ensure_user_has_manage_unpublish_perm(user):
     # Update the django permission controlling whether the user can preview unpublished visualisation catalogue pages.
     perm_codename = dataset_type_to_manage_unpublished_permission_codename(
         DataSetType.VISUALISATION
@@ -188,7 +189,7 @@ def gitlab_project_members(gitlab_project_id: int) -> list[dict]:
     return project_members
 
 
-def gitlab_project_member_by_id(gitlab_user: User, gitlab_project_id: int) -> dict:
+def gitlab_project_member_by_id(gitlab_user, gitlab_project_id: int) -> dict:
     if settings.GITLAB_FIXTURES:
         (current_gitlab_project_user,) = get_fixture("project_member_fixture.json")
     else:

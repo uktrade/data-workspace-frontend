@@ -26,9 +26,9 @@
         {% endif %}
       {% endfor %}
    </ul>
-  {% if current_user_type == 'Owner' %}
+  {% if current_user_type == 'owner' %}
      {% include './visualisation_approvals/owner.html' %}
-  {% elif current_user_type == 'Team Member' %}
+  {% elif current_user_type == 'team member' %}
      {% include './visualisation_approvals/team_member.html' %}
    {% endif %}
    <h2 class="govuk-heading-m">Approve this visualisation</h2>

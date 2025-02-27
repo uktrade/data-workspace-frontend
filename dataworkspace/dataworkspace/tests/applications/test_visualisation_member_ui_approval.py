@@ -50,7 +50,7 @@ def _visualisation_ui_gitlab_mocks(owner_access=False, access_level=30, project_
         owner_access_mock.return_value = owner_access
         project_members_mock.return_value = []
         user_mock.return_value = [{"id": 3}]
-        approver_type.return_value = "Team Member"
+        approver_type.return_value = "team member"
         project_members_mock.return_value = (
             project_members
             if project_members

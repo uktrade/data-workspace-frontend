@@ -62,7 +62,7 @@ def _visualisation_ui_gitlab_mocks(owner_access=True, access_level=30, project_m
             ]
         )
         user_mock.return_value = [{"id": 1}]
-        approver_type.return_value = "Owner"
+        approver_type.return_value = "owner"
 
         yield projects_mock, branches_mock, access_mock, owner_access_mock, user_mock, project_members_mock, approver_type
 
