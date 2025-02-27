@@ -1,6 +1,7 @@
 from unittest import mock
-import requests_mock
+
 import pytest
+import requests_mock
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.test import override_settings

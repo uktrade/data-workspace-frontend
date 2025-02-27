@@ -1,21 +1,18 @@
 from contextlib import contextmanager
 from unittest import mock
+
 import pytest
 from bs4 import BeautifulSoup
-
-from waffle.testutils import override_flag
 from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.test import Client, override_settings
 from django.urls import reverse
+from freezegun import freeze_time
+from waffle.testutils import override_flag
 
+from dataworkspace.apps.applications.models import ApplicationInstance, VisualisationApproval
 from dataworkspace.apps.datasets.constants import UserAccessType
-from dataworkspace.apps.applications.models import (
-    ApplicationInstance,
-    VisualisationApproval,
-)
-
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
 
@@ -27,14 +24,16 @@ def _visualisation_ui_gitlab_mocks(owner_access=True, access_level=30, project_m
     ) as projects_mock, mock.patch(
         "dataworkspace.apps.applications.views.gitlab_project_members"
     ) as project_members_mock, mock.patch(
-        "dataworkspace.apps.applications.views.gitlab_is_project_owner"
+        "dataworkspace.apps.applications.gitlab.is_project_owner"
     ) as owner_access_mock, mock.patch(
         "dataworkspace.apps.applications.views._visualisation_branches"
     ) as branches_mock, mock.patch(
         "dataworkspace.apps.applications.views.gitlab_api_v4"
     ) as user_mock, mock.patch(
         "dataworkspace.apps.applications.views.gitlab_has_developer_access"
-    ) as access_mock:
+    ) as access_mock, mock.patch(
+        "dataworkspace.apps.applications.views.get_approver_type"
+    ) as approver_type:
         access_mock.return_value = True
         projects_mock.return_value = {
             "id": 1,
@@ -63,8 +62,9 @@ def _visualisation_ui_gitlab_mocks(owner_access=True, access_level=30, project_m
             ]
         )
         user_mock.return_value = [{"id": 1}]
+        approver_type.return_value = "Owner"
 
-        yield projects_mock, branches_mock, access_mock, owner_access_mock, user_mock, project_members_mock
+        yield projects_mock, branches_mock, access_mock, owner_access_mock, user_mock, project_members_mock, approver_type
 
 
 class TestDataVisualisationOwnerUIApprovalPage:
@@ -102,6 +102,7 @@ class TestDataVisualisationOwnerUIApprovalPage:
         assert "Currently 0 out of 3 have approved this visualisation." in approval_count_text
         assert response.status_code == 200
 
+    @freeze_time("2025-01-01 01:01:01")
     @override_flag(settings.THIRD_APPROVER, active=True)
     @override_settings(GITLAB_FIXTURES=False)
     @pytest.mark.django_db
@@ -141,11 +142,14 @@ class TestDataVisualisationOwnerUIApprovalPage:
         assert (
             approval_list_items[0]
             .get_text()
-            .startswith("Ledia Luli (owner) approved this visualisation at")
+            .startswith(
+                "Ledia Luli (owner) approved this visualisation on Jan. 1, 2025, 1:01 a.m."
+            )
         )
         assert "Currently 1 out of 3 have approved this visualisation." in approval_count_text
         assert response.status_code == 200
 
+    @freeze_time("2025-01-01 01:01:01")
     @override_flag(settings.THIRD_APPROVER, active=True)
     @override_settings(GITLAB_FIXTURES=False)
     @pytest.mark.django_db
@@ -187,11 +191,14 @@ class TestDataVisualisationOwnerUIApprovalPage:
         assert (
             approval_list_items[0]
             .get_text()
-            .startswith("Ledia Luli (peer reviewer) approved this visualisation at")
+            .startswith(
+                "Ledia Luli (peer reviewer) approved this visualisation on Jan. 1, 2025, 1:01 a.m."
+            )
         )
         assert "Currently 1 out of 3 have approved this visualisation." in approval_count_text
         assert response.status_code == 200
 
+    @freeze_time("2025-01-01 01:01:01")
     @override_flag(settings.THIRD_APPROVER, active=True)
     @override_settings(GITLAB_FIXTURES=False)
     @pytest.mark.django_db
@@ -233,11 +240,14 @@ class TestDataVisualisationOwnerUIApprovalPage:
         assert (
             approval_list_items[0]
             .get_text()
-            .startswith("A member of the Data Workspace team approved this visualisation on")
+            .startswith(
+                "A member of the Data Workspace team approved this visualisation on Jan. 1, 2025, 1:01 a.m."
+            )
         )
         assert "Currently 1 out of 3 have approved this visualisation." in approval_count_text
         assert response.status_code == 200
 
+    @freeze_time("2025-01-01 01:01:01")
     @override_flag(settings.THIRD_APPROVER, active=True)
     @override_settings(GITLAB_FIXTURES=False)
     @pytest.mark.django_db
@@ -315,12 +325,16 @@ class TestDataVisualisationOwnerUIApprovalPage:
         assert (
             approval_list_items[0]
             .get_text()
-            .startswith("Ledia Luli (owner) approved this visualisation at")
+            .startswith(
+                "Ledia Luli (owner) approved this visualisation on Jan. 1, 2025, 1:01 a.m."
+            )
         )
         assert (
             approval_list_items[1]
             .get_text()
-            .startswith("Ian Leggett (peer reviewer) approved this visualisation at")
+            .startswith(
+                "Ian Leggett (peer reviewer) approved this visualisation on Jan. 1, 2025, 1:01 a.m."
+            )
         )
         assert (
             approval_list_items[2]

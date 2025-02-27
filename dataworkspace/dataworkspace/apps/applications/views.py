@@ -55,6 +55,7 @@ from dataworkspace.apps.applications.models import (
     VisualisationApproval,
     VisualisationTemplate,
 )
+from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import (
     application_options,
     fetch_visualisation_log_events,
@@ -62,7 +63,6 @@ from dataworkspace.apps.applications.utils import (
     stop_spawner_and_application,
     sync_quicksight_permissions,
 )
-from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils_tools import get_grouped_tools
 from dataworkspace.apps.core.errors import (
     DeveloperPermissionRequiredError,
@@ -91,6 +91,7 @@ from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.datasets_db import extract_queried_tables_from_sql_query
 from dataworkspace.notify import decrypt_token, send_email
 from dataworkspace.zendesk import update_zendesk_ticket
+
 from .fixtures.utils import get_fixture
 
 logger = logging.getLogger("app")
@@ -1095,7 +1096,9 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         visualisation_branches = _visualisation_branches(gitlab_project)
     current_user_type = None
     if waffle.flag_is_active(request, settings.THIRD_APPROVER):
-        current_user_type = get_approver_type(gitlab_project["id"], request.user, current_gitlab_user)
+        current_user_type = get_approver_type(
+            gitlab_project["id"], request.user, current_gitlab_user
+        )
         approved_users = [d.approver.get_full_name() for d in dw_approvals]
         project_approvals = [
             member for member in project_members if member["name"] in approved_users

@@ -12,10 +12,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.test import Client, override_settings
 from django.urls import reverse
 
-from dataworkspace.apps.applications.models import (
-    ApplicationInstance,
-    UserToolConfiguration,
-)
+from dataworkspace.apps.applications.models import ApplicationInstance, UserToolConfiguration
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.tests import factories

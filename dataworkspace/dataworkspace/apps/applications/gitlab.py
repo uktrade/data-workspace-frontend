@@ -10,11 +10,11 @@ from django.core.cache import cache
 from django.db import transaction
 from django.utils.encoding import force_str
 
+from dataworkspace.apps.applications.fixtures.utils import get_fixture
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
 )
-from dataworkspace.apps.applications.fixtures.utils import get_fixture
 
 logger = logging.getLogger("app")
 
@@ -25,13 +25,15 @@ DEVELOPER_ACCESS_LEVEL = 30
 MAINTAINER_ACCESS_LEVEL = 40
 
 
-def get_approver_type(gitlab_project_id: int, user_django: User = None, user_gitlab: dict = None) -> Union[str, None]:
+def get_approver_type(
+    gitlab_project_id: int, user_django: User = None, user_gitlab: dict = None
+) -> Union[str, None]:
     if is_project_owner(user_gitlab, gitlab_project_id):
         return "Owner"
     elif is_dataworkspace_team_member(user_django, gitlab_project_id):
         return "Team Member"
     elif is_peer_reviewer(user_django, user_gitlab, gitlab_project_id):
-        return "Peer-reviewer"
+        return "Peer Reviewer"
 
 
 def gitlab_api_v4(method: str, path: str, params: tuple = ()):
@@ -146,11 +148,13 @@ def is_peer_reviewer(user_django: User, user_gitlab: dict, gitlab_project_id: in
     if settings.GITLAB_FIXTURES:
         current_gitlab_project_user = gitlab_project_member_by_id(user_gitlab, gitlab_project_id)
         return bool(
-            user_django.is_superuser is False and current_gitlab_project_user["access_level"] == DEVELOPER_ACCESS_LEVEL
+            user_django.is_superuser is False
+            and current_gitlab_project_user["access_level"] == DEVELOPER_ACCESS_LEVEL
         )
     else:
         return bool(
-            user_django.is_superuser is False and gitlab_has_developer_access(user_gitlab, gitlab_project_id)
+            user_django.is_superuser is False
+            and gitlab_has_developer_access(user_gitlab, gitlab_project_id)
         )
 
 
