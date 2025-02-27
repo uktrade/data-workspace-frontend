@@ -30,7 +30,7 @@ def _visualisation_ui_gitlab_mocks(peer_reviewer_access=True, access_level=30, p
         "dataworkspace.apps.applications.views.gitlab_is_project_owner"
     ) as owner_access_mock, mock.patch(
         "dataworkspace.apps.applications.views.gitlab_is_peer_reviewer"
-    ) as peer_reviewer_access_mock,mock.patch(
+    ) as peer_reviewer_access_mock, mock.patch(
         "dataworkspace.apps.applications.views._visualisation_branches"
     ) as branches_mock, mock.patch(
         "dataworkspace.apps.applications.views.gitlab_api_v4"
@@ -284,6 +284,111 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
             .startswith("A member of the Data Workspace team approved this visualisation on")
         )
         assert "Currently 3 out of 3 have approved this visualisation." in approval_count_text
+        assert response.status_code == 200
+
+    @override_flag(settings.THIRD_APPROVER, active=True)
+    @override_settings(GITLAB_FIXTURES=False)
+    @pytest.mark.django_db
+    def test_second_peer_reviewer_view_with_all_approvals(self):
+        develop_visualisations_permission = Permission.objects.get(
+            codename="develop_visualisations",
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+        second_peer_reviewer = factories.UserFactory.create(
+            first_name="Ledia", last_name="Luli", is_staff=False, is_superuser=False
+        )
+        second_peer_reviewer.user_permissions.add(develop_visualisations_permission)
+
+        team_member_reviewer = factories.UserFactory.create(
+            first_name="Bob", last_name="Burger", is_staff=False, is_superuser=True
+        )
+
+        owner = factories.UserFactory.create(
+            first_name="Tina", last_name="Belcher", is_staff=False, is_superuser=False
+        )
+
+        peer_reviewer = factories.UserFactory.create(
+            first_name="Gene", last_name="Belcher", is_staff=False, is_superuser=False
+        )
+
+        v = factories.VisualisationTemplateFactory.create(gitlab_project_id=1)
+        factories.VisualisationCatalogueItemFactory.create(
+            name="test-gitlab-project",
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            visualisation_template=v,
+        )
+        factories.VisualisationApprovalFactory.create(
+            approved=True, visualisation=v, approver=team_member_reviewer
+        )
+        factories.VisualisationApprovalFactory.create(
+            approved=True, visualisation=v, approver=peer_reviewer
+        )
+        factories.VisualisationApprovalFactory.create(
+            approved=True, visualisation=v, approver=owner
+        )
+
+        project_members = [
+            {
+                "id": 1,
+                "name": "Bob Burger",
+                "username": "bob.burger",
+                "state": "active",
+                "access_level": 30,
+            },
+            {
+                "id": 2,
+                "name": "Tina Belcher",
+                "username": "tina.belcher",
+                "state": "active",
+                "access_level": 40,
+            },
+            {
+                "id": 3,
+                "name": "Gene Belcher",
+                "username": "gene.belcher",
+                "state": "active",
+                "access_level": 30,
+            },
+        ]
+
+        client = Client(**get_http_sso_data(second_peer_reviewer))
+        with _visualisation_ui_gitlab_mocks(project_members=project_members):
+            response = client.get(
+                reverse("visualisations:approvals", args=(1,)),
+                follow=True,
+            )
+        soup = BeautifulSoup(response.content.decode(response.charset), features="lxml")
+        second_peer_reviewer_body = soup.find_all("p")
+        second_peer_reviewer_approval_count_text_one = second_peer_reviewer_body[2].contents
+        second_peer_reviewer_approval_count_text_two = second_peer_reviewer_body[3].contents
+
+        second_peer_reviewer_headers = soup.find_all("h2")
+        second_peer_reviewer_header = second_peer_reviewer_headers[1].contents
+
+        print(">>>>>>>", second_peer_reviewer_headers)
+        approval_list = soup.find(attrs={"data-test": "approvals-list"})
+        approval_list_items = approval_list.find_all("li")
+
+        assert len(approval_list_items) == 3
+        assert (
+            approval_list_items[0]
+            .get_text()
+            .startswith("Tina Belcher (owner) approved this visualisation at")
+        )
+        assert (
+            approval_list_items[1]
+            .get_text()
+            .startswith("Gene Belcher (peer reviewer) approved this visualisation at")
+        )
+        assert (
+            approval_list_items[2]
+            .get_text()
+            .startswith("A member of the Data Workspace team approved this visualisation on")
+        )
+        assert "This visualisation has been peer-reviewed" in second_peer_reviewer_header
+        assert "This visualisation has already been peer reviewed by someone else. Their name is listed above." in second_peer_reviewer_approval_count_text_one
+        assert "Only three approvals are needed: the owner, a peer reviewer and a Data Workspace team member." in second_peer_reviewer_approval_count_text_two
+
         assert response.status_code == 200
 
     @pytest.mark.django_db
