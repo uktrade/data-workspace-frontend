@@ -130,7 +130,7 @@ async def async_main():
             f"frame-src {direct_host} {sso_host} https://www.googletagmanager.com;"
             f"img-src {root_domain} https://www.googletagmanager.com https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com *.google-analytics.com *.googletagmanager.com;"  # pylint: disable=line-too-long
             f"font-src {root_domain} data: https://fonts.gstatic.com;"
-            f"script-src 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://tagmanager.google.com *.googletagmanager.com;"  # pylint: disable=line-too-long
+            f"script-src 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://tagmanager.google.com *.googletagmanager.com 'unsafe-inline' *.visualwebsiteoptimizer.com app.vwo.com;"  # pylint: disable=line-too-long
             f"style-src 'unsafe-inline' {root_domain} https://tagmanager.google.com https://fonts.googleapis.com;"
             f"connect-src *.google-analytics.com *.analytics.google.com *.googletagmanager.com;"
         )
@@ -154,7 +154,7 @@ async def async_main():
             f"frame-ancestors 'self' {root_domain} {public_host}.{root_domain};"
             "img-src 'self' data: blob:;"
             # Both JupyterLab and RStudio need `unsafe-eval`
-            "script-src 'unsafe-inline' 'unsafe-eval' 'self' data: https://*.vscode-cdn.invalid/;"
+            "script-src 'unsafe-inline' 'unsafe-eval' 'self' data: https://*.vscode-cdn.invalid/ 'unsafe-inline' *.visualwebsiteoptimizer.com app.vwo.com;"
             "style-src 'unsafe-inline' 'self' data: https://*.vscode-cdn.invalid/;"
             "worker-src 'self' blob:;"
         )
