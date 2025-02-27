@@ -22,12 +22,14 @@
         {% if approver.status == 'team member' %}
         <li>A member of the Data Workspace team approved this visualisation on {{ approver.date_approved }}</li>
         {% else %}
-         <li>{% if request.user.get_full_name == approver %}You{% else %}{{ approver.name }} ({{approver.status}}){% endif %} approved this visualisation at {{ approver.date_approved }}</li>
+         <li>{% if request.user.get_full_name == approver %}You{% else %}{{ approver.name }} ({{approver.status}}){% endif %} approved this visualisation on {{ approver.date_approved }}</li>
         {% endif %}
       {% endfor %}
    </ul>
-  {% if type_of_user.is_owner  %}
+  {% if current_user_type == 'owner' %}
      {% include './visualisation_approvals/owner.html' %}
+  {% elif current_user_type == 'team member' %}
+     {% include './visualisation_approvals/team_member.html' %}
    {% endif %}
    <h2 class="govuk-heading-m">Approve this visualisation</h2>
     <p class="govuk-body">By clicking the button below you’re confirming that this visualisation:</p>
