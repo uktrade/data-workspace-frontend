@@ -17,7 +17,6 @@
   </h1>
 {% flag THIRD_APPROVER %}
    <p class="govuk-body">Currently {{ approvals | length }} out of 3 have approved this visualisation.</p>
-<<<<<<< HEAD
      <ul class="govuk-list govuk-list--bullet" data-test="approvals-list">
       {% for approver in approvals %}
         {% if approver.status == 'team member' %}
@@ -27,6 +26,7 @@
         {% endif %}
       {% endfor %}
    </ul>
+
   {% if current_user_type == 'owner' %}
      {% include './visualisation_approvals/owner.html' %}
   {% elif current_user_type == 'team member' %}
@@ -35,19 +35,7 @@
      {% include './visualisation_approvals/peer_reviewer.html' %}
    {% endif %}
  
-=======
-   
-  {% if type_of_user.is_owner  %}
-     {% include './visualisation_approvals/owner.html' %} 
-
-  {% elif type_of_user.is_second_peer_reviwer  %}
-       {% include './visualisation_approvals/second_peer_reviewer.html' %}
-
-  {% elif type_of_user.is_peer_reviewer  %}
-       {% include './visualisation_approvals/peer_reviewer.html' %}
-  {% endif %}
->>>>>>> 9f4f7d6bc (adding tests for second peer review)
-
+{% if approvals|length != 3 %}
    <h2 class="govuk-heading-m">Approve this visualisation</h2>
     <p class="govuk-body">By clicking the button below you’re confirming that this visualisation:</p>
     <ul class="govuk-list govuk-list--bullet" data-test="generic_approval_list">
@@ -68,7 +56,6 @@
       <button type="submit" class="govuk-button" name="action" value="approve">Approve</button>
     {% endif %}
     </form> 
-{% else %}
   {% if form_errors %}
   <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
     <h2 class="govuk-error-summary__title" id="error-summary-title">
@@ -84,7 +71,7 @@
       </ul>
     </div>
   </div>
-  {% endif %}
+  
 
   <p class="govuk-body">
     In order to publish this visualisation, at least two users must approve it. One approver must be the creator of the visualisation, and a different approver must have completed a peer review of the visualisation.
@@ -128,5 +115,7 @@
     {% endif %}
 
   </form>
+  {% endif %}
+  {% endif %}
 {% endflag %}
 {% endblock %}

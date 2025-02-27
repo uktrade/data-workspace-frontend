@@ -1171,17 +1171,7 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         visualisation_branches,
         current_menu_item="approvals",
         template_specific_context={
-<<<<<<< HEAD
             "current_user_type": current_user_type,
-=======
-            "type_of_user": {
-                "is_owner": is_owner if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None,
-                "is_peer_reviewer": is_peer_reviewer if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None,
-                "is_dataworkspace_team_member": is_dataworkspace_team_member if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None,
-                "is_second_peer_reviwer": len(project_approvals) == 3 and is_peer_reviewer if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None,
-                "is_second_dataworkspace_team_member": len(project_approvals) == 3 and is_dataworkspace_team_member if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None,
-            },
->>>>>>> 9f4f7d6bc (adding tests for second peer review)
             "approvals": (
                 project_approvals
                 if waffle.flag_is_active(request, settings.THIRD_APPROVER)
