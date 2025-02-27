@@ -106,15 +106,17 @@ async def async_main():
     # A spawning application on <my-application>.<root_domain> shows the admin-styled site,
     # fetching assets from <root_domain>, but also makes requests to the current domain
     csp_application_spawning = csp_common + (
+        "worker-src 'self' blob"
         f"default-src {root_domain};"
         f"base-uri {root_domain};"
         f"font-src {root_domain} data:  https://fonts.gstatic.com;"
         f"form-action {root_domain} *.{root_domain};"
         f"frame-ancestors {root_domain};"
-        f"img-src {root_domain} data: https://www.googletagmanager.com https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com *.google-analytics.com *.googletagmanager.com;"  # pylint: disable=line-too-long
-        f"script-src 'unsafe-inline' {root_domain} https://www.googletagmanager.com https://www.google-analytics.com https://tagmanager.google.com *.googletagmanager.com;"  # pylint: disable=line-too-long
-        f"style-src 'unsafe-inline' {root_domain} https://tagmanager.google.com https://fonts.googleapis.com;"
-        f"connect-src {root_domain} 'self' *.google-analytics.com *.analytics.google.com *.googletagmanager.com;"
+        f"img-src {root_domain} data: https://www.googletagmanager.com https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com *.google-analytics.com *.googletagmanager.com useruploads.vwo.io *.visualwebsiteoptimizer.com app.vwo.com;"  # pylint: disable=line-too-long
+        f"script-src 'unsafe-inline' {root_domain} https://www.googletagmanager.com https://www.google-analytics.com https://tagmanager.google.com *.googletagmanager.com 'unsafe-inline' *.visualwebsiteoptimizer.com app.vwo.com;"  # pylint: disable=line-too-long
+        f"style-src 'unsafe-inline' {root_domain} https://tagmanager.google.com https://fonts.googleapis.com 'unsafe-inline' *.visualwebsiteoptimizer.com app.vwo.com;"
+        f"connect-src {root_domain} 'self' *.google-analytics.com *.analytics.google.com *.googletagmanager.com *.visualwebsiteoptimizer.com app.vwo.com;"
+        "frame-src *.visualwebsiteoptimizer.com app.vwo.com"
     )
 
     # A running wrapped application on <my-application>.<root_domain>  has an
