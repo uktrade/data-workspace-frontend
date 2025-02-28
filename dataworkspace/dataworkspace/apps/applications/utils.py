@@ -1936,3 +1936,10 @@ def _self_certify_renewal_email_notification():
         if is_tools_cert_renewal_due(user_profile.tools_certification_date):
             send_notify_email(user_profile.user, user_profile)
     logger.info("_self_certify_renewal_email_notification: Stop")
+
+
+def has_all_three_approval_types(approvals: list[dict]) -> bool:
+    return all(
+        len([a for a in approvals if a["status"] == approval_type]) > 0
+        for approval_type in ["owner", "peer reviewer", "team member"]
+    )
