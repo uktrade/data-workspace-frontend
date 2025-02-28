@@ -68,7 +68,7 @@ def _visualisation_ui_gitlab_mocks(owner_access=True, access_level=30, project_m
 
 
 class TestDataVisualisationOwnerUIApprovalPage:
-    def assert_common_content(self, soup):
+    def assert_common_content(self, soup, all_approved=False):
         header_two = soup.find_all("h2")
         first_header_two_text = header_two[0].contents
         second_header_two_text = header_two[1].contents
@@ -76,9 +76,10 @@ class TestDataVisualisationOwnerUIApprovalPage:
         owner_approval_list = soup.find_all(attrs={"data-test": "owner_approval_list"})
 
         assert "Who needs to approve this visualisation" in first_header_two_text
-        assert "Approve this visualisation" in second_header_two_text
+        if not all_approved:
+            assert "Approve this visualisation" in second_header_two_text
+            assert generic_approval_list
         assert owner_approval_list
-        assert generic_approval_list
 
     @override_flag(settings.THIRD_APPROVER, active=True)
     @pytest.mark.django_db
@@ -320,7 +321,7 @@ class TestDataVisualisationOwnerUIApprovalPage:
         approval_list = soup.find(attrs={"data-test": "approvals-list"})
         approval_list_items = approval_list.find_all("li")
 
-        self.assert_common_content(soup)
+        self.assert_common_content(soup, all_approved=True)
         assert len(approval_list_items) == 3
         assert (
             approval_list_items[0]
