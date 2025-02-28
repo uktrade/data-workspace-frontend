@@ -268,6 +268,8 @@ CSP_CONNECT_SRC = [
     "*.google-analytics.com",
     "*.analytics.google.com",
     "*.googletagmanager.com",
+    "*.visualwebsiteoptimizer.com",
+    "app.vwo.com",
 ]
 CSP_IMG_SRC = [
     APPLICATION_ROOT_DOMAIN,
@@ -279,6 +281,8 @@ CSP_IMG_SRC = [
     "https://www.gstatic.com",
     "*.google-analytics.com",
     "*.googletagmanager.com",
+    "*.visualwebsiteoptimizer.com",
+    "app.vwo.com",
 ]
 CSP_SCRIPT_SRC = [
     APPLICATION_ROOT_DOMAIN,
@@ -286,12 +290,16 @@ CSP_SCRIPT_SRC = [
     "https://www.google-analytics.com",
     "https://tagmanager.google.com",
     "*.googletagmanager.com",
+    "*.visualwebsiteoptimizer.com",
+    "app.vwo.com",
 ]
 CSP_STYLE_SRC = [
     APPLICATION_ROOT_DOMAIN,
     "'unsafe-inline'",
     "https://tagmanager.google.com",
     "https://fonts.googleapis.com",
+    "*.visualwebsiteoptimizer.com",
+    "app.vwo.com",
 ]
 CSP_INCLUDE_NONCE_IN = ["script-src"]
 
