@@ -106,16 +106,16 @@ async def async_main():
     # A spawning application on <my-application>.<root_domain> shows the admin-styled site,
     # fetching assets from <root_domain>, but also makes requests to the current domain
     csp_application_spawning = csp_common + (
-        "worker-src 'self' blob"
+        "worker-src 'self' blob;"
         f"default-src {root_domain};"
         f"base-uri {root_domain};"
         f"font-src {root_domain} data:  https://fonts.gstatic.com;"
         f"form-action {root_domain} *.{root_domain};"
         f"frame-ancestors {root_domain};"
-        f"img-src {root_domain} data: https://www.googletagmanager.com https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com *.google-analytics.com *.googletagmanager.com useruploads.vwo.io *.visualwebsiteoptimizer.com app.vwo.com;"  # pylint: disable=line-too-long
+        f"img-src {root_domain} data: https://www.googletagmanager.com https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com *.google-analytics.com *.googletagmanager.com https://dev.visualwebsiteoptimizer.com useruploads.vwo.io *.visualwebsiteoptimizer.com app.vwo.com;"  # pylint: disable=line-too-long
         f"script-src 'unsafe-inline' {root_domain} https://www.googletagmanager.com https://www.google-analytics.com https://tagmanager.google.com *.googletagmanager.com *.visualwebsiteoptimizer.com app.vwo.com;"  # pylint: disable=line-too-long
         f"style-src 'unsafe-inline' {root_domain} https://tagmanager.google.com https://fonts.googleapis.com 'unsafe-inline' *.visualwebsiteoptimizer.com app.vwo.com;"
-        f"connect-src {root_domain} 'self' *.google-analytics.com *.analytics.google.com *.googletagmanager.com *.visualwebsiteoptimizer.com app.vwo.com;"
+        f"connect-src {root_domain} 'self' *.google-analytics.com *.analytics.google.com *.googletagmanager.com https://dev.visualwebsiteoptimizer.com *.visualwebsiteoptimizer.com app.vwo.com;"
         "frame-src *.visualwebsiteoptimizer.com app.vwo.com"
     )
 
@@ -123,16 +123,17 @@ async def async_main():
     # iframe that directly routes to the app on <my-application>--8888.<root_domain>
     def csp_application_running_wrapped(direct_host):
         return csp_common + (
+            "worker-src 'self' blob;"
             f"default-src 'none';"
             f"base-uri {root_domain};"
             f"form-action 'none';"
             f"frame-ancestors 'none';"
             f"frame-src {direct_host} {sso_host} https://www.googletagmanager.com;"
-            f"img-src {root_domain} https://www.googletagmanager.com https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com *.google-analytics.com *.googletagmanager.com;"  # pylint: disable=line-too-long
+            f"img-src {root_domain} https://www.googletagmanager.com https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com *.google-analytics.com *.googletagmanager.com https://dev.visualwebsiteoptimizer.com;"  # pylint: disable=line-too-long
             f"font-src {root_domain} data: https://fonts.gstatic.com;"
-            f"script-src 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://tagmanager.google.com *.googletagmanager.com *.visualwebsiteoptimizer.com app.vwo.com;"  # pylint: disable=line-too-long
+            f"script-src 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://tagmanager.google.com *.googletagmanager.com https://dev.visualwebsiteoptimizer.com *.visualwebsiteoptimizer.com app.vwo.com;"  # pylint: disable=line-too-long
             f"style-src 'unsafe-inline' {root_domain} https://tagmanager.google.com https://fonts.googleapis.com;"
-            f"connect-src *.google-analytics.com *.analytics.google.com *.googletagmanager.com;"
+            f"connect-src *.google-analytics.com *.analytics.google.com *.googletagmanager.com https://dev.visualwebsiteoptimizer.com;"
         )
 
     # A running application should only connect to 'self': this is where we have the most
