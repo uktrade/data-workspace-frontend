@@ -32,7 +32,7 @@ def get_approver_type(
         return "owner"
     elif is_dataworkspace_team_member(user_django, gitlab_project_id):
         return "team member"
-    elif is_peer_reviewer(user_django, user_gitlab, gitlab_project_id):
+    elif is_peer_reviewer(user_django, gitlab_project_id):
         return "peer reviewer"
     return None
 
@@ -136,26 +136,32 @@ def gitlab_has_developer_access(user, gitlab_project_id: int) -> bool:
     return has_access
 
 
-def is_dataworkspace_team_member(user, gitlab_project_id: int) -> bool:
-    return bool(user.is_superuser and gitlab_has_developer_access(user, gitlab_project_id))
-
-
 def is_project_owner(user, gitlab_project_id: int) -> bool:
     current_gitlab_project_user = gitlab_project_member_by_id(user, gitlab_project_id)
     return bool(current_gitlab_project_user["access_level"] == MAINTAINER_ACCESS_LEVEL)
 
 
-def is_peer_reviewer(user_django, user_gitlab: dict, gitlab_project_id: int) -> bool:
+def is_dataworkspace_team_member(user, gitlab_project_id) -> bool:
     if settings.GITLAB_FIXTURES:
-        current_gitlab_project_user = gitlab_project_member_by_id(user_gitlab, gitlab_project_id)
+        (current_gitlab_project_user,) = get_fixture("project_member_fixture.json")
         return bool(
-            user_django.is_superuser is False
-            and current_gitlab_project_user["access_level"] == DEVELOPER_ACCESS_LEVEL
+            user.is_superuser
+            and current_gitlab_project_user["access_level"] == int(DEVELOPER_ACCESS_LEVEL)
+        )
+    else:
+        return bool(user.is_superuser and gitlab_has_developer_access(user, gitlab_project_id))
+
+
+def is_peer_reviewer(user, gitlab_project_id) -> bool:
+    if settings.GITLAB_FIXTURES:
+        (current_gitlab_project_user,) = get_fixture("project_member_fixture.json")
+        return bool(
+            user.is_superuser is False
+            and current_gitlab_project_user["access_level"] == int(DEVELOPER_ACCESS_LEVEL)
         )
     else:
         return bool(
-            user_django.is_superuser is False
-            and gitlab_has_developer_access(user_gitlab, gitlab_project_id)
+            user.is_superuser is False and gitlab_has_developer_access(user, gitlab_project_id)
         )
 
 

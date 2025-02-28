@@ -26,11 +26,16 @@
         {% endif %}
       {% endfor %}
    </ul>
+
   {% if current_user_type == 'owner' %}
      {% include './visualisation_approvals/owner.html' %}
   {% elif current_user_type == 'team member' %}
      {% include './visualisation_approvals/team_member.html' %}
+  {% elif current_user_type == 'peer reviewer'  %}
+     {% include './visualisation_approvals/peer_reviewer.html' %}
    {% endif %}
+ 
+  {% if not is_approved_by_all %}
    <h2 class="govuk-heading-m">Approve this visualisation</h2>
     <p class="govuk-body">By clicking the button below you’re confirming that this visualisation:</p>
     <ul class="govuk-list govuk-list--bullet" data-test="generic_approval_list">
@@ -51,6 +56,7 @@
       <button type="submit" class="govuk-button" name="action" value="approve">Approve</button>
     {% endif %}
     </form> 
+  {% endif %}
 {% else %}
   {% if form_errors %}
   <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
