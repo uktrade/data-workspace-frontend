@@ -1132,11 +1132,12 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         for approver in filter(lambda x: x["status"], approvers):
             approver_types[approver["status"]].append(approver)
 
-        for approver_type in approver_types:
+        for approver_type in approver_types.keys():
             approver_types[approver_type].sort(key=lambda x: x["date_approved"])
+
         project_approvals = [
             approver_types[approver_type][0]
-            for approver_type in approver_types
+            for approver_type in approver_types.keys()
             if approver_types[approver_type]
         ]
     another_user_with_same_type_already_approved = (
