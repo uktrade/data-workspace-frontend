@@ -80,7 +80,6 @@ class TestDataVisualisationMemberUIApprovalPage:
         first_header_two_text = header_two[0].contents
         generic_approval_list = soup.find_all(attrs={"data-test": "generic_approval_list"})
         member_approval_list = soup.find_all(attrs={"data-test": "member_approval_list"})
-        print(soup)
         if already_approved_by_member is False:
             assert "You're a Data Workspace team member" in first_header_two_text
             assert generic_approval_list
