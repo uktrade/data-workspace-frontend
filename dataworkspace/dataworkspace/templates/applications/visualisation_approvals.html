@@ -35,7 +35,7 @@
      {% include './visualisation_approvals/peer_reviewer.html' %}
    {% endif %}
  
-  {% if not is_approved_by_all %}
+   {% if not already_approved %}
    <h2 class="govuk-heading-m">Approve this visualisation</h2>
     <p class="govuk-body">By clicking the button below you’re confirming that this visualisation:</p>
     <ul class="govuk-list govuk-list--bullet" data-test="generic_approval_list">
@@ -44,6 +44,10 @@
       <li>follows our visualisation guidance</li>
       <li>only uses data that's published to the Data Workspace catalogue</li>
     </ul>
+    {% else %}
+    <h2 class="govuk-heading-m">Unapprove your visualisation</h2>
+    <p class="govuk-body">You've already approved this visualisation. Clicking the button below will reverse this action and you'll be removed from the approvers list at the top of the page.</p>
+    {% endif %}
     <form method="POST" action="{{ request.path }}" novalidate>
     {% csrf_token %}
     {{ form.non_field_errors }}
@@ -56,7 +60,6 @@
       <button type="submit" class="govuk-button" name="action" value="approve">Approve</button>
     {% endif %}
     </form> 
-  {% endif %}
 {% else %}
   {% if form_errors %}
   <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
