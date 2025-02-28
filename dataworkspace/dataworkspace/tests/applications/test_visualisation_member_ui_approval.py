@@ -49,7 +49,7 @@ def _visualisation_ui_gitlab_mocks(owner_access=False, access_level=30, project_
         ]
         owner_access_mock.return_value = owner_access
         project_members_mock.return_value = []
-        user_mock.return_value = [{"id": 3}]
+        user_mock.return_value = [{"id": 3, "name": "James Robinson"}]
         approver_type.return_value = "team member"
         project_members_mock.return_value = (
             project_members
@@ -75,18 +75,20 @@ def _visualisation_ui_gitlab_mocks(owner_access=False, access_level=30, project_
 
 
 class TestDataVisualisationMemberUIApprovalPage:
-    def assert_common_content(self, soup, all_approved=False):
+    def assert_common_content(self, soup, already_approved_by_member=False):
         header_two = soup.find_all("h2")
         first_header_two_text = header_two[0].contents
-        second_header_two_text = header_two[1].contents
         generic_approval_list = soup.find_all(attrs={"data-test": "generic_approval_list"})
         member_approval_list = soup.find_all(attrs={"data-test": "member_approval_list"})
-
-        assert "You're a Data Workspace team member" in first_header_two_text
-        if not all_approved:
-            assert "Approve this visualisation" in second_header_two_text
+        if already_approved_by_member is False:
+            assert "You're a Data Workspace team member" in first_header_two_text
             assert generic_approval_list
-        assert member_approval_list
+            assert member_approval_list
+        elif already_approved_by_member is True:
+            assert (
+                "This visualisation has been approved by a Data Workspace Team member"
+                in first_header_two_text
+            )
 
     @override_flag(settings.THIRD_APPROVER, active=True)
     @pytest.mark.django_db
@@ -114,7 +116,55 @@ class TestDataVisualisationMemberUIApprovalPage:
     @override_flag(settings.THIRD_APPROVER, active=True)
     @override_settings(GITLAB_FIXTURES=False)
     @pytest.mark.django_db
-    def test_member_view_with_one_peer_reviewer_approval(self):
+    def test_member_view_with_another_member_approval(self):
+        develop_visualisations_permission = Permission.objects.get(
+            codename="develop_visualisations",
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+        user = factories.UserFactory.create(is_superuser=True)
+        user.user_permissions.add(develop_visualisations_permission)
+        team_member_reviewer = factories.UserFactory.create(
+            first_name="Ledia", last_name="Luli", is_staff=False, is_superuser=True
+        )
+
+        v = factories.VisualisationTemplateFactory.create(gitlab_project_id=1)
+        factories.VisualisationCatalogueItemFactory.create(
+            name="test-gitlab-project",
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            visualisation_template=v,
+        )
+        factories.VisualisationApprovalFactory.create(
+            approved=True, visualisation=v, approver=team_member_reviewer
+        )
+
+        client = Client(**get_http_sso_data(user))
+        with _visualisation_ui_gitlab_mocks():
+            response = client.get(
+                reverse("visualisations:approvals", args=(1,)),
+                follow=True,
+            )
+        soup = BeautifulSoup(response.content.decode(response.charset), features="lxml")
+        approval_count_text = soup.find("p").contents
+        approval_list = soup.find(attrs={"data-test": "approvals-list"})
+        approval_list_items = approval_list.find_all("li")
+
+        self.assert_common_content(soup, already_approved_by_member=True)
+        assert len(approval_list_items) == 1
+        assert (
+            approval_list_items[0]
+            .get_text()
+            .startswith(
+                "A member of the Data Workspace team approved this visualisation on Jan. 1, 2025, 1:01 a.m."
+            )
+        )
+        assert "Currently 1 out of 3 have approved this visualisation." in approval_count_text
+        assert response.status_code == 200
+
+    @freeze_time("2025-01-01 01:01:01")
+    @override_flag(settings.THIRD_APPROVER, active=True)
+    @override_settings(GITLAB_FIXTURES=False)
+    @pytest.mark.django_db
+    def test_member_view_with_peer_reviewer_approval(self):
         develop_visualisations_permission = Permission.objects.get(
             codename="develop_visualisations",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
@@ -142,7 +192,6 @@ class TestDataVisualisationMemberUIApprovalPage:
                 follow=True,
             )
         soup = BeautifulSoup(response.content.decode(response.charset), features="lxml")
-        print(soup.contents)
         approval_count_text = soup.find("p").contents
         approval_list = soup.find(attrs={"data-test": "approvals-list"})
         approval_list_items = approval_list.find_all("li")
@@ -327,7 +376,7 @@ class TestDataVisualisationMemberUIApprovalPage:
         approval_list = soup.find(attrs={"data-test": "approvals-list"})
         approval_list_items = approval_list.find_all("li")
 
-        self.assert_common_content(soup, all_approved=True)
+        self.assert_common_content(soup)
         assert len(approval_list_items) == 3
         assert (
             approval_list_items[0]

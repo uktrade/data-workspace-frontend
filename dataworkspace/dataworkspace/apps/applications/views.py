@@ -1141,7 +1141,14 @@ def visualisation_approvals_html_GET(request, gitlab_project):
             if approver_types[approver_type]
         ]
     another_user_with_same_type_already_approved = (
-        len([p for p in project_approvals if p["status"] == current_user_type]) > 0
+        len(
+            [
+                p
+                for p in project_approvals
+                if p["status"] == current_user_type and p["name"] != current_gitlab_user[0]["name"]
+            ]
+        )
+        > 0
         if waffle.flag_is_active(request, settings.THIRD_APPROVER)
         else None
     )
