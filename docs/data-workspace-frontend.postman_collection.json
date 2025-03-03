@@ -50,7 +50,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://{{data_workspace_host}}/api/v1/dataset/catalogue-items",
+							"raw": "https://{{data_workspace_host}}/api/v1/application-instance/instances",
 							"protocol": "https",
 							"host": [
 								"{{data_workspace_host}}"
@@ -58,8 +58,8 @@
 							"path": [
 								"api",
 								"v1",
-								"dataset",
-								"catalogue-items"
+								"application-instance",
+								"instances"
 							]
 						}
 					},
@@ -160,7 +160,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://{{data_workspace_host}}/api/v1/dataset/catalogue-items",
+							"raw": "https://{{data_workspace_host}}/api/v1/reference-dataset/catalogue-items",
 							"protocol": "https",
 							"host": [
 								"{{data_workspace_host}}"
@@ -168,7 +168,7 @@
 							"path": [
 								"api",
 								"v1",
-								"dataset",
+								"reference-dataset",
 								"catalogue-items"
 							]
 						}
@@ -215,7 +215,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://{{data_workspace_host}}/api/v1/dataset/catalogue-items",
+							"raw": "https://{{data_workspace_host}}/api/v1/eventlog/events",
 							"protocol": "https",
 							"host": [
 								"{{data_workspace_host}}"
@@ -223,8 +223,8 @@
 							"path": [
 								"api",
 								"v1",
-								"dataset",
-								"catalogue-items"
+								"eventlog",
+								"events"
 							]
 						}
 					},
@@ -270,7 +270,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://{{data_workspace_host}}/api/v1/dataset/catalogue-items",
+							"raw": "https://{{data_workspace_host}}/api/v1/core/teams",
 							"protocol": "https",
 							"host": [
 								"{{data_workspace_host}}"
@@ -278,8 +278,8 @@
 							"path": [
 								"api",
 								"v1",
-								"dataset",
-								"catalogue-items"
+								"core",
+								"teams"
 							]
 						}
 					},
@@ -325,7 +325,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://{{data_workspace_host}}/api/v1/dataset/catalogue-items",
+							"raw": "https://{{data_workspace_host}}/api/v1/account/users",
 							"protocol": "https",
 							"host": [
 								"{{data_workspace_host}}"
@@ -333,8 +333,8 @@
 							"path": [
 								"api",
 								"v1",
-								"dataset",
-								"catalogue-items"
+								"account",
+								"users"
 							]
 						}
 					},
