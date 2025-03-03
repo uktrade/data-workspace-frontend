@@ -568,6 +568,36 @@ class TestUploadCSVPage(TestCase):
         )
         assert len(bullet_point_text) + len(bullet_point_text_two) == 6
 
+    def test_csv_upload_fails_when_it_contains_whitespace(self):
+        file1 = SimpleUploadedFile(
+            "white space.csv",
+            b"id,name\r\nA1,test1\r\nA2,test2\r\n",
+            content_type="text/csv",
+        )
+
+        response = self.client.post(
+            reverse(
+                "datasets:add_table:upload-csv",
+                kwargs={
+                    "pk": self.dataset.id,
+                    "schema": self.source.schema,
+                    "descriptive_name": self.descriptive_name,
+                    "table_name": self.table_name,
+                },
+            ),
+            data={"csv_file": file1},
+        )
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        error_message_text = (
+            soup.find("ul", class_="govuk-list govuk-error-summary__list").find("a").contents
+        )
+        assert response.status_code == 200
+        assert (
+            "File name cannot contain special characters apart from underscores and hyphens.  Special characters include whitespace, which we recommend replacing with underscores"
+            in error_message_text
+        )
+
     def test_csv_upload_fails_when_it_contains_special_chars(self):
         file1 = SimpleUploadedFile(
             "sp£c!al-ch@r$.csv",
