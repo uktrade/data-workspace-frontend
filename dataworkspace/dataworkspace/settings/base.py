@@ -121,7 +121,6 @@ INSTALLED_APPS = [
     "dataworkspace.apps.data_collections",
     "django_celery_results",
     "dataworkspace.apps.arangodb",
-    "corsheaders",
 ]
 
 MIDDLEWARE = [
@@ -138,7 +137,6 @@ MIDDLEWARE = [
     "django.contrib.redirects.middleware.RedirectFallbackMiddleware",
     "dataworkspace.apps.maintenance.maintenance.MaintenanceMiddleware",
     "maintenance_mode.middleware.MaintenanceModeMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
 ]
 
@@ -258,13 +256,14 @@ APPLICATION_ROOT_DOMAIN = env["APPLICATION_ROOT_DOMAIN"]
 APPLICATION_SPAWNER_OPTIONS = env.get("APPLICATION_SPAWNER_OPTIONS", {})
 
 # CSP Headers
-CSP_DEFAULT_SRC = [APPLICATION_ROOT_DOMAIN]
+CSP_DEFAULT_SRC = [APPLICATION_ROOT_DOMAIN, "'self' blob:", "'unsafe-inline'", "*.visualwebsiteoptimizer.com", "app.vwo.com"]
 CSP_OBJECT_SRC = ["'none'"]
 CSP_UPGRADE_INSECURE_REQUESTS = not LOCAL
 CSP_BASE_URI = [APPLICATION_ROOT_DOMAIN]
 CSP_FONT_SRC = [APPLICATION_ROOT_DOMAIN, "data:", "https://fonts.gstatic.com"]
 CSP_FORM_ACTION = [APPLICATION_ROOT_DOMAIN, f"*.{APPLICATION_ROOT_DOMAIN}"]
 CSP_FRAME_ANCESTORS = [APPLICATION_ROOT_DOMAIN]
+CSP_FRAME_SRC = ["*.visualwebsiteoptimizer.com", "app.vwo.com"]
 CSP_CONNECT_SRC = [
     APPLICATION_ROOT_DOMAIN,
     "https://www.google-analytics.com",
@@ -286,9 +285,11 @@ CSP_IMG_SRC = [
     "*.googletagmanager.com",
     "*.visualwebsiteoptimizer.com",
     "app.vwo.com",
+    "useruploads.vwo.io",
 ]
 CSP_SCRIPT_SRC = [
     APPLICATION_ROOT_DOMAIN,
+    "'unsafe-inline'",
     "https://www.googletagmanager.com",
     "https://www.google-analytics.com",
     "https://tagmanager.google.com",
@@ -305,6 +306,7 @@ CSP_STYLE_SRC = [
     "app.vwo.com",
 ]
 CSP_INCLUDE_NONCE_IN = ["script-src"]
+CSP_WORKER_SRC = ["'self' blob:"]
 
 # Allow for connecting to the webpack hotloader for local development
 if DEBUG:
@@ -845,9 +847,3 @@ MAINTENANCE_MODE_IGNORE_URLS = (r"^/healthcheck$",)
 MAINTENANCE_MODE_IGNORE_ADMIN_SITE = True
 MAINTENANCE_MODE_GET_CONTEXT = "dataworkspace.apps.maintenance.maintenance.maintenance_context"
 MAINTENANCE_MODE_STATE_BACKEND = "maintenance_mode.backends.CacheBackend"
-
-CORS_ALLOWED_ORIGINS = [
-    "useruploads.vwo.io",
-    "*.visualwebsiteoptimizer.com",
-    "app.vwo.com",
-]
