@@ -6,6 +6,7 @@ from dataworkspace.apps.datasets.data_dictionary import views as data_dictionary
 from dataworkspace.apps.datasets.search import suggested_searches
 from dataworkspace.apps.datasets.subscriptions import views as subscription_views
 from dataworkspace.apps.request_access.views import DatasetAccessRequest
+from dataworkspace.apps.datasets.requesting_data.views import StepOneView
 
 urlpatterns = [
     path("", login_required(views.find_datasets), name="find_datasets"),
@@ -298,7 +299,16 @@ urlpatterns = [
             ("dataworkspace.apps.datasets.add_table.urls", "dataset_add_table"),
             namespace="add_table",
         ),
+
     ),
+    path(
+        "requesting-data/",
+        include(
+            ("dataworkspace.apps.datasets.requesting_data.urls", "requesting_data"),
+            namespace="requesting_data",
+        ),
+    ),
+
     path(
         "<uuid:pk>/review-access/<int:user_id>",
         login_required(views.DataSetReviewAccess.as_view()),
