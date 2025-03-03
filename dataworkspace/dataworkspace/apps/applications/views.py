@@ -1075,7 +1075,7 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         if settings.GITLAB_FIXTURES:
             project_members = get_fixture("project_members_fixture.json")
         else:
-            project_members = gitlab_project_members(gitlab_project)
+            project_members = gitlab_project_members(gitlab_project["id"])
 
     approval = next(filter(lambda a: a.approver == request.user, dw_approvals), None)
 
