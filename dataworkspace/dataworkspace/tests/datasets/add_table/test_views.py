@@ -594,7 +594,7 @@ class TestUploadCSVPage(TestCase):
         )
         assert response.status_code == 200
         assert (
-            "File name cannot contain special characters apart from underscores and hyphens.  Special characters include whitespace, which we recommend replacing with underscores"
+            "File name cannot contain special characters apart from underscores and hyphens. Special characters include whitespace, which we recommend replacing with underscores"
             in error_message_text
         )
 

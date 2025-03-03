@@ -109,7 +109,7 @@ class UploadCSVForm(GOVUKDesignSystemForm):
         csv_name = cleaned_data["csv_file"]._name.replace(".csv", "")
         if bool(re.search(r"\s", csv_name)) is True:
             raise ValidationError(
-                "File name cannot contain special characters apart from underscores and hyphens. Special characters include whitespace, which we recommend replacing with underscores"
+                "File name cannot contain special characters apart from underscores and hyphens. Special characters include whitespace, which we recommend replacing with underscores"  # pylint: disable=line-too-long
             )
         if not bool(re.search(r"^[A-Za-z0-9_-]+$", csv_name)):
             raise ValidationError(
