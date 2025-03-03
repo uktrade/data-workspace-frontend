@@ -1090,7 +1090,7 @@ def visualisation_approvals_html_GET(request, gitlab_project):
                 ("provider", "oauth2_generic"),
             ),
         )
-        if len(current_gitlab_user):
+        if len(current_gitlab_user) > 1:
             return HttpResponse(status=500)
         current_gitlab_user = current_gitlab_user[0]
 
