@@ -11,6 +11,7 @@ django-admin-sortable2
 django-better-admin-arrayfield
 django-ckeditor
 django-compressor
+django-cors-headers
 django-csp
 django-csp-helpers
 django-db-connection-pool[postgresql]

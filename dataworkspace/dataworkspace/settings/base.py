@@ -121,6 +121,7 @@ INSTALLED_APPS = [
     "dataworkspace.apps.data_collections",
     "django_celery_results",
     "dataworkspace.apps.arangodb",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
@@ -137,6 +138,8 @@ MIDDLEWARE = [
     "django.contrib.redirects.middleware.RedirectFallbackMiddleware",
     "dataworkspace.apps.maintenance.maintenance.MaintenanceMiddleware",
     "maintenance_mode.middleware.MaintenanceModeMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
 ]
 
 if DEBUG:
@@ -842,3 +845,9 @@ MAINTENANCE_MODE_IGNORE_URLS = (r"^/healthcheck$",)
 MAINTENANCE_MODE_IGNORE_ADMIN_SITE = True
 MAINTENANCE_MODE_GET_CONTEXT = "dataworkspace.apps.maintenance.maintenance.maintenance_context"
 MAINTENANCE_MODE_STATE_BACKEND = "maintenance_mode.backends.CacheBackend"
+
+CORS_ALLOWED_ORIGINS = [
+    "useruploads.vwo.io",
+    "*.visualwebsiteoptimizer.com",
+    "app.vwo.com",
+]
