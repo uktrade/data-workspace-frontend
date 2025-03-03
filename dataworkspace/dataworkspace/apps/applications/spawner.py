@@ -311,6 +311,8 @@ class FargateSpawner:
 
             arangodb_env = arangodb_credentials
 
+            matchbox_env = {"MB__CLIENT__DEFAULT_WAREHOUSE": "postgresql://"}
+
             user_efs_access_point_id = (
                 user.profile.home_directory_efs_access_point_id
                 if application_instance.application_template.application_type == "TOOL"
@@ -431,6 +433,7 @@ class FargateSpawner:
                             **env,
                             **mlflow_env,
                             **arangodb_env,
+                            **matchbox_env,
                         },
                         s3_sync,
                         platform_version,
