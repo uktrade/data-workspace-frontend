@@ -1,0 +1,25 @@
+{% extends '_main.html' %}
+
+{% load waffle_tags %}
+
+{% block page_title %}Request a new dataset - {{ block.super }}{% endblock page_title %}
+{% block breadcrumbs %}
+<a href="{% url 'support' %}" class="govuk-back-link">Back</a>
+{% endblock %}
+{% block content %}
+        <h1 class="govuk-heading-l">{{ title }}</h2>
+
+{% for field in form %}
+{{ field }}
+{% endfor %}
+
+<p class="govuk-body">
+  <a href="{{ link }}" class="govuk-link">{{ link_text }}</a>
+</p>
+
+<button type="submit" class="govuk-button" data-module="govuk-button">
+  Continue
+</button>
+
+
+{% endblock %}
