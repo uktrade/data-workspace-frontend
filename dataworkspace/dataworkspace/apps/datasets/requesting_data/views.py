@@ -31,7 +31,7 @@ from dataworkspace.apps.datasets.add_table.forms import (
 )
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import RequestingDataset, SourceTable
-from dataworkspace.apps.datasets.requesting_data.forms import DatasetNameForm, DatasetDescriptionsForm
+from dataworkspace.apps.datasets.requesting_data.forms import DatasetNameForm, DatasetDescriptionsForm, DatasetRestrictionsForm
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -47,15 +47,15 @@ class DatasetNameView(FormView):
     form_class = DatasetNameForm
 
     def form_valid(self, form):
-        print('hello')
-
-        requesting_dataset = RequestingDataset.objects.get_or_create(
+        requesting_dataset = RequestingDataset.objects.create(
             name=form.cleaned_data.get("name"), type=DataSetType.MASTER)
 
-        # requesting_dataset.save()
         return HttpResponseRedirect(
             reverse(
-                "datasets:requesting_data:dataset-descriptions",))
+                "datasets:requesting_data:dataset-descriptions",
+                kwargs={"id": requesting_dataset.id},
+            )
+        )
 
 
 class DatasetDescriptionsView(FormView):
@@ -67,8 +67,39 @@ class DatasetDescriptionsView(FormView):
         context["title"] = "Summary information"
         context["link"] = "www.google.com"
         context["link_text"] = "Find out the best practice for writing descriptions."
-
         return context
+    
+    def form_valid(self, form):
+        id = self.kwargs.get("id")
+        requesting_dataset = RequestingDataset.objects.get(id=id)
+        requesting_dataset.short_description = form.cleaned_data.get("short_description")
+        requesting_dataset.description = form.cleaned_data.get("description")
+
+        return HttpResponseRedirect(
+            reverse(
+                "datasets:requesting_data:dataset-restrictions",
+                kwargs={"id": requesting_dataset.id},
+            )
+        )
+    
+
+class DatasetRestrictionsView(FormView):
+    template_name = "datasets/requesting_data/step_one.html"
+    form_class = DatasetRestrictionsForm
+
+    
+    def form_valid(self, form):
+        id = self.kwargs.get("id")
+        requesting_dataset = RequestingDataset.objects.get(id=id)
+        requesting_dataset.restrictions_on_usage = form.cleaned_data.get("restrictions_on_usage")
+
+        # return HttpResponseRedirect(
+        #     reverse(
+        #         "datasets:requesting_data:dataset-type",
+        #         kwargs={"id": requesting_dataset.id},
+        #     )
+        # )
+
 
 
 class BaseAddTableTemplateView(RequiredParameterGetRequestMixin, TemplateView):
