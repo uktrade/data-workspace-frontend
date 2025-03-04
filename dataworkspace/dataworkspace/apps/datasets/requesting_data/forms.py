@@ -7,6 +7,7 @@ from django.forms import ValidationError
 from dataworkspace.apps.core.forms import ConditionalSupportTypeRadioWidget
 from dataworkspace.apps.core.storage import malware_file_validator
 from dataworkspace.apps.core.utils import get_postgres_datatype_choices
+from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemChoiceField,
@@ -62,6 +63,20 @@ class DatasetDescriptionsForm(GOVUKDesignSystemForm):
             extra_label_classes="govuk-!-static-margin-0",
         ),
         error_messages={"required": "Enter a table name"},
+    )
+
+    title = "Summary information"
+
+
+class DatasetRestrictionsForm(GOVUKDesignSystemForm):
+
+    restrictions_on_usage = GOVUKDesignSystemRadioField(
+        label="What type of dataset is this?",
+        choices=[
+            (t, t.label)
+            for t in [DataSetType.MASTER, DataSetType.DATACUT, DataSetType.REFERENCE]
+        ],
+        widget=ConditionalSupportTypeRadioWidget(heading="h2"),
     )
 
     title = "Summary information"
