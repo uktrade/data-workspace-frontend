@@ -1099,6 +1099,7 @@ def visualisation_approvals_html_GET(request, gitlab_project):
     else:
         visualisation_branches = _visualisation_branches(gitlab_project)
     current_user_type = None
+    already_approved = None
     project_approvals = dw_approvals
     if waffle.flag_is_active(request, settings.THIRD_APPROVER):
         current_user_type = get_approver_type(
@@ -1143,6 +1144,7 @@ def visualisation_approvals_html_GET(request, gitlab_project):
             for approver_type in ["owner", "peer reviewer", "team member"]
             if approver_types[approver_type]
         ]
+        already_approved = request.user.get_full_name() in list(map(lambda x: x["name"], approvers))
     another_user_with_same_type_already_approved = (
         len(
             [
@@ -1181,6 +1183,7 @@ def visualisation_approvals_html_GET(request, gitlab_project):
                 if waffle.flag_is_active(request, settings.THIRD_APPROVER)
                 else dw_approvals
             ),
+            "already_approved": already_approved,
             "another_user_with_same_type_already_approved": another_user_with_same_type_already_approved,
             "current_user_already_approved": approval.approved if approval else False,
             "current_user_type": current_user_type,
