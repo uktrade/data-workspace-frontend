@@ -558,6 +558,14 @@ class DataSet(DeletableTimestampedUserModel):
             > 0
             or self.sourcelink_set.exclude(frequency="No longer updated").count() > 0
         )
+    
+
+class RequestingDataset(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.TextField(null=True, blank=True, max_length=128)
+    name = models.TextField(null=True, blank=True, max_length=128)
+    short_description = models.TextField(null=True, blank=True, max_length=255)
+    description = RichTextField(null=False, blank=False)
 
 
 class DataSetUserPermission(models.Model):
