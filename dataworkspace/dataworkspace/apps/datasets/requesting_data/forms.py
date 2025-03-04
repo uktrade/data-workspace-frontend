@@ -23,9 +23,20 @@ from dataworkspace.forms import (
 )
 
 
-class StepOneForm(GOVUKDesignSystemForm):
+class DatasetNameForm(GOVUKDesignSystemForm):
 
-    summarise_this_dataset = GOVUKDesignSystemTextareaField(
+    name = GOVUKDesignSystemCharField(
+        label="What is the name of the dataset?",
+        required=True,
+        widget=GOVUKDesignSystemTextWidget(label_is_heading=True),
+        error_messages={"required": "Enter a table name"},
+    )
+
+    title = "Summary information"
+
+class DatasetDescriptionsForm(GOVUKDesignSystemForm):
+
+    short_description = GOVUKDesignSystemTextareaField(
         label="Summarise this dataset",
         help_text="Please provide a brief description of what it contains.",
         required=True,
@@ -36,9 +47,10 @@ class StepOneForm(GOVUKDesignSystemForm):
               attrs={"rows": 5},
               extra_label_classes="govuk-!-static-margin-0",
         ),
+        error_messages={"required": "Enter a table name"},
     )
 
-    describe_this_dataset = GOVUKDesignSystemTextareaField(
+    description = GOVUKDesignSystemTextareaField(
         label="Describe this dataset",
         help_text="Please ensure this contains enough detail to ensure non-experts viewing the Data Workspace catalogue can understand it's contents. Minimum 30 words",
         required=True,
@@ -49,6 +61,7 @@ class StepOneForm(GOVUKDesignSystemForm):
             attrs={"rows": 5},
             extra_label_classes="govuk-!-static-margin-0",
         ),
+        error_messages={"required": "Enter a table name"},
     )
 
     title = "Summary information"

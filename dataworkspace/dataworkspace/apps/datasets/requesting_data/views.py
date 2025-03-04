@@ -29,8 +29,8 @@ from dataworkspace.apps.datasets.add_table.forms import (
     TableSchemaForm,
     UploadCSVForm,
 )
-from dataworkspace.apps.datasets.models import SourceTable
-from dataworkspace.apps.datasets.requesting_data.forms import StepOneForm
+from dataworkspace.apps.datasets.models import RequestingDataset, SourceTable
+from dataworkspace.apps.datasets.requesting_data.forms import DatasetNameForm, DatasetDescriptionsForm
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -41,9 +41,26 @@ from dataworkspace.forms import GOVUKDesignSystemRadioField, GOVUKDesignSystemRa
 logger = logging.getLogger(__name__)
 
 
-class StepOneView(FormView):
+class DatasetNameView(FormView):
     template_name = "datasets/requesting_data/step_one.html"
-    form_class = StepOneForm
+    form_class = DatasetNameForm
+    
+    def form_valid(self, form):
+        print('hello')
+
+        requesting_dataset = RequestingDataset.objects.get_or_create(
+            name = form.cleaned_data.get("name"))
+        
+        print(requesting_dataset)
+        print(requesting_dataset.__dict__)
+        print(requesting_dataset.name)
+
+        # requesting_dataset.save()
+    
+
+class DatasetDescriptionsView(FormView):
+    template_name = "datasets/requesting_data/step_one.html"
+    form_class = DatasetDescriptionsForm
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
