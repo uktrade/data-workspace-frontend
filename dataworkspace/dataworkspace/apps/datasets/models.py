@@ -574,6 +574,7 @@ class RequestingDataset(models.Model):
     enquiries_contact = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
     )
+    data_origin = models.TextField(null=True, blank=True, max_length=128)
     licence = models.CharField(
         null=True, blank=True, max_length=256, help_text="Licence description"
     )
