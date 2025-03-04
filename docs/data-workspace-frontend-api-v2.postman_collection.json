@@ -1,0 +1,275 @@
+{
+  "info": {
+    "_postman_id": "be9baa67-de3e-40bf-a214-73c32dc6d11c",
+    "name": "DW API v2",
+    "description": "**To use the endpoints you will need to:**\n\n1. Create a session on Data Workspace(staging) - [https://data.trade.staging.uktrade.digital/](https://data.trade.staging.uktrade.digital/)\n    \n2. Locate your browsers cookies. For example in Chrome open the dev toolbar and click the application tab.\n    \n3. Expand all the cookies under the following domain. [https://data.trade.staging.uktrade.digital/](https://data.trade.staging.uktrade.digital/)\n    \n4. Replace the collections `SESSION_ID` variable with the `__Secure-data_workspace_session` cookie value.\n    \n5. Replace the collections `CSRF_TOKEN` variable with the `__Secure-data_workspace_csrf` cookie value.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "2265347"
+  },
+  "item": [
+    {
+      "name": "Post inline feedback",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-CSRFToken",
+            "value": "{{CSRF_TOKEN}}",
+            "type": "text"
+          },
+          {
+            "key": "cookie",
+            "value": "__Secure-data_workspace_csrf={{CSRF_TOKEN}}",
+            "type": "text"
+          },
+          {
+            "key": "cookie",
+            "value": "__Secure-data_workspace_session={{SESSION_ID}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"was_this_page_helpful\": true,\n    \"location\": \"data-catalogue\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{BASE_URL}}inline_feedback",
+          "host": ["{{BASE_URL}}inline_feedback"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update inline feedback",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "X-CSRFToken",
+            "value": "{{CSRF_TOKEN}}"
+          },
+          {
+            "key": "cookie",
+            "value": "__Secure-data_workspace_session={{SESSION_ID}}",
+            "type": "text"
+          },
+          {
+            "key": "cookie",
+            "value": "__Secure-data_workspace_csrf={{CSRF_TOKEN}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"inline_feedback_choices\": \"This is great\",\n    \"more_detail\": \"More details\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{BASE_URL}}inline_feedback/1",
+          "host": ["{{BASE_URL}}inline_feedback"],
+          "path": ["1"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Bookmarks",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "cookie",
+            "value": "__Secure-data_workspace_session={{SESSION_ID}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}/your_bookmarks?page_size=5",
+          "host": ["{{BASE_URL}}"],
+          "path": ["your_bookmarks"],
+          "query": [
+            {
+              "key": "page_size",
+              "value": "5"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Recent items",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "cookie",
+            "value": "__Secure-data_workspace_session={{SESSION_ID}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}recent_items?page_size=5",
+          "host": ["{{BASE_URL}}recent_items"],
+          "query": [
+            {
+              "key": "page_size",
+              "value": "5"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Datasets",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "cookie",
+            "value": "__Secure-data_workspace_session={{SESSION_ID}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}datasets",
+          "host": ["{{BASE_URL}}datasets"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Visualisations",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "cookie",
+            "value": "__Secure-data_workspace_session={{SESSION_ID}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}visualisation",
+          "host": ["{{BASE_URL}}visualisation"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Recent tools",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "cookie",
+            "value": "__Secure-data_workspace_session={{SESSION_ID}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}recent_tools?page_size=2",
+          "host": ["{{BASE_URL}}recent_tools"],
+          "query": [
+            {
+              "key": "page_size",
+              "value": "2"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Recent collections",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "cookie",
+            "value": "__Secure-data_workspace_session={{SESSION_ID}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}collections/?page_size=3",
+          "host": ["{{BASE_URL}}collections"],
+          "path": [""],
+          "query": [
+            {
+              "key": "page_size",
+              "value": "3"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Reference",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "cookie",
+            "value": "__Secure-data_workspace_session={{SESSION_ID}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}reference",
+          "host": ["{{BASE_URL}}reference"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Manage data",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "cookie",
+            "value": "__Secure-data_workspace_session={{SESSION_ID}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}managed_data/stats",
+          "host": ["{{BASE_URL}}managed_data"],
+          "path": ["stats"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": []
+}
