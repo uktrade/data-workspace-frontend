@@ -29,6 +29,7 @@ from dataworkspace.apps.datasets.add_table.forms import (
     TableSchemaForm,
     UploadCSVForm,
 )
+from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import RequestingDataset, SourceTable
 from dataworkspace.apps.datasets.requesting_data.forms import DatasetNameForm, DatasetDescriptionsForm
 from dataworkspace.apps.datasets.utils import find_dataset
@@ -44,19 +45,18 @@ logger = logging.getLogger(__name__)
 class DatasetNameView(FormView):
     template_name = "datasets/requesting_data/step_one.html"
     form_class = DatasetNameForm
-    
+
     def form_valid(self, form):
         print('hello')
 
         requesting_dataset = RequestingDataset.objects.get_or_create(
-            name = form.cleaned_data.get("name"))
-        
-        print(requesting_dataset)
-        print(requesting_dataset.__dict__)
-        print(requesting_dataset.name)
+            name=form.cleaned_data.get("name"), type=DataSetType.MASTER)
 
         # requesting_dataset.save()
-    
+        return HttpResponseRedirect(
+            reverse(
+                "datasets:requesting_data:dataset-descriptions",))
+
 
 class DatasetDescriptionsView(FormView):
     template_name = "datasets/requesting_data/step_one.html"
