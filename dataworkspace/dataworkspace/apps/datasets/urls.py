@@ -6,7 +6,6 @@ from dataworkspace.apps.datasets.data_dictionary import views as data_dictionary
 from dataworkspace.apps.datasets.search import suggested_searches
 from dataworkspace.apps.datasets.subscriptions import views as subscription_views
 from dataworkspace.apps.request_access.views import DatasetAccessRequest
-from dataworkspace.apps.datasets.requesting_data.views import StepOneView
 
 urlpatterns = [
     path("", login_required(views.find_datasets), name="find_datasets"),
