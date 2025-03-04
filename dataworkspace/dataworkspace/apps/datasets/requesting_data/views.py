@@ -3,9 +3,13 @@ import os
 import uuid
 from datetime import datetime
 from urllib.parse import urlencode
+from django.db.models import Q
+
 
 from aiohttp import ClientError
 from django.conf import settings
+from django.contrib.auth import get_user_model
+
 from django.http import HttpResponseRedirect, HttpResponseServerError
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -30,20 +34,20 @@ from dataworkspace.apps.datasets.add_table.forms import (
     UploadCSVForm,
 )
 from dataworkspace.apps.datasets.constants import DataSetType
-from dataworkspace.apps.datasets.models import RequestingDataset, SourceTable
-from dataworkspace.apps.datasets.requesting_data.forms import DatasetNameForm, DatasetDescriptionsForm, DatasetRestrictionsForm
+from dataworkspace.apps.datasets.models import DataSet, DataSetUserPermission, RequestingDataset, SourceTable, VisualisationUserPermission
+from dataworkspace.apps.datasets.requesting_data.forms import DataSetOwnersForm, DatasetNameForm, DatasetDescriptionsForm, DatasetTypeOfDatasetForm
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.apps.your_files.utils import get_s3_csv_file_info
 from dataworkspace.apps.your_files.views import RequiredParameterGetRequestMixin
-from dataworkspace.forms import GOVUKDesignSystemRadioField, GOVUKDesignSystemRadiosWidget
+from dataworkspace.forms import GOVUKDesignSystemRadioField, GOVUKDesignSystemRadiosWidget, GOVUKDesignSystemTextareaField, GOVUKDesignSystemTextareaWidget
 
 logger = logging.getLogger(__name__)
 
 
 class DatasetNameView(FormView):
-    template_name = "datasets/requesting_data/step_one.html"
+    template_name = "datasets/requesting_data/summary_information.html"
     form_class = DatasetNameForm
 
     def form_valid(self, form):
@@ -59,7 +63,7 @@ class DatasetNameView(FormView):
 
 
 class DatasetDescriptionsView(FormView):
-    template_name = "datasets/requesting_data/step_one.html"
+    template_name = "datasets/requesting_data/summary_information.html"
     form_class = DatasetDescriptionsForm
 
     def get_context_data(self, **kwargs):
@@ -68,38 +72,142 @@ class DatasetDescriptionsView(FormView):
         context["link"] = "www.google.com"
         context["link_text"] = "Find out the best practice for writing descriptions."
         return context
-    
+
     def form_valid(self, form):
-        id = self.kwargs.get("id")
-        requesting_dataset = RequestingDataset.objects.get(id=id)
+        requesting_dataset = RequestingDataset.objects.get(id=self.kwargs.get("id"))
         requesting_dataset.short_description = form.cleaned_data.get("short_description")
         requesting_dataset.description = form.cleaned_data.get("description")
 
         return HttpResponseRedirect(
             reverse(
-                "datasets:requesting_data:dataset-restrictions",
+                "datasets:requesting_data:dataset-type",
                 kwargs={"id": requesting_dataset.id},
             )
         )
-    
 
-class DatasetRestrictionsView(FormView):
-    template_name = "datasets/requesting_data/step_one.html"
-    form_class = DatasetRestrictionsForm
 
-    
+class DatasetTypeOfDatasetView(FormView):
+    template_name = "datasets/requesting_data/summary_information.html"
+    form_class = DatasetTypeOfDatasetForm
+
     def form_valid(self, form):
-        id = self.kwargs.get("id")
-        requesting_dataset = RequestingDataset.objects.get(id=id)
-        requesting_dataset.restrictions_on_usage = form.cleaned_data.get("restrictions_on_usage")
+        requesting_dataset = RequestingDataset.objects.get(id=self.kwargs.get("id"))
+        requesting_dataset.type = form.cleaned_data.get("restrictions_on_usage")
 
-        # return HttpResponseRedirect(
-        #     reverse(
-        #         "datasets:requesting_data:dataset-type",
-        #         kwargs={"id": requesting_dataset.id},
+        return HttpResponseRedirect(
+            reverse(
+                "datasets:requesting_data:dataset-owners",
+                kwargs={"id": requesting_dataset.id},
+            )
+        )
+
+
+class DatasetOwnersView(FormView):
+    # template_name = "datasets/requesting_data/summary_information.html"
+    # form_class = DataSetOwnersForm
+
+    # search = GOVUKDesignSystemTextareaField(
+    #     label="Enter one or more email addresses on separate lines or search for a single user by name.",
+    #     widget=GOVUKDesignSystemTextareaWidget(
+    #         label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+    #     ),
+    #     error_messages={"required": "You must provide a search term."},
+    # )
+
+    # def form_valid(self, form):
+    #     requesting_dataset = RequestingDataset.objects.get(id=self.kwargs.get("id"))
+    #     requesting_dataset.restrictions_on_usage = form.cleaned_data.get("restrictions_on_usage")
+
+    #     return HttpResponseRedirect(
+    #         reverse(
+    #             "datasets:requesting_data:dataset-type",
+    #             kwargs={"id": requesting_dataset.id},
+    #         )
+    #     )
+
+    form_class = DataSetOwnersForm
+    form: None
+
+    def form_valid(self, form):
+        self.form = form
+        # requesting_dataset = RequestingDataset.objects.get(id=self.kwargs.get("id"))
+
+        search_query = self.request.POST["search"]
+        # self.request.session[
+        #     (
+        #         f"search-query--edit-dataset-iam--{self.kwargs.get("id")}"
         #     )
-        # )
+        # ] = search_query
 
+        return super().form_valid(form)
+
+    # def get_initial(self):
+    #     initial = super().get_initial()
+    #     try:
+    #         initial["search"] = self.request.session[
+    #             (
+    #                 f"search-query--add-dataset-iam--{self.kwargs.get("id")}"
+    #             )
+    #         ]
+    #     except KeyError:
+    #         pass
+    #     return initial
+
+    # def get_context_data(self, **kwargs):
+    #     context = super().get_context_data(**kwargs)
+    #     search_query = self.request.session.get(
+    #         f"search-query--add-dataset-iam--{self.kwargs.get("id")}"
+    #     )
+    #     if search_query:
+    #         if "\n" in search_query:
+    #             email_matches = []
+    #             non_email_matches = []
+    #             for query in search_query.splitlines():
+    #                 if not query.strip():
+    #                     continue
+    #                 matches_for_query = get_user_model().objects.filter(
+    #                     Q(email__iexact=query.strip())
+    #                 )
+    #                 for match in matches_for_query:
+    #                     email_matches.append(match)
+    #                 if not matches_for_query:
+    #                     non_email_matches.append(query)
+    #             context["search_results"] = email_matches
+    #             context["non_matches"] = non_email_matches
+
+    #         else:
+    #             search_query = search_query.strip()
+    #             email_filter = Q(email__icontains=search_query)
+    #             name_filter = Q(first_name__icontains=search_query) | Q(
+    #                 last_name__icontains=search_query
+    #             )
+    #             users = get_user_model().objects.filter(Q(email_filter | name_filter))
+    #             if not users.exists() and len(search_query.split("@")) != 1:
+    #                 users = get_user_model().objects.filter(
+    #                     email__istartswith=search_query.split("@")[0]
+    #                 )
+    #             if isinstance(self.obj, DataSet):
+    #                 permissions = DataSetUserPermission.objects.filter(dataset=self.obj)
+    #             else:
+    #                 permissions = VisualisationUserPermission.objects.filter(
+    #                     visualisation=self.obj
+    #                 )
+
+    #             users_with_permission = [p.user.id for p in permissions]
+    #             search_results = []
+
+    #             for user in users:
+    #                 search_results.append(
+    #                     {
+    #                         "id": user.id,
+    #                         "first_name": user.first_name,
+    #                         "last_name": user.last_name,
+    #                         "email": user.email,
+    #                         "has_access": user.id in users_with_permission,
+    #                     }
+    #                 )
+
+    #     return context
 
 
 class BaseAddTableTemplateView(RequiredParameterGetRequestMixin, TemplateView):

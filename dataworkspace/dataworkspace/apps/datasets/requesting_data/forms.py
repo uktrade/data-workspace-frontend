@@ -33,7 +33,6 @@ class DatasetNameForm(GOVUKDesignSystemForm):
         error_messages={"required": "Enter a table name"},
     )
 
-    title = "Summary information"
 
 class DatasetDescriptionsForm(GOVUKDesignSystemForm):
 
@@ -65,21 +64,29 @@ class DatasetDescriptionsForm(GOVUKDesignSystemForm):
         error_messages={"required": "Enter a table name"},
     )
 
-    title = "Summary information"
 
+class DatasetTypeOfDatasetForm(GOVUKDesignSystemForm):
 
-class DatasetRestrictionsForm(GOVUKDesignSystemForm):
-
-    restrictions_on_usage = GOVUKDesignSystemRadioField(
+    type_of_dataset = GOVUKDesignSystemRadioField(
+        required=True,
         label="What type of dataset is this?",
         choices=[
             (t, t.label)
             for t in [DataSetType.MASTER, DataSetType.DATACUT, DataSetType.REFERENCE]
         ],
-        widget=ConditionalSupportTypeRadioWidget(heading="h2"),
+        widget=ConditionalSupportTypeRadioWidget(heading="h2", label_size="m",
+                                                 ),
     )
 
-    title = "Summary information"
+
+class DataSetOwnersForm(GOVUKDesignSystemForm):
+    search = GOVUKDesignSystemTextareaField(
+        label="Enter one or more email addresses on separate lines or search for a single user by name.",
+        widget=GOVUKDesignSystemTextareaWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        error_messages={"required": "You must provide a search term."},
+    )
 
 
 class TableNameForm(GOVUKDesignSystemForm):
