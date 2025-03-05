@@ -1144,7 +1144,9 @@ def visualisation_approvals_html_GET(request, gitlab_project):
             for approver_type in ["owner", "peer reviewer", "team member"]
             if approver_types[approver_type]
         ]
-        already_approved = request.user.get_full_name() in list(map(lambda x: x["name"], approvers))
+        already_approved = request.user.get_full_name() in list(
+            map(lambda x: x["name"], approvers)
+        )
     another_user_with_same_type_already_approved = (
         len(
             [
