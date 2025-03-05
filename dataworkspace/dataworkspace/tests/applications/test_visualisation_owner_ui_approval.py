@@ -18,7 +18,12 @@ from dataworkspace.tests.common import get_http_sso_data
 
 
 @contextmanager
-def _visualisation_ui_gitlab_mocks(owner_access=True, access_level=30, project_members=None):
+def _visualisation_ui_gitlab_mocks(
+    owner_access=True,
+    access_level=40,
+    project_members=None,
+    user=[{"id": 3, "name": "Ledia Luli"}],
+):
     with mock.patch(
         "dataworkspace.apps.applications.views._visualisation_gitlab_project"
     ) as projects_mock, mock.patch(
@@ -61,24 +66,29 @@ def _visualisation_ui_gitlab_mocks(owner_access=True, access_level=30, project_m
                 }
             ]
         )
-        user_mock.return_value = [{"id": 3, "name": "James Robinson"}]
+        user_mock.return_value = user
         approver_type.return_value = "owner"
 
         yield projects_mock, branches_mock, access_mock, owner_access_mock, user_mock, project_members_mock, approver_type
 
 
 class TestDataVisualisationOwnerUIApprovalPage:
-    def assert_common_content(self, soup, all_approved=False):
+    def assert_common_content(self, soup, self_approval=False):
         header_two = soup.find_all("h2")
+        buttons = soup.find_all("button", attrs={"type": "submit"})
         first_header_two_text = header_two[0].contents
         second_header_two_text = header_two[1].contents
         generic_approval_list = soup.find_all(attrs={"data-test": "generic_approval_list"})
         owner_approval_list = soup.find_all(attrs={"data-test": "owner_approval_list"})
 
         assert "Who needs to approve this visualisation" in first_header_two_text
-        if not all_approved:
+        if self_approval is False:
+            assert generic_approval_list
+            assert "Approve" in buttons[0].contents
             assert "Approve this visualisation" in second_header_two_text
             assert generic_approval_list
+        else:
+            assert "Unapprove" in buttons[0].contents
         assert owner_approval_list
 
     @override_flag(settings.THIRD_APPROVER, active=True)
@@ -88,10 +98,22 @@ class TestDataVisualisationOwnerUIApprovalPage:
             codename="develop_visualisations",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
-        user = factories.UserFactory.create(is_staff=False)
-        user.user_permissions.add(develop_visualisations_permission)
-        client = Client(**get_http_sso_data(user))
-        with _visualisation_ui_gitlab_mocks():
+        owner = factories.UserFactory.create(
+            first_name="Ledia", last_name="Luli", is_staff=False, is_superuser=False
+        )
+        owner.user_permissions.add(develop_visualisations_permission)
+        client = Client(**get_http_sso_data(owner))
+        with _visualisation_ui_gitlab_mocks(
+            user=[
+                {
+                    "id": 2,
+                    "name": "Ledia Luli",
+                    "username": "ledia.luli",
+                    "state": "active",
+                    "access_level": 40,
+                }
+            ]
+        ):
             response = client.get(
                 reverse("visualisations:approvals", args=(1,)),
                 follow=True,
@@ -107,15 +129,15 @@ class TestDataVisualisationOwnerUIApprovalPage:
     @override_flag(settings.THIRD_APPROVER, active=True)
     @override_settings(GITLAB_FIXTURES=False)
     @pytest.mark.django_db
-    def test_owner_view_with_owner_approval(self):
+    def test_owner_view_with_self_approval(self):
         develop_visualisations_permission = Permission.objects.get(
             codename="develop_visualisations",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
-        user = factories.UserFactory.create(
+        owner = factories.UserFactory.create(
             first_name="Ledia", last_name="Luli", is_staff=False, is_superuser=False
         )
-        user.user_permissions.add(develop_visualisations_permission)
+        owner.user_permissions.add(develop_visualisations_permission)
 
         v = factories.VisualisationTemplateFactory.create(gitlab_project_id=1)
         factories.VisualisationCatalogueItemFactory.create(
@@ -124,11 +146,11 @@ class TestDataVisualisationOwnerUIApprovalPage:
             visualisation_template=v,
         )
         factories.VisualisationApprovalFactory.create(
-            approved=True, visualisation=v, approver=user
+            approved=True, visualisation=v, approver=owner
         )
 
-        client = Client(**get_http_sso_data(user))
-        with _visualisation_ui_gitlab_mocks(access_level=40):
+        client = Client(**get_http_sso_data(owner))
+        with _visualisation_ui_gitlab_mocks():
             response = client.get(
                 reverse("visualisations:approvals", args=(1,)),
                 follow=True,
@@ -138,14 +160,12 @@ class TestDataVisualisationOwnerUIApprovalPage:
         approval_list = soup.find(attrs={"data-test": "approvals-list"})
         approval_list_items = approval_list.find_all("li")
 
-        self.assert_common_content(soup)
+        self.assert_common_content(soup, self_approval=True)
         assert len(approval_list_items) == 1
         assert (
             approval_list_items[0]
             .get_text()
-            .startswith(
-                "Ledia Luli (owner) approved this visualisation on Jan. 1, 2025, 1:01 a.m."
-            )
+            .startswith("You approved this visualisation on Jan. 1, 2025, 1:01 a.m.")
         )
         assert "Currently 1 out of 3 have approved this visualisation." in approval_count_text
         assert response.status_code == 200
@@ -159,11 +179,13 @@ class TestDataVisualisationOwnerUIApprovalPage:
             codename="develop_visualisations",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
-        user = factories.UserFactory.create(is_staff=False, is_superuser=False)
-        user.user_permissions.add(develop_visualisations_permission)
+        owner = factories.UserFactory.create(
+            first_name="Ledia", last_name="Luli", is_staff=False, is_superuser=False
+        )
+        owner.user_permissions.add(develop_visualisations_permission)
 
         peer_reviewer = factories.UserFactory.create(
-            first_name="Ledia", last_name="Luli", is_staff=False, is_superuser=False
+            first_name="Ian", last_name="Leggett", is_staff=False, is_superuser=False
         )
 
         v = factories.VisualisationTemplateFactory.create(gitlab_project_id=1)
@@ -176,8 +198,34 @@ class TestDataVisualisationOwnerUIApprovalPage:
             approved=True, visualisation=v, approver=peer_reviewer
         )
 
-        client = Client(**get_http_sso_data(user))
-        with _visualisation_ui_gitlab_mocks():
+        client = Client(**get_http_sso_data(owner))
+        with _visualisation_ui_gitlab_mocks(
+            project_members=[
+                {
+                    "id": 2,
+                    "name": "Ledia Luli",
+                    "username": "ledia.luli",
+                    "state": "active",
+                    "access_level": 40,
+                },
+                {
+                    "id": 3,
+                    "name": "Ian Leggett",
+                    "username": "ian.leggett",
+                    "state": "active",
+                    "access_level": 30,
+                },
+            ],
+            user=[
+                {
+                    "id": 2,
+                    "name": "Ledia Luli",
+                    "username": "ledia.luli",
+                    "state": "active",
+                    "access_level": 40,
+                }
+            ],
+        ):
             response = client.get(
                 reverse("visualisations:approvals", args=(1,)),
                 follow=True,
@@ -188,12 +236,13 @@ class TestDataVisualisationOwnerUIApprovalPage:
         approval_list_items = approval_list.find_all("li")
 
         self.assert_common_content(soup)
+        print(list(ap.get_text() for ap in approval_list_items))
         assert len(approval_list_items) == 1
         assert (
             approval_list_items[0]
             .get_text()
             .startswith(
-                "Ledia Luli (peer reviewer) approved this visualisation on Jan. 1, 2025, 1:01 a.m."
+                "Ian Leggett (peer reviewer) approved this visualisation on Jan. 1, 2025, 1:01 a.m."
             )
         )
         assert "Currently 1 out of 3 have approved this visualisation." in approval_count_text
@@ -208,11 +257,13 @@ class TestDataVisualisationOwnerUIApprovalPage:
             codename="develop_visualisations",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
-        user = factories.UserFactory.create(is_staff=False, is_superuser=False)
-        user.user_permissions.add(develop_visualisations_permission)
+        owner = factories.UserFactory.create(
+            first_name="Ledia", last_name="Luli", is_staff=False, is_superuser=False
+        )
+        owner.user_permissions.add(develop_visualisations_permission)
 
         team_member_reviewer = factories.UserFactory.create(
-            first_name="Ledia", last_name="Luli", is_staff=False, is_superuser=True
+            first_name="James", last_name="Robinson", is_staff=False, is_superuser=True
         )
 
         v = factories.VisualisationTemplateFactory.create(gitlab_project_id=1)
@@ -225,8 +276,34 @@ class TestDataVisualisationOwnerUIApprovalPage:
             approved=True, visualisation=v, approver=team_member_reviewer
         )
 
-        client = Client(**get_http_sso_data(user))
-        with _visualisation_ui_gitlab_mocks():
+        client = Client(**get_http_sso_data(owner))
+        with _visualisation_ui_gitlab_mocks(
+            project_members=[
+                {
+                    "id": 2,
+                    "name": "Ledia Luli",
+                    "username": "ledia.luli",
+                    "state": "active",
+                    "access_level": 40,
+                },
+                {
+                    "id": 3,
+                    "name": "James Robinson",
+                    "username": "james.robinson",
+                    "state": "active",
+                    "access_level": 30,
+                },
+            ],
+            user=[
+                {
+                    "id": 2,
+                    "name": "Ledia Luli",
+                    "username": "ledia.luli",
+                    "state": "active",
+                    "access_level": 40,
+                }
+            ],
+        ):
             response = client.get(
                 reverse("visualisations:approvals", args=(1,)),
                 follow=True,
@@ -257,10 +334,10 @@ class TestDataVisualisationOwnerUIApprovalPage:
             codename="develop_visualisations",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
-        user = factories.UserFactory.create(
+        owner = factories.UserFactory.create(
             first_name="Ledia", last_name="Luli", is_staff=False, is_superuser=False
         )
-        user.user_permissions.add(develop_visualisations_permission)
+        owner.user_permissions.add(develop_visualisations_permission)
 
         team_member_reviewer = factories.UserFactory.create(
             first_name="James", last_name="Robinson", is_staff=False, is_superuser=True
@@ -283,7 +360,7 @@ class TestDataVisualisationOwnerUIApprovalPage:
             approved=True, visualisation=v, approver=peer_reviewer
         )
         factories.VisualisationApprovalFactory.create(
-            approved=True, visualisation=v, approver=user
+            approved=True, visualisation=v, approver=owner
         )
 
         project_members = [
@@ -310,8 +387,19 @@ class TestDataVisualisationOwnerUIApprovalPage:
             },
         ]
 
-        client = Client(**get_http_sso_data(user))
-        with _visualisation_ui_gitlab_mocks(project_members=project_members):
+        client = Client(**get_http_sso_data(owner))
+        with _visualisation_ui_gitlab_mocks(
+            project_members=project_members,
+            user=[
+                {
+                    "id": 2,
+                    "name": "Ledia Luli",
+                    "username": "ledia.luli",
+                    "state": "active",
+                    "access_level": 40,
+                }
+            ],
+        ):
             response = client.get(
                 reverse("visualisations:approvals", args=(1,)),
                 follow=True,
@@ -321,14 +409,13 @@ class TestDataVisualisationOwnerUIApprovalPage:
         approval_list = soup.find(attrs={"data-test": "approvals-list"})
         approval_list_items = approval_list.find_all("li")
 
-        self.assert_common_content(soup, all_approved=True)
+        self.assert_common_content(soup, self_approval=True)
         assert len(approval_list_items) == 3
+        print(list(ap.get_text() for ap in approval_list_items))
         assert (
             approval_list_items[0]
             .get_text()
-            .startswith(
-                "Ledia Luli (owner) approved this visualisation on Jan. 1, 2025, 1:01 a.m."
-            )
+            .startswith("You approved this visualisation on Jan. 1, 2025, 1:01 a.m.")
         )
         assert (
             approval_list_items[1]
