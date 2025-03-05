@@ -35,6 +35,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     ApplicationInstanceDbUsers,
     ApplicationTemplate,
+    VisualisationApproval,
 )
 from dataworkspace.apps.applications.spawner import (
     _fargate_task_describe,
@@ -1943,3 +1944,45 @@ def has_all_three_approval_types(approvals: list[dict]) -> bool:
         len([a for a in approvals if a["status"] == approval_type]) > 0
         for approval_type in ["owner", "peer reviewer", "team member"]
     )
+
+def visualisation_approvals(dw_approvals, project_members):
+    approvers = [
+            {
+                "name": a.approver.get_full_name(),
+                "date_approved": a.created_date,
+                "is_superuser": a.approver.is_superuser,
+                "status": None,
+            }
+            for a in dw_approvals
+            if a.approved
+        ]
+    # match the Django database list of approvers to their GitLab identity to
+    # get level of access with GitLab project for visualisation
+    for approver in approvers:
+        for member in project_members:
+            if approver["name"] == member["name"]:
+                approver["status"] = (
+                    "team member"
+                    if approver["is_superuser"] and member["access_level"] == 30
+                    else (
+                        "owner"
+                        if member["access_level"] == 40
+                        else "peer reviewer" if member["access_level"] == 30 else None
+                    )
+                )
+    approver_types = {"owner": [], "peer reviewer": [], "team member": []}
+    # Split the list into all the owners, peer reviewers and team members that have approved.
+    # Sort them by the person who approved first
+    for approver in filter(lambda x: x["status"], approvers):
+        approver_types[approver["status"]].append(approver)
+
+    for approver_type in ["owner", "peer reviewer", "team member"]:
+        approver_types[approver_type].sort(key=lambda x: x["date_approved"])
+    
+    project_approvals = [
+        approver_types[approver_type][0]
+        for approver_type in ["owner", "peer reviewer", "team member"]
+        if approver_types[approver_type]
+    ]
+    is_approved_by_all = has_all_three_approval_types(project_approvals)
+    return (is_approved_by_all, project_approvals)
