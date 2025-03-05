@@ -1,9 +1,15 @@
 from django.contrib.auth import get_user_model
 from django.forms import ValidationError
 
+
+from dataworkspace.apps.datasets.models import RequestingDataset
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemForm,
+    GOVUKDesignSystemModelForm,
+    GOVUKDesignSystemTextWidget,
+    GOVUKDesignSystemModelForm,
+
     GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
@@ -135,3 +141,19 @@ class DatasetSystemForm(GOVUKDesignSystemForm):
         widget=GOVUKDesignSystemTextWidget(label_is_heading=True),
         error_messages={"required": "Enter a table name"},
     )
+
+
+class DaatasetSecurityClassificationForm(GOVUKDesignSystemModelForm):
+
+    class Meta:
+        model = RequestingDataset
+        fields = [
+            "government_security_classification",
+            "sensitivity",
+        ]
+    # sensitivity = GOVUKDesignSystemRadioField(
+    #     required=False,
+    #     label="What would you like to do?",
+    #     choices=SecurityClassificationTypes.choices,
+    #     widget=ConditionalSupportTypeRadioWidget(heading="h2", attrs={'data-type', 'sensitivity'}),
+    # )
