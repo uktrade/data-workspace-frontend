@@ -35,7 +35,7 @@ from dataworkspace.apps.datasets.add_table.forms import (
 )
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import DataSet, DataSetUserPermission, RequestingDataset, SourceTable, VisualisationUserPermission
-from dataworkspace.apps.datasets.requesting_data.forms import DataSetOwnersForm, DatasetNameForm, DatasetDescriptionsForm, DatasetDataOriginForm
+from dataworkspace.apps.datasets.requesting_data.forms import DataSetOwnersForm, DatasetNameForm, DatasetDescriptionsForm, DatasetDataOriginForm, DatasetSystemForm
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.datasets.views import UserSearchFormView
 from dataworkspace.apps.eventlog.models import EventLog
@@ -109,13 +109,22 @@ class DatasetOwnersView(FormView):
 
     def form_valid(self, form):
         requesting_dataset = RequestingDataset.objects.get(id=self.kwargs.get("id"))
-        User = get_user_model()
-        print('HELLOOOOOOOO')
-        for user in User.objects.all():
-            print(user.__dict__)
-        # requesting_dataset.information_asset_owner = form.cleaned_data.get("information_asset_owner")
+
+        requesting_dataset.information_asset_owner = form.cleaned_data["iao_user"]
+        requesting_dataset.information_asset_manager = form.cleaned_data["iam_user"]
+        requesting_dataset.enquiries_contact = form.cleaned_data["enquiries_contact_user"]
+
+        return HttpResponseRedirect(
+            reverse(
+                "datasets:requesting_data:dataset-system",
+                kwargs={"id": requesting_dataset.id},
+            )
+        )
 
 
+class DatasetSystemView(FormView):
+    template_name = "datasets/requesting_data/summary_information.html"
+    form_class = DatasetSystemForm
 
 
 
