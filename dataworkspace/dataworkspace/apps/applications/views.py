@@ -60,7 +60,7 @@ from dataworkspace.apps.applications.utils import (
     application_options,
     fetch_visualisation_log_events,
     get_quicksight_dashboard_name_url,
-    has_all_three_approval_types,
+    visualisation_approvals,
     stop_spawner_and_application,
     sync_quicksight_permissions,
 )
@@ -1076,6 +1076,7 @@ def visualisation_approvals_html_GET(request, gitlab_project):
     dw_approvals = VisualisationApproval.objects.filter(
         visualisation=application_template, approved=True
     ).all()
+
     if waffle.flag_is_active(request, settings.THIRD_APPROVER):
         if settings.GITLAB_FIXTURES:
             project_members = get_fixture("project_members_fixture.json")
@@ -1106,45 +1107,8 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         current_user_type = get_approver_type(
             gitlab_project["id"], request.user, current_gitlab_user
         )
-        # Create a list of approvers based on the list from dataworkspace
-        approvers = [
-            {
-                "name": a.approver.get_full_name(),
-                "date_approved": a.created_date,
-                "is_superuser": a.approver.is_superuser,
-                "status": None,
-            }
-            for a in dw_approvals
-            if a.approved
-        ]
-        # match the Django database list of approvers to their GitLab identity to
-        # get level of access with GitLab project for visualisation
-        for approver in approvers:
-            for member in project_members:
-                if approver["name"] == member["name"]:
-                    approver["status"] = (
-                        "team member"
-                        if approver["is_superuser"] and member["access_level"] == 30
-                        else (
-                            "owner"
-                            if member["access_level"] == 40
-                            else "peer reviewer" if member["access_level"] == 30 else None
-                        )
-                    )
-        approver_types = {"owner": [], "peer reviewer": [], "team member": []}
-        # Split the list into all the owners, peer reviewers and team members that have approved.
-        # Sort them by the person who approved first
-        for approver in filter(lambda x: x["status"], approvers):
-            approver_types[approver["status"]].append(approver)
 
-        for approver_type in ["owner", "peer reviewer", "team member"]:
-            approver_types[approver_type].sort(key=lambda x: x["date_approved"])
-
-        project_approvals = [
-            approver_types[approver_type][0]
-            for approver_type in ["owner", "peer reviewer", "team member"]
-            if approver_types[approver_type]
-        ]
+        is_approved_by_all, project_approvals = visualisation_approvals(dw_approvals, project_members)
     another_user_with_same_type_already_approved = (
         len(
             [
@@ -1157,11 +1121,13 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         if waffle.flag_is_active(request, settings.THIRD_APPROVER)
         else None
     )
+
     is_approved_by_all = (
-        has_all_three_approval_types(project_approvals)
+        is_approved_by_all
         if waffle.flag_is_active(request, settings.THIRD_APPROVER)
         else None
     )
+
     form = VisualisationApprovalForm(
         instance=approval,
         initial={
