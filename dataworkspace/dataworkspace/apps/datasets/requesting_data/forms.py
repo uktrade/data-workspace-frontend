@@ -47,7 +47,6 @@ class DatasetDescriptionsForm(GOVUKDesignSystemForm):
               attrs={"rows": 5},
               extra_label_classes="govuk-!-static-margin-0",
         ),
-        error_messages={"required": "Enter a table name"},
     )
 
     description = GOVUKDesignSystemTextareaField(
@@ -61,74 +60,24 @@ class DatasetDescriptionsForm(GOVUKDesignSystemForm):
             attrs={"rows": 5},
             extra_label_classes="govuk-!-static-margin-0",
         ),
-        error_messages={"required": "Enter a table name"},
     )
 
 
-class DatasetTypeOfDatasetForm(GOVUKDesignSystemForm):
+class DatasetDataOriginForm(GOVUKDesignSystemForm):
 
-    type_of_dataset = GOVUKDesignSystemRadioField(
-        required=True,
+    data_origin = GOVUKDesignSystemCharField(
         label="What type of dataset is this?",
-        choices=[
-            (t, t.label)
-            for t in [DataSetType.MASTER, DataSetType.DATACUT, DataSetType.REFERENCE]
-        ],
-        widget=ConditionalSupportTypeRadioWidget(heading="h2", label_size="m",
-                                                 ),
+        required=True,
+        widget=GOVUKDesignSystemTextWidget(label_is_heading=True),
     )
 
 
 class DataSetOwnersForm(GOVUKDesignSystemForm):
-    search = GOVUKDesignSystemTextareaField(
-        label="Enter one or more email addresses on separate lines or search for a single user by name.",
-        widget=GOVUKDesignSystemTextareaWidget(
-            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
-        ),
-        error_messages={"required": "You must provide a search term."},
-    )
 
-
-class TableNameForm(GOVUKDesignSystemForm):
-    table_name = GOVUKDesignSystemCharField(
-        label="Enter your table name",
+    information_asset_owner = GOVUKDesignSystemCharField(
+        label="Name of Information Asset Owner",
+        help_text="IAO's are responsible for ensuring information assets are handled and managed appropriately",
         required=True,
-        help_text="Your table name needs to be unique, have less than 42 characters and not contain any special characters apart from underscores.",  # pylint: disable=line-too-long
-        error_messages={"required": "Enter a table name"},
+        widget=GOVUKDesignSystemTextWidget(label_is_heading=True),
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        kwargs = kwargs.pop("initial")
-        schema = kwargs["schema"] + "."
-        descriptive_name = kwargs["descriptive_name"].replace(" ", "_").lower()
-        self.table_names = kwargs["table_names"]
-        self.fields["table_name"].widget = GOVUKDesignSystemTextCharCountWidget(
-            prefix=schema,
-            character_limit="42",
-        )
-        self.fields["table_name"].widget.attrs.update(
-            {
-                "label": self.fields["table_name"].label,
-                "help_text": self.fields["table_name"].help_text,
-            }
-        )
-
-        self.fields["table_name"].initial = descriptive_name
-
-    def clean_table_name(self):
-        cleaned_data = super().clean()
-        table_name = str(cleaned_data["table_name"])
-        if len(table_name) > 42:
-            raise ValidationError("Table name must be 42 characters or less")
-        elif bool(re.search(r"[^A-Za-z0-9_]", table_name)):
-            raise ValidationError("Table name cannot contain special characters")
-        elif table_name in self.table_names:
-            raise ValidationError("Table name already in use")
-        elif "dataset" in table_name:
-            raise ValidationError("Table name cannot contain the word 'dataset'")
-        elif "data" in table_name:
-            raise ValidationError("Table name cannot contain the word 'data'")
-        elif "record" in table_name:
-            raise ValidationError("Table name cannot contain the word 'record'")
-        return table_name
