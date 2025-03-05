@@ -1,22 +1,18 @@
 from contextlib import contextmanager
 from unittest import mock
-from freezegun import freeze_time
+
 import pytest
 from bs4 import BeautifulSoup
-
-from waffle.testutils import override_flag
 from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.test import Client, override_settings
 from django.urls import reverse
+from freezegun import freeze_time
+from waffle.testutils import override_flag
 
+from dataworkspace.apps.applications.models import ApplicationInstance, VisualisationApproval
 from dataworkspace.apps.datasets.constants import UserAccessType
-from dataworkspace.apps.applications.models import (
-    ApplicationInstance,
-    VisualisationApproval,
-)
-
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
 
