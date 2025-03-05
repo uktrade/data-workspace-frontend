@@ -22,7 +22,7 @@ def _visualisation_ui_gitlab_mocks(
     peer_reviewer_access=True,
     access_level=30,
     project_members=None,
-    user=[{"id": 3, "name": "Ledia Luli"}],
+    user=None,
 ):
     with mock.patch(
         "dataworkspace.apps.applications.views._visualisation_gitlab_project"
@@ -63,7 +63,7 @@ def _visualisation_ui_gitlab_mocks(
                 }
             ]
         )
-        user_mock.return_value = user
+        user_mock.return_value = user if user else [{"id": 3, "name": "Ledia Luli"}]
         approver_type.return_value = "peer reviewer"
 
         yield projects_mock, branches_mock, access_mock, user_mock, project_members_mock, approver_type

@@ -22,7 +22,7 @@ def _visualisation_ui_gitlab_mocks(
     owner_access=False,
     access_level=30,
     project_members=None,
-    user=[{"id": 3, "name": "James Robinson"}],
+    user=None,
 ):
     with mock.patch(
         "dataworkspace.apps.applications.views._visualisation_gitlab_project"
@@ -54,7 +54,7 @@ def _visualisation_ui_gitlab_mocks(
         ]
         owner_access_mock.return_value = owner_access
         project_members_mock.return_value = []
-        user_mock.return_value = user
+        user_mock.return_value = user if user else [{"id": 3, "name": "James Robinson"}]
         approver_type.return_value = "team member"
         project_members_mock.return_value = (
             project_members
