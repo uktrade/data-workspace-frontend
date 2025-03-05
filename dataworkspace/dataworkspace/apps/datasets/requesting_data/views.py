@@ -35,7 +35,7 @@ from dataworkspace.apps.datasets.add_table.forms import (
 )
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import DataSet, DataSetUserPermission, RequestingDataset, SourceTable, VisualisationUserPermission
-from dataworkspace.apps.datasets.requesting_data.forms import DataSetOwnersForm, DatasetNameForm, DatasetDescriptionsForm, DatasetTypeOfDatasetForm
+from dataworkspace.apps.datasets.requesting_data.forms import DataSetOwnersForm, DatasetNameForm, DatasetDescriptionsForm, DatasetDataOriginForm
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.datasets.views import UserSearchFormView
 from dataworkspace.apps.eventlog.models import EventLog
@@ -81,19 +81,19 @@ class DatasetDescriptionsView(FormView):
 
         return HttpResponseRedirect(
             reverse(
-                "datasets:requesting_data:dataset-type",
+                "datasets:requesting_data:dataset-data-origin",
                 kwargs={"id": requesting_dataset.id},
             )
         )
 
 
-class DatasetTypeOfDatasetView(FormView):
+class DatasetDataOriginView(FormView):
     template_name = "datasets/requesting_data/summary_information.html"
-    form_class = DatasetTypeOfDatasetForm
+    form_class = DatasetDataOriginForm
 
     def form_valid(self, form):
         requesting_dataset = RequestingDataset.objects.get(id=self.kwargs.get("id"))
-        requesting_dataset.type = form.cleaned_data.get("restrictions_on_usage")
+        requesting_dataset.data_origin = form.cleaned_data.get("data_origin")
 
         return HttpResponseRedirect(
             reverse(
@@ -103,19 +103,20 @@ class DatasetTypeOfDatasetView(FormView):
         )
 
 
-class DatasetOwnersView(UserSearchFormView):
+class DatasetOwnersView(FormView):
     template_name = "datasets/requesting_data/summary_information.html"
+    form_class = DataSetOwnersForm
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
-
-    def get_success_url(self):
+    def form_valid(self, form):
         requesting_dataset = RequestingDataset.objects.get(id=self.kwargs.get("id"))
-        return reverse(
-            "datasets:requesting_data:dataset-type",
-            kwargs={"id": requesting_dataset.id},
-        )
+        User = get_user_model()
+        print('HELLOOOOOOOO')
+        for user in User.objects.all():
+            print(user.__dict__)
+        # requesting_dataset.information_asset_owner = form.cleaned_data.get("information_asset_owner")
+
+
+
 
 
 class BaseAddTableTemplateView(RequiredParameterGetRequestMixin, TemplateView):
