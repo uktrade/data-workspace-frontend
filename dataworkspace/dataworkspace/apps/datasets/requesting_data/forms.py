@@ -1,11 +1,19 @@
 from django.contrib.auth import get_user_model
 from django.forms import ValidationError
 
+
+from dataworkspace.apps.datasets.models import RequestingDataset
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemForm,
+    GOVUKDesignSystemTextWidget,
+    GOVUKDesignSystemTextareaField,
+    GOVUKDesignSystemTextareaWidget,
     GOVUKDesignSystemRadioField,
     GOVUKDesignSystemRadiosWidget,
+    GOVUKDesignSystemModelForm,
+    GOVUKDesignSystemTextWidget,
+    GOVUKDesignSystemModelForm,
     GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
@@ -260,7 +268,6 @@ class DatasetCurrentAccessForm(GOVUKDesignSystemForm):
     )
 
 
-
 class DatasetIntendedAccessForm(GOVUKDesignSystemForm):
 
     intended_access = GOVUKDesignSystemRadioField(
@@ -342,3 +349,19 @@ class DatasetUserRestrictionsForm(GOVUKDesignSystemForm):
             extra_label_classes="govuk-!-static-margin-0",
         ),
     )
+
+
+class DaatasetSecurityClassificationForm(GOVUKDesignSystemModelForm):
+
+    class Meta:
+        model = RequestingDataset
+        fields = [
+            "government_security_classification",
+            "sensitivity",
+        ]
+    # sensitivity = GOVUKDesignSystemRadioField(
+    #     required=False,
+    #     label="What would you like to do?",
+    #     choices=SecurityClassificationTypes.choices,
+    #     widget=ConditionalSupportTypeRadioWidget(heading="h2", attrs={'data-type', 'sensitivity'}),
+    # )
