@@ -823,7 +823,12 @@ def visualisation_users_give_access_html_POST(request, gitlab_project, token_dat
 
 
 def _visualisation_gitlab_project(gitlab_project_id):
-    gitlab_project, status = gitlab_api_v4_with_status("GET", f"projects/{gitlab_project_id}")
+
+    if settings.GITLAB_FIXTURES:
+        gitlab_project = get_fixture("project_fixture.json")
+        status=200
+    else:
+        gitlab_project, status = gitlab_api_v4_with_status("GET", f"projects/{gitlab_project_id}")
     if status == 404:
         raise Http404
     if status != 200:
@@ -1509,11 +1514,13 @@ def visualisation_publish_html_view(request, gitlab_project_id):
         raise ManageVisualisationsPermissionDeniedError(
             "manage visualisations", "To request access"
         )
-
-    gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
-
-    if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        raise DeveloperPermissionRequiredError(gitlab_project["name"])
+    if settings.GITLAB_FIXTURES:
+        gitlab_project = get_fixture("project_fixture.json")
+    else:
+        gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+        if not gitlab_has_developer_access(request.user, gitlab_project_id):
+        
+            raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     if request.method == "GET":
         return visualisation_publish_html_GET(request, gitlab_project)
@@ -1567,12 +1574,18 @@ def _render_visualisation_publish_html(request, gitlab_project, catalogue_item=N
         f"{application_template.host_basename}.{settings.APPLICATION_ROOT_DOMAIN}"
     )
     catalogue_item_complete = _visualisation_catalogue_item_is_complete(catalogue_item)
+
+    if settings.GITLAB_FIXTURES:
+        visualisation_branches = get_fixture("visualisation_branches_fixture.json")
+    else:
+        visualisation_branches = _visualisation_branches(gitlab_project)
+
     return _render_visualisation(
         request,
         "applications/visualisation_publish.html",
         gitlab_project,
         application_template,
-        _visualisation_branches(gitlab_project),
+        visualisation_branches,
         current_menu_item="publish",
         template_specific_context={
             "visualisation_domain": visualisation_domain,
@@ -1678,6 +1691,11 @@ def visualisation_publish_html_POST(request, gitlab_project):
     application_template = _application_template(gitlab_project)
     action = request.POST.get("action", "").lower()
     catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
+
+    if settings.GITLAB_FIXTURES:
+        gitlab_project = get_fixture("project_fixture.json")
+    else:
+        gitlab_project = gitlab_project
 
     if action == "publish-catalogue":
         return _set_published_on_catalogue_item(

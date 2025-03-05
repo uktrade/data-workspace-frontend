@@ -1,4 +1,6 @@
 {% extends '_visualisation.html' %}
+
+
 {% load core_filters %}
 
 {% block head %}
@@ -32,68 +34,39 @@
 </h1>
 
 <p class="govuk-body">
-  In order to publish this visualisation, at least two users must have <a class="govuk-link" href="{% url 'visualisations:approvals' gitlab_project.id %}">approved</a> it.
+  Before you publish this visualisation to the catalogue you need to release it to production. This makes it viewable to users who have the link.
 </p>
 
-<hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
+<h3 class="govuk-heading-m">
+  Release to production
+</h3>
 
-<div class="govuk-grid-row">
-  <div class="govuk-grid-column-two-thirds">
-    <p class="govuk-body" id="visualisation-explanation">
+<p class="govuk-body">
+  {% if approvals %}
+  So far, the following {{ approvals | length }} user{{ approvals | pluralize }} {{ approvals | pluralize:'has,have' }} approved it.
+  {% else %}
+  No-one has approved this yet.
+  {% endif %}
+</p>
+
+  <button type="submit" class="govuk-button govuk-button--secondary
+  {% if not visualisation_published and not approved %}
+   govuk-button--disabled 
+  {% endif %}" 
+  name="action" 
+  value="{% if visualisation_published %}
+    unpublish-visualisation
+  {% else %}
+    publish-visualisation
+  {% endif %}"
+  aria-labelledby="visualisation-explanation"
+  {% if not visualisation_published and not approved %} disabled{% endif %}>
       {% if visualisation_published %}
-      Unpublish this visualisation to stop users from accessing it at the
-      <a class="govuk-link" style="white-space: nowrap;" href="{{ visualisation_link }}">production domain</a>.
-      {% else %}
-      Publish this visualisation to make the latest release available for users at the
-      <a class="govuk-link" style="white-space: nowrap;" href="{{ visualisation_link }}">production domain</a>.
-      {% endif %}
-    </p>
-  </div>
-  <div class="govuk-grid-column-one-third">
-    <form method="POST" action="{{ request.path }}">
-      {% csrf_token %}
-      <button type="submit" class="govuk-button app-!-fill-width{% if not visualisation_published and not approved %} govuk-button--disabled{% endif %}" name="action" value="{% if visualisation_published %}unpublish-visualisation{% else %}publish-visualisation{% endif %}" aria-labelledby="visualisation-explanation"{% if not visualisation_published and not approved %} disabled{% endif %}>
-        {% if visualisation_published %}
           Unpublish visualisation
-        {% else %}
-          Publish visualisation
-        {% endif %}
-      </button>
-    </form>
-  </div>
-</div>
-
-<hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
-
-<div class="govuk-grid-row">
-  <div class="govuk-grid-column-two-thirds">
-    <p class="govuk-body" id="catalogue-explanation">
-      {% if catalogue_published %}
-      Unpublish the
-      <a class="govuk-link" href="{% url 'visualisations:catalogue-item' gitlab_project.id %}">catalogue item</a>
-      to stop users from being able to discover the visualisation on
-      <a class="govuk-link" href="{% url 'root' %}">Data Workspace</a>.
       {% else %}
-      Publish the
-      <a class="govuk-link" href="{% url 'visualisations:catalogue-item' gitlab_project.id %}">catalogue item</a>
-      to let users discover this visualisation on
-      <a class="govuk-link" href="{% url 'root' %}">Data Workspace</a>.
-      {% endif %}
-    </p>
-  </div>
-  <div class="govuk-grid-column-one-third">
-    <form method="POST" action="{{ request.path }}">
-      {% csrf_token %}
-
-      <button type="submit" class="govuk-button app-!-fill-width{% if not approved or not visualisation_published or not catalogue_complete %} govuk-button--disabled{% endif %}" name="action" value="{% if catalogue_published %}unpublish-catalogue{% else %}publish-catalogue{% endif %}" aria-labelledby="catalogue-explanation"{% if not approved or not visualisation_published or not catalogue_complete %} disabled{% endif %}>
-        {% if catalogue_published %}
-          Unpublish catalogue item
-        {% else %}
-          Publish catalogue item
+          Release to production
         {% endif %}
-      </button>
-    </form>
-  </div>
+  </button>
 </div>
 
 {% endblock %}
