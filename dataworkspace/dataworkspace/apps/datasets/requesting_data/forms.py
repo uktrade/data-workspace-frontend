@@ -143,7 +143,7 @@ class DatasetSystemForm(GOVUKDesignSystemForm):
     )
 
 
-class DaatasetSecurityClassificationForm(GOVUKDesignSystemModelForm):
+class DatasetSecurityClassificationForm(GOVUKDesignSystemModelForm):
 
     class Meta:
         model = RequestingDataset
@@ -157,3 +157,21 @@ class DaatasetSecurityClassificationForm(GOVUKDesignSystemModelForm):
     #     choices=SecurityClassificationTypes.choices,
     #     widget=ConditionalSupportTypeRadioWidget(heading="h2", attrs={'data-type', 'sensitivity'}),
     # )
+
+
+class DatsetPersonalDataForm(GOVUKDesignSystemForm):
+    personal_data = GOVUKDesignSystemRadioField(
+        label="How can we help you?",
+        help_text="Please choose one of the options below for help.",
+        choices=[("True", "Yes"), ("False", "No")],
+        widget=ConditionalSupportTypeRadioWidget(heading="h2"),
+        error_messages={"required": "Please select the type of support you require"},
+    )
+    message = GOVUKDesignSystemTextareaField(
+        required=False,
+        label="Tell us how we can help you",
+        widget=GOVUKDesignSystemTextareaWidget(
+            label_is_heading=False,
+            attrs={"rows": 5},
+        ),
+    )

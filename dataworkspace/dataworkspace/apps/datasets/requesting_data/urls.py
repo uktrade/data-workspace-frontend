@@ -1,7 +1,7 @@
 from django.urls import path
 
 from dataworkspace.apps.accounts.utils import login_required
-from dataworkspace.apps.datasets.requesting_data.views import DatasetDescriptionsView, DatasetNameView, DatasetDataOriginView, DatasetSecurityClassificationView
+from dataworkspace.apps.datasets.requesting_data.views import DatasetDescriptionsView, DatasetNameView, DatasetDataOriginView, DatasetSecurityClassificationView, DatsetPersonalDataView
 
 urlpatterns = [
 
@@ -21,14 +21,14 @@ urlpatterns = [
         name="dataset-data-origin",
     ),
     path(
-        "<uuid:id>/dataset-dataset-security-classification",
+        "<uuid:id>/dataset-security-classification",
         login_required(DatasetSecurityClassificationView.as_view()),
         name="dataset-security-classification",
     ),
     path(
-        "<uuid:id>/dataset-dataset-security-classification",
-        login_required(DatasetSecurityClassificationView.as_view()),
-        name="dataset-security-classification",
+        "<uuid:id>/dataset-personal-data",
+        login_required(DatsetPersonalDataView.as_view()),
+        name="dataset-personal-data",
     ),
 
 ]
