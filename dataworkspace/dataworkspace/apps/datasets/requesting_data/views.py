@@ -28,8 +28,12 @@ from dataworkspace.apps.datasets.requesting_data.forms import DatasetOwnersForm,
 from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.core.utils import get_task_error_message_template
 
+
+from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import RequestingDataset, SourceTable
 from dataworkspace.apps.datasets.requesting_data.forms import DaatasetSecurityClassificationForm, DatasetNameForm, DatasetDescriptionsForm, DatasetDataOriginForm
+from dataworkspace.apps.datasets.models import DataSet, DataSetUserPermission, RequestingDataset, SourceTable, VisualisationUserPermission
+from dataworkspace.apps.datasets.requesting_data.forms import DatasetSecurityClassificationForm, DataSetOwnersForm, DatasetNameForm, DatasetDescriptionsForm, DatasetDataOriginForm, DatsetPersonalDataForm
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -143,6 +147,7 @@ class DatasetDescriptionsView(FormView):
         requesting_dataset = RequestingDataset.objects.get(id=self.kwargs.get("id"))
         requesting_dataset.short_description = form.cleaned_data.get("short_description")
         requesting_dataset.description = form.cleaned_data.get("description")
+        requesting_dataset.save()
 
         return HttpResponseRedirect(
             reverse(
@@ -159,6 +164,7 @@ class DatasetDataOriginView(FormView):
     def form_valid(self, form):
         requesting_dataset = RequestingDataset.objects.get(id=self.kwargs.get("id"))
         requesting_dataset.data_origin = form.cleaned_data.get("data_origin")
+        requesting_dataset.save()
 
         return HttpResponseRedirect(
             reverse(
@@ -169,29 +175,30 @@ class DatasetDataOriginView(FormView):
 
 
 class DatasetSecurityClassificationView(FormView):
-    form_class = DaatasetSecurityClassificationForm
     model = RequestingDataset
+    form_class = DatasetSecurityClassificationForm
     template_name = "datasets/requesting_data/security.html"
 
     def form_valid(self, form):
-        print(">>>>>>", form.cleaned_data.get("sensitivity").values_list('id', flat=True))
-
+        print(">>>>>", type(form.cleaned_data.get("government_security_classification")))
         requesting_dataset = RequestingDataset.objects.get(id=self.kwargs.get("id"))
         requesting_dataset.government_security_classification = form.cleaned_data.get("government_security_classification")
+
+        print('<<<<<<', requesting_dataset.description)
         # if requesting_dataset.government_security_classification == 2:
         #     requesting_dataset.sensitivity = form.cleaned_data.get("sensitivity").values_list('id')
 
         return HttpResponseRedirect(
             reverse(
-                "datasets:requesting_data:dataset-security-classification",
+                "datasets:requesting_data:dataset-personal-data",
                 kwargs={"id": requesting_dataset.id},
             )
         )
 
 
 class DatsetPersonalDataView(FormView):
-    form_class = SupportForm
-    template_name = "core/support.html"
+    form_class = DatsetPersonalDataForm
+    template_name = "datasets/requesting_data/radio_conditional.html"
 
 
 class BaseAddTableTemplateView(RequiredParameterGetRequestMixin, TemplateView):
