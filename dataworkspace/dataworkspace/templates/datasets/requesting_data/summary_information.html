@@ -6,6 +6,12 @@
 {% block breadcrumbs %}
 <a href="{% url 'support' %}" class="govuk-back-link">Back</a>
 {% endblock %}
+
+{% load i18n %}
+
+{% block head %}
+{{ wizard.form.media }}
+{% endblock %}
 {% block content %}
 {% if form.errors %}
   <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
@@ -27,15 +33,19 @@
 {% endif %}
 
 <h1 class="govuk-heading-l">Summary information</h2>
-  <form method="post">
-    {% csrf_token %}
-    {% for field in form %}
-      {{ field }}
+  <form action="" method="post">{% csrf_token %}
+{{ wizard.management_form }}
+{% if wizard.form.forms %}
+    {{ wizard.form.management_form }}
+    {% for form in wizard.form.forms %}
+        {{ wizard.form }}
     {% endfor %}
-    <button type="submit" class="govuk-button" data-module="govuk-button">
-      Continue
-    </button>
-  </form>
+{% endif %}
+<button name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% translate "first step" %}</button>
+<button name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% translate "prev step" %}</button>
+{% endif %}
+<input type="submit" value="{% translate "submit" %}"/>
+</form>
 
 <p class="govuk-body">
   <a href="{{ link }}" class="govuk-link">{{ link_text }}</a>
