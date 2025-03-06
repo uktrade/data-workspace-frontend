@@ -121,6 +121,7 @@ INSTALLED_APPS = [
     "dataworkspace.apps.data_collections",
     "django_celery_results",
     "dataworkspace.apps.arangodb",
+    "formtools",
 ]
 
 MIDDLEWARE = [

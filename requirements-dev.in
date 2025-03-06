@@ -28,3 +28,4 @@ remote-pdb-client
 pydevd-pycharm
 debugpy
 python-arango
+django-formtools
