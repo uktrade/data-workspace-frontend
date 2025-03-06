@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime
 from urllib.parse import urlencode
 from django.db.models import Q
+from formtools.wizard.views import SessionWizardView, NamedUrlWizardView
 
 
 from aiohttp import ClientError
@@ -11,7 +12,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 
 from django.http import HttpResponseRedirect, HttpResponseServerError
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.generic import DetailView, FormView, TemplateView
 from requests import HTTPError
@@ -19,23 +20,10 @@ from requests import HTTPError
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP, PostgresDataTypes
 from dataworkspace.apps.core.models import Database
-from dataworkspace.apps.core.utils import (
-    copy_file_to_uploads_bucket,
-    get_data_flow_import_pipeline_name,
-    get_s3_prefix,
-    get_task_error_message_template,
-    trigger_dataflow_dag,
-)
-from dataworkspace.apps.datasets.add_table.forms import (
-    AddTableDataTypesForm,
-    DescriptiveNameForm,
-    TableNameForm,
-    TableSchemaForm,
-    UploadCSVForm,
-)
+
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import DataSet, DataSetUserPermission, RequestingDataset, SourceTable, VisualisationUserPermission
-from dataworkspace.apps.datasets.requesting_data.forms import DataSetOwnersForm, DatasetNameForm, DatasetDescriptionsForm, DatasetDataOriginForm, DatasetSystemForm
+from dataworkspace.apps.datasets.requesting_data.forms import DatasetOwnersForm, DatasetNameForm, DatasetDescriptionsForm, DatasetDataOriginForm, DatasetSystemForm
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.datasets.views import UserSearchFormView
 from dataworkspace.apps.eventlog.models import EventLog
@@ -48,18 +36,56 @@ logger = logging.getLogger(__name__)
 
 
 class DatasetBaseView(FormView):
-    template_name = "datasets/requesting_data/summary_information.html"
-
     def save_dataset(self, form, fields, page):
         requesting_dataset = RequestingDataset.objects.get(id=self.kwargs.get("id"))
         for field in fields:
-            requesting_dataset.field = form.cleaned_data.get(field)
+            setattr(requesting_dataset, field, form.cleaned_data.get(field))
             requesting_dataset.save()
-
         return HttpResponseRedirect(
             reverse(
                 f"datasets:requesting_data:{page}",
-                kwargs={"id": requesting_dataset.id},
+            )
+        )
+
+
+class RequestingDataWizardView(NamedUrlWizardView):
+    form_list = [
+        ('name', DatasetNameForm),
+        ('descriptions', DatasetDescriptionsForm),
+        ('origin', DatasetDataOriginForm),
+        ('owners', DatasetOwnersForm),
+        # ('existing-system', DatasetExistingSystemForm),
+        # ('published', DatasetPublishedForm),
+        # ('licence', DatasetLicenceForm),
+        # ('restrictions', DatasetRestrictionsForm),
+        # ('purpose', DatasetPurposeForm),
+        # ('usage', DatasetUsageForm),
+        # ('security-classification', DatasetSecurityClassificationForm),
+        # ('personal-data', DatasetPersonalDataForm),
+        # ('special-personal-data', DatasetSpecialPersonalDataForm),
+        # ('commercial-sensitive', DatasetCommercialSensitiveForm),
+        # ('retention-period', DatasetRetentionPeriodForm),
+        # ('update-frequency', DatasetUpdateFrequencyForm),
+        # ('current-access', DatasetCurrentAccessForm),
+        # ('intended-access', DatasetIntendedAccessForm),
+        # ('location-restrictions', DatasetLocationRestrictionsForm),
+        # ('security-clearance', DatasetSecurityClearanceForm),
+        # ('network-restrictions', DatasetNetworkRestrictionsForm),
+        # ('user-restrictions', DatasetUserRestrictionsForm),
+    ]
+    template_name = "datasets/requesting_data/summary_information.html"
+
+    # send a zendesk ticket and create object
+
+    def done(self, form_list, **kwargs):
+
+        for form in form_list:
+            print(">>>>", form.prefix)
+            print(">>>>", form.cleaned_data)
+
+        return HttpResponseRedirect(
+            reverse(
+                "datasets",
             )
         )
 
@@ -85,7 +111,6 @@ class DatasetDescriptionsView(DatasetBaseView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
-        context["title"] = "Summary information"
         context["link"] = "www.google.com"
         context["link_text"] = "Find out the best practice for writing descriptions."
         return context
@@ -95,25 +120,17 @@ class DatasetDescriptionsView(DatasetBaseView):
         return self.save_dataset(form, fields, "dataset-data-origin")
 
 
-class DatasetDataOriginView(FormView):
-    template_name = "datasets/requesting_data/summary_information.html"
+class DatasetDataOriginView(DatasetBaseView):
     form_class = DatasetDataOriginForm
 
     def form_valid(self, form):
-        requesting_dataset = RequestingDataset.objects.get(id=self.kwargs.get("id"))
-        requesting_dataset.data_origin = form.cleaned_data.get("data_origin")
-
-        return HttpResponseRedirect(
-            reverse(
-                "datasets:requesting_data:dataset-owners",
-                kwargs={"id": requesting_dataset.id},
-            )
-        )
+        fields = ["data_origin"]
+        return self.save_dataset(form, fields, "dataset-owners")
 
 
 class DatasetOwnersView(FormView):
     template_name = "datasets/requesting_data/summary_information.html"
-    form_class = DataSetOwnersForm
+    form_class = DatasetOwnersForm
 
     def form_valid(self, form):
         requesting_dataset = RequestingDataset.objects.get(id=self.kwargs.get("id"))
@@ -133,7 +150,6 @@ class DatasetOwnersView(FormView):
 class DatasetSystemView(FormView):
     template_name = "datasets/requesting_data/summary_information.html"
     form_class = DatasetSystemForm
-
 
 
 class BaseAddTableTemplateView(RequiredParameterGetRequestMixin, TemplateView):

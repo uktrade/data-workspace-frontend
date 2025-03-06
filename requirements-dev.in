@@ -30,3 +30,7 @@ remote-pdb
 remote-pdb-client
 requests-mock
 selenium
+pydevd-pycharm
+debugpy
+python-arango
+django-formtools
