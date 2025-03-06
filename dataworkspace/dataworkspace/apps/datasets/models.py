@@ -560,7 +560,7 @@ class DataSet(DeletableTimestampedUserModel):
         )
 
 
-class RequestingDataset(models.Model):
+class RequestingDataset(DeletableTimestampedUserModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.TextField(null=True, blank=True, max_length=128)
     name = models.TextField(null=True, blank=True, max_length=128)
