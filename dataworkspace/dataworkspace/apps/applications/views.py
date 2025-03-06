@@ -1582,11 +1582,13 @@ def visualisation_publish_html_GET(request, gitlab_project):
 
 @transaction.atomic
 def _set_published_on_catalogue_item(request, gitlab_project, catalogue_item, publish):
-    visualisation_approved = _visualisation_is_approved(catalogue_item.visualisation_template)
+    is_approved_by_all, project_approvals = _visualisation_is_approved(
+        catalogue_item.visualisation_template, request, gitlab_project
+    )
     visualisation_published = _visualisation_is_published(catalogue_item.visualisation_template)
     catalogue_item_complete = _visualisation_catalogue_item_is_complete(catalogue_item)
     if publish is False or (
-        visualisation_approved and visualisation_published and catalogue_item_complete
+        is_approved_by_all and visualisation_published and catalogue_item_complete
     ):
         catalogue_item.published = publish
         catalogue_item.save()
@@ -1604,7 +1606,7 @@ def _set_published_on_catalogue_item(request, gitlab_project, catalogue_item, pu
 
         return redirect(request.path)
 
-    if visualisation_approved is False:
+    if is_approved_by_all is False:
         error = (
             reverse("visualisations:approvals", args=(gitlab_project["id"],)),
             "The visualisation must be approved by two developers before it can be published.",
@@ -1632,8 +1634,10 @@ def _set_published_on_catalogue_item(request, gitlab_project, catalogue_item, pu
 
 @transaction.atomic
 def _set_published_on_visualisation(request, gitlab_project, application_template, publish):
-    visualisation_approved = _visualisation_is_approved(application_template)
-    if publish is False or visualisation_approved:
+    is_approved_by_all, project_approvals = _visualisation_is_approved(
+        application_template, request, gitlab_project
+    )
+    if publish is False or is_approved_by_all:
         application_template.visible = publish
         application_template.save()
 
@@ -1652,7 +1656,7 @@ def _set_published_on_visualisation(request, gitlab_project, application_templat
 
         return redirect(request.path)
 
-    if visualisation_approved is False:
+    if is_approved_by_all is False:
         error = (
             reverse("visualisations:approvals", args=(gitlab_project["id"],)),
             "The visualisation must be approved by two developers before it can be published.",
@@ -1668,11 +1672,6 @@ def visualisation_publish_html_POST(request, gitlab_project):
     application_template = _application_template(gitlab_project)
     action = request.POST.get("action", "").lower()
     catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
-
-    if settings.GITLAB_FIXTURES:
-        gitlab_project = get_fixture("project_fixture.json")
-    else:
-        gitlab_project = gitlab_project
 
     if action == "publish-catalogue":
         return _set_published_on_catalogue_item(
