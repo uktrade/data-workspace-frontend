@@ -1606,7 +1606,7 @@ def _set_published_on_catalogue_item(request, gitlab_project, catalogue_item, pu
 
         return redirect(request.path)
 
-    if is_approved_by_all is False:
+    if is_approved_by_all is False and len(project_approvals) < 3:
         error = (
             reverse("visualisations:approvals", args=(gitlab_project["id"],)),
             "The visualisation must be approved by two developers before it can be published.",
@@ -1656,7 +1656,7 @@ def _set_published_on_visualisation(request, gitlab_project, application_templat
 
         return redirect(request.path)
 
-    if is_approved_by_all is False:
+    if is_approved_by_all is False and len(project_approvals) < 3:
         error = (
             reverse("visualisations:approvals", args=(gitlab_project["id"],)),
             "The visualisation must be approved by two developers before it can be published.",
