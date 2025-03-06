@@ -35,7 +35,6 @@ from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     ApplicationInstanceDbUsers,
     ApplicationTemplate,
-    VisualisationApproval,
 )
 from dataworkspace.apps.applications.spawner import (
     _fargate_task_describe,
@@ -1945,17 +1944,18 @@ def has_all_three_approval_types(approvals: list[dict]) -> bool:
         for approval_type in ["owner", "peer reviewer", "team member"]
     )
 
+
 def visualisation_approvals(dw_approvals, project_members):
     approvers = [
-            {
-                "name": a.approver.get_full_name(),
-                "date_approved": a.created_date,
-                "is_superuser": a.approver.is_superuser,
-                "status": None,
-            }
-            for a in dw_approvals
-            if a.approved
-        ]
+        {
+            "name": a.approver.get_full_name(),
+            "date_approved": a.created_date,
+            "is_superuser": a.approver.is_superuser,
+            "status": None,
+        }
+        for a in dw_approvals
+        if a.approved
+    ]
     # match the Django database list of approvers to their GitLab identity to
     # get level of access with GitLab project for visualisation
     for approver in approvers:
@@ -1978,7 +1978,7 @@ def visualisation_approvals(dw_approvals, project_members):
 
     for approver_type in ["owner", "peer reviewer", "team member"]:
         approver_types[approver_type].sort(key=lambda x: x["date_approved"])
-    
+
     project_approvals = [
         approver_types[approver_type][0]
         for approver_type in ["owner", "peer reviewer", "team member"]
