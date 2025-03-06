@@ -34,7 +34,7 @@ class BulletListSplitArrayWidget(SplitArrayWidget):
         context["widget"]["label"] = self.label
 
         for i, _ in enumerate(context["widget"]["subwidgets"]):
-            context["widget"]["subwidgets"][i]["label"] = f"{self.input_prefix} #{i+1}"
+            context["widget"]["subwidgets"][i]["label"] = f"{self.input_prefix} #{i + 1}"
         return context
 
 
