@@ -109,7 +109,7 @@ class TestDataVisualisationMemberUIApprovalPage:
         approval_count_text = soup.find("p").contents
 
         self.assert_common_content(soup)
-        assert "Currently 0 out of 3 have approved this visualisation." in approval_count_text
+        assert "Currently 0 out of 3 have approved this visualisation:" in approval_count_text
         assert response.status_code == 200
 
     @freeze_time("2025-01-01 01:01:01")
@@ -154,7 +154,7 @@ class TestDataVisualisationMemberUIApprovalPage:
             approval_list_items[0]
             .get_text()
             .startswith(
-                "A member of the Data Workspace team approved this visualisation on Jan. 1, 2025, 1:01 am."
+                "A member of the Data Workspace team approved this visualisation on 01 January 2025, 01:01am"
             )
         )
         assert "Currently 1 out of 3 have approved this visualisation:" in approval_count_text
