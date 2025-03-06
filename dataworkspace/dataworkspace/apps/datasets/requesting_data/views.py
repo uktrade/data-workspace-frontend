@@ -47,6 +47,23 @@ from dataworkspace.forms import GOVUKDesignSystemRadioField, GOVUKDesignSystemRa
 logger = logging.getLogger(__name__)
 
 
+class DatasetBaseView(FormView):
+    template_name = "datasets/requesting_data/summary_information.html"
+
+    def save_dataset(self, form, fields, page):
+        requesting_dataset = RequestingDataset.objects.get(id=self.kwargs.get("id"))
+        for field in fields:
+            requesting_dataset.field = form.cleaned_data.get(field)
+            requesting_dataset.save()
+
+        return HttpResponseRedirect(
+            reverse(
+                f"datasets:requesting_data:{page}",
+                kwargs={"id": requesting_dataset.id},
+            )
+        )
+
+
 class DatasetNameView(FormView):
     template_name = "datasets/requesting_data/summary_information.html"
     form_class = DatasetNameForm
@@ -63,8 +80,7 @@ class DatasetNameView(FormView):
         )
 
 
-class DatasetDescriptionsView(FormView):
-    template_name = "datasets/requesting_data/summary_information.html"
+class DatasetDescriptionsView(DatasetBaseView):
     form_class = DatasetDescriptionsForm
 
     def get_context_data(self, **kwargs):
@@ -75,16 +91,8 @@ class DatasetDescriptionsView(FormView):
         return context
 
     def form_valid(self, form):
-        requesting_dataset = RequestingDataset.objects.get(id=self.kwargs.get("id"))
-        requesting_dataset.short_description = form.cleaned_data.get("short_description")
-        requesting_dataset.description = form.cleaned_data.get("description")
-
-        return HttpResponseRedirect(
-            reverse(
-                "datasets:requesting_data:dataset-data-origin",
-                kwargs={"id": requesting_dataset.id},
-            )
-        )
+        fields = ["short_description", "description"]
+        return self.save_dataset(form, fields, "dataset-data-origin")
 
 
 class DatasetDataOriginView(FormView):
