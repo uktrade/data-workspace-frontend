@@ -42,13 +42,9 @@
 </h3>
 
 <p class="govuk-body">
-  {% if approvals %}
-  So far, the following {{ approvals | length }} user{{ approvals | pluralize }} {{ approvals | pluralize:'has,have' }} approved it.
-  {% else %}
-  No-one has approved this yet.
-  {% endif %}
+  {% if approved %}
+  You can release your visualisation to production.{{ project_approvals| length }} out of 3 users have approved it.
 </p>
-
   <button type="submit" class="govuk-button govuk-button--secondary
   {% if not visualisation_published and not approved %}
    govuk-button--disabled 
@@ -68,5 +64,12 @@
         {% endif %}
   </button>
 </div>
-
+{% else %}
+<div class="govuk-warning-text">
+  <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+  <strong class="govuk-warning-text__text">
+    You cannot release your visualisation to production. This is because only {{ project_approvals| length }} out of 3 users{{ project_approvals | pluralize }} {{ project_approvals | pluralize:'has,have' }} approved it.
+  </strong>
+</div>
+{% endif %}
 {% endblock %}
