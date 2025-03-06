@@ -1497,13 +1497,21 @@ def visualisation_publish_html_view(request, gitlab_project_id):
     return HttpResponse(status=405)
 
 
-def _visualisation_is_approved(application_template):
-    return (
-        VisualisationApproval.objects.filter(
-            visualisation=application_template, approved=True
-        ).count()
-        >= 2
-    )
+def _visualisation_is_approved(application_template,request,gitlab_project):
+
+    dw_approvals = VisualisationApproval.objects.filter(
+            visualisation=application_template, approved=True).all()
+    
+    if waffle.flag_is_active(request, settings.THIRD_APPROVER):
+        if settings.GITLAB_FIXTURES:
+            project_members = get_fixture("project_members_fixture.json")
+        else:
+            project_members = gitlab_project_members(gitlab_project)
+
+    is_approved_by_all, project_approvals = visualisation_approvals(dw_approvals, project_members)
+
+    return (is_approved_by_all, project_approvals)
+    
 
 
 def _visualisation_is_published(application_template):
@@ -1534,7 +1542,7 @@ def _render_visualisation_publish_html(request, gitlab_project, catalogue_item=N
     if not catalogue_item:
         catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
     application_template = catalogue_item.visualisation_template
-    visualisation_approved = _visualisation_is_approved(application_template)
+    is_approved_by_all, project_approvals = _visualisation_is_approved(application_template,request,gitlab_project)
     visualisation_published = _visualisation_is_published(application_template)
     visualisation_domain = (
         f"{application_template.host_basename}.{settings.APPLICATION_ROOT_DOMAIN}"
@@ -1559,7 +1567,8 @@ def _render_visualisation_publish_html(request, gitlab_project, catalogue_item=N
             "catalogue_complete": catalogue_item_complete,
             "catalogue_published": catalogue_item.published,
             "visualisation_published": visualisation_published,
-            "approved": visualisation_approved,
+            "approved": is_approved_by_all,
+            "project_approvals": project_approvals,
             "errors": errors,
         },
     )
