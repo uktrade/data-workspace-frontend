@@ -106,7 +106,7 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
         approval_count_text = soup.find("p").contents
 
         self.assert_common_content(soup)
-        assert "Currently 0 out of 3 have approved this visualisation." in approval_count_text
+        assert "Currently 0 out of 3 have approved this visualisation:" in approval_count_text
         assert response.status_code == 200
 
     @freeze_time("2025-01-01 01:01:01")
@@ -165,10 +165,10 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
             approval_list_items[0]
             .get_text()
             .startswith(
-                "Bob Burger (peer reviewer) approved this visualisation on Jan. 1, 2025, 1:01 a.m."
+                "Bob Burger (peer reviewer) approved this visualisation on 01 January 2025, 01:01am"
             )
         )
-        assert "Currently 1 out of 3 have approved this visualisation." in approval_count_text
+        assert "Currently 1 out of 3 have approved this visualisation:" in approval_count_text
         assert response.status_code == 200
 
     @freeze_time("2025-01-01 01:01:01")
@@ -214,10 +214,10 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
             approval_list_items[0]
             .get_text()
             .startswith(
-                "Ledia Luli (owner) approved this visualisation on Jan. 1, 2025, 1:01 a.m."
+                "Ledia Luli (owner) approved this visualisation on 01 January 2025, 01:01am"
             )
         )
-        assert "Currently 1 out of 3 have approved this visualisation." in approval_count_text
+        assert "Currently 1 out of 3 have approved this visualisation:" in approval_count_text
         assert response.status_code == 200
 
     @freeze_time("2025-01-01 01:01:01")
@@ -263,10 +263,10 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
             approval_list_items[0]
             .get_text()
             .startswith(
-                "A member of the Data Workspace team approved this visualisation on Jan. 1, 2025, 1:01 a.m."
+                "A member of the Data Workspace team approved this visualisation on 01 January 2025, 01:01am"
             )
         )
-        assert "Currently 1 out of 3 have approved this visualisation." in approval_count_text
+        assert "Currently 1 out of 3 have approved this visualisation:" in approval_count_text
         assert response.status_code == 200
 
     @freeze_time("2025-01-01 01:01:01")
@@ -355,21 +355,21 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
             approval_list_items[0]
             .get_text()
             .startswith(
-                "Tina Belcher (owner) approved this visualisation on Jan. 1, 2025, 1:01 a.m."
+                "Tina Belcher (owner) approved this visualisation on 01 January 2025, 01:01am"
             )
         )
         assert (
             approval_list_items[1]
             .get_text()
             .startswith(
-                "Gene Belcher (peer reviewer) approved this visualisation on Jan. 1, 2025, 1:01 a.m."
+                "Gene Belcher (peer reviewer) approved this visualisation on 01 January 2025, 01:01am"
             )
         )
         assert (
             approval_list_items[2]
             .get_text()
             .startswith(
-                "A member of the Data Workspace team approved this visualisation on Jan. 1, 2025, 1:01 a.m."
+                "A member of the Data Workspace team approved this visualisation on 01 January 2025, 01:01am"
             )
         )
         assert "This visualisation has been peer-reviewed" in second_peer_reviewer_header

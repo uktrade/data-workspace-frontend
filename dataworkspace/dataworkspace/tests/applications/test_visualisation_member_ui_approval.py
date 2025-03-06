@@ -154,10 +154,10 @@ class TestDataVisualisationMemberUIApprovalPage:
             approval_list_items[0]
             .get_text()
             .startswith(
-                "A member of the Data Workspace team approved this visualisation on Jan. 1, 2025, 1:01 a.m."
+                "A member of the Data Workspace team approved this visualisation on Jan. 1, 2025, 1:01 am."
             )
         )
-        assert "Currently 1 out of 3 have approved this visualisation." in approval_count_text
+        assert "Currently 1 out of 3 have approved this visualisation:" in approval_count_text
         assert response.status_code == 200
 
     @freeze_time("2025-01-01 01:01:01")
@@ -202,10 +202,10 @@ class TestDataVisualisationMemberUIApprovalPage:
             approval_list_items[0]
             .get_text()
             .startswith(
-                "Ledia Luli (peer reviewer) approved this visualisation on Jan. 1, 2025, 1:01 a.m."
+                "Ledia Luli (peer reviewer) approved this visualisation on 01 January 2025, 01:01am"
             )
         )
-        assert "Currently 1 out of 3 have approved this visualisation." in approval_count_text
+        assert "Currently 1 out of 3 have approved this visualisation:" in approval_count_text
         assert response.status_code == 200
 
     @freeze_time("2025-01-01 01:01:01")
@@ -249,10 +249,10 @@ class TestDataVisualisationMemberUIApprovalPage:
             approval_list_items[0]
             .get_text()
             .startswith(
-                "Ian Leggett (owner) approved this visualisation on Jan. 1, 2025, 1:01 a.m."
+                "Ian Leggett (owner) approved this visualisation on 01 January 2025, 01:01am"
             )
         )
-        assert "Currently 1 out of 3 have approved this visualisation." in approval_count_text
+        assert "Currently 1 out of 3 have approved this visualisation:" in approval_count_text
         assert response.status_code == 200
 
     @freeze_time("2025-01-01 01:01:01")
@@ -292,13 +292,13 @@ class TestDataVisualisationMemberUIApprovalPage:
         approval_list_items = approval_list.find_all("li")
 
         self.assert_common_content(soup)
-        assert "Currently 2 out of 3 have approved this visualisation." in approval_count_text
+        assert "Currently 2 out of 3 have approved this visualisation:" in approval_count_text
         assert (
-            "Ian Leggett (owner) approved this visualisation on Jan. 1, 2025, 1:01 a.m."
+            "Ian Leggett (owner) approved this visualisation on 01 January 2025, 01:01am"
             in approval_list_items[0]
         )
         assert (
-            "Ledia Luli (peer reviewer) approved this visualisation on Jan. 1, 2025, 1:01 a.m."
+            "Ledia Luli (peer reviewer) approved this visualisation on 01 January 2025, 01:01am"
             in approval_list_items[1]
         )
         assert response.status_code == 200
@@ -382,24 +382,24 @@ class TestDataVisualisationMemberUIApprovalPage:
             approval_list_items[0]
             .get_text()
             .startswith(
-                "Ledia Luli (owner) approved this visualisation on Jan. 1, 2025, 1:01 a.m."
+                "Ledia Luli (owner) approved this visualisation on 01 January 2025, 01:01am"
             )
         )
         assert (
             approval_list_items[1]
             .get_text()
             .startswith(
-                "Ian Leggett (peer reviewer) approved this visualisation on Jan. 1, 2025, 1:01 a.m."
+                "Ian Leggett (peer reviewer) approved this visualisation on 01 January 2025, 01:01am"
             )
         )
         assert (
             approval_list_items[2]
             .get_text()
             .startswith(
-                "A member of the Data Workspace team approved this visualisation on Jan. 1, 2025, 1:01 a.m."
+                "A member of the Data Workspace team approved this visualisation on 01 January 2025, 01:01am"
             )
         )
-        assert "Currently 3 out of 3 have approved this visualisation." in approval_count_text
+        assert "Currently 3 out of 3 have approved this visualisation:" in approval_count_text
         assert response.status_code == 200
 
     @pytest.mark.django_db
