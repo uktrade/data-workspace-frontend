@@ -16,7 +16,7 @@
     Approvals
   </h1>
 {% flag THIRD_APPROVER %}
-   <p class="govuk-body">Currently {{ approvals | length }} out of 3 have approved this visualisation.</p>
+   <p class="govuk-body">Currently {{ approvals | length }} out of 3 have approved this visualisation:</p>
      <ul class="govuk-list govuk-list--bullet" data-test="approvals-list">
       {% for approver in approvals %}
         {% if approver.status == 'team member' %}
@@ -53,6 +53,7 @@
     {{ form.non_field_errors }}
     {{ form.visualisation }}
     {{ form.approver }}
+    <br>
     {% if already_approved %}
       <button type="submit" class="govuk-button" name="action" value="unapprove">Unapprove</button>
     {% else %}

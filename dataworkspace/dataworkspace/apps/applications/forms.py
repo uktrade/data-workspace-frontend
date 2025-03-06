@@ -219,7 +219,7 @@ class VisualisationApprovalForm(GOVUKDesignSystemModelForm):
         ),
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, third_approver_flag=None, *args, **kwargs):
         # If the visualisation has already been approved, we want to render a form that allows the user to unapprove it.
         if kwargs.get("instance") and kwargs.get("instance").approved:
             self._initial_approved = True
@@ -231,6 +231,9 @@ class VisualisationApprovalForm(GOVUKDesignSystemModelForm):
 
         if self._initial_approved:
             self.fields["approved"].required = False
+
+        if third_approver_flag:
+            self.fields["approved"].widget = HiddenInput()
 
     def clean_approved(self):
         if not self._initial_approved and not self.cleaned_data["approved"]:
