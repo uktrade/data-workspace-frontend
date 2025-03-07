@@ -4,7 +4,8 @@ import uuid
 from datetime import datetime
 from urllib.parse import urlencode
 from django.db.models import Q
-from formtools.wizard.views import SessionWizardView, NamedUrlWizardView
+from formtools.preview import FormPreview
+from formtools.wizard.views import SessionWizardView, NamedUrlWizardView, NamedUrlSessionWizardView
 
 
 from aiohttp import ClientError
@@ -48,34 +49,86 @@ class DatasetBaseView(FormView):
         )
 
 
-class RequestingDataWizardView(NamedUrlWizardView):
+class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
     form_list = [
         ('name', DatasetNameForm),
         ('descriptions', DatasetDescriptionsForm),
         ('origin', DatasetDataOriginForm),
         ('owners', DatasetOwnersForm),
-        # ('existing-system', DatasetExistingSystemForm),
-        # ('published', DatasetPublishedForm),
-        # ('licence', DatasetLicenceForm),
-        # ('restrictions', DatasetRestrictionsForm),
-        # ('purpose', DatasetPurposeForm),
-        # ('usage', DatasetUsageForm),
-        # ('security-classification', DatasetSecurityClassificationForm),
-        # ('personal-data', DatasetPersonalDataForm),
-        # ('special-personal-data', DatasetSpecialPersonalDataForm),
-        # ('commercial-sensitive', DatasetCommercialSensitiveForm),
-        # ('retention-period', DatasetRetentionPeriodForm),
-        # ('update-frequency', DatasetUpdateFrequencyForm),
-        # ('current-access', DatasetCurrentAccessForm),
-        # ('intended-access', DatasetIntendedAccessForm),
-        # ('location-restrictions', DatasetLocationRestrictionsForm),
-        # ('security-clearance', DatasetSecurityClearanceForm),
-        # ('network-restrictions', DatasetNetworkRestrictionsForm),
-        # ('user-restrictions', DatasetUserRestrictionsForm),
+#         # ('existing-system', DatasetExistingSystemForm),
+#         # ('published', DatasetPublishedForm),
+#         # ('licence', DatasetLicenceForm),
+#         # ('restrictions', DatasetRestrictionsForm),
+#         # ('purpose', DatasetPurposeForm),
+#         # ('usage', DatasetUsageForm),
+#         # ('security-classification', DatasetSecurityClassificationForm),
+#         # ('personal-data', DatasetPersonalDataForm),
+#         # ('special-personal-data', DatasetSpecialPersonalDataForm),
+#         # ('commercial-sensitive', DatasetCommercialSensitiveForm),
+#         # ('retention-period', DatasetRetentionPeriodForm),
+#         # ('update-frequency', DatasetUpdateFrequencyForm),
+#         # ('current-access', DatasetCurrentAccessForm),
+#         # ('intended-access', DatasetIntendedAccessForm),
+#         # ('location-restrictions', DatasetLocationRestrictionsForm),
+#         # ('security-clearance', DatasetSecurityClearanceForm),
+#         # ('network-restrictions', DatasetNetworkRestrictionsForm),
+#         # ('user-restrictions', DatasetUserRestrictionsForm),
     ]
-    template_name = "datasets/requesting_data/summary_information.html"
 
-    # send a zendesk ticket and create object
+    def get_template_names(self):
+        return "datasets/requesting_data/summary_information.html"
+    
+    def process_step(self, form):
+        """
+        This method is used to postprocess the form data. By default, it
+        returns the raw `form.data` dictionary.
+
+        """
+
+        print("HELLOOOO*************")
+        print(form)
+        print(form.prefix)
+        print(form.cleaned_data)
+        print(self.get_form_step_data(form))
+
+
+        # During the process, get_cleaned_data_for_step will trigger an error
+        # if some optional forms have been submitted, then later the user chooses a different path.
+        # At the root of the branching paths, we need to remove step data if we jump to a different path
+        # so we do not cause a keyerror when looping cleaned_data on the final barrier summary step.
+        # if (
+        #     form.prefix == "barrier-public-eligibility"
+        #     and not form.cleaned_data["public_eligibility"]
+        # ):
+        #     for form_name in [
+        #         "barrier-public-information-gate",
+        #         "barrier-public-title",
+        #         "barrier-public-summary",
+        #     ]:
+        #         if form_name in self.storage.data["step_data"]:
+        #             self.storage.data["step_data"].pop(form_name)
+        # if (
+        #     form.prefix == "barrier-public-information-gate"
+        #     and form.cleaned_data["public_information"] == "false"
+        # ):
+        #     for form_name in ["barrier-public-title", "barrier-public-summary"]:
+        #         if form_name in self.storage.data["step_data"]:
+        #             self.storage.data["step_data"].pop(form_name)
+
+        return self.get_form_step_data(form)
+    
+    # def post(self, *args, **kwargs):
+    #     print('HELLOOOOOOOOO')
+    #     print(self)
+
+    #     return HttpResponseRedirect(
+    #         reverse(
+    #             "datasets:requesting_data",
+    #             kwargs={"step"="descriptions"},
+    #         )
+    #     )
+
+#     # send a zendesk ticket and create object
 
     def done(self, form_list, **kwargs):
 
@@ -85,7 +138,7 @@ class RequestingDataWizardView(NamedUrlWizardView):
 
         return HttpResponseRedirect(
             reverse(
-                "datasets",
+                "datasets:find_datasets",
             )
         )
 
@@ -328,3 +381,138 @@ class AddTableFailedView(BaseAddTableTemplateView):
                 self.request.GET["execution_date"], self.request.GET["task_name"]
             )
         return ctx
+    
+
+
+class ReportBarrierWizardView(NamedUrlSessionWizardView, FormPreview):
+    form_list = [
+        ("name", DatasetNameForm),
+        ("barrier-status", DatasetDescriptionsForm),
+    ]
+
+    # Use a condition dict to indicate pages that may not load depending on branching
+    # paths through the form. Call the method outside the class which will return a bool
+    # to decide if the page should be included in the form_list.
+
+    def get_template_names(self):
+        return "datasets/requesting_data/summary_information.html"
+    
+    def get(self, request, *args, **kwargs):
+        """
+        At this point we should check if the user is returning via a draft url and clear
+        the current session via self.storage.reset(), get the draft barrier and
+        convert the data into step data using self.storage.data to resume the drafting process.
+
+        For legacy drafts we need to populate each step.
+        This is cumbersome though and all the fields would need to be mapped to the right step.
+
+        We save the whole storage object on 'save and exit' skip to done and check to see
+        if it is the last step.
+        If it is the last step then we save to barrier as normal if not we save
+        the storage object and barrier status as draft.
+
+        If it is the last step then we save to barrier as normal if not we save the storage object and barrier
+        status as draft
+
+        This renders the form or, if needed, does the http redirects.
+        """
+
+        step_url = kwargs.get("step", None)
+
+        # Handle legacy React app calls
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return self.ajax(request, *args, **kwargs)
+
+        # Is it resuming a draft barrier
+        if draft_barrier_id := kwargs.get("draft_barrier_id", None):
+            draft_barrier = self.client.reports.get(id=draft_barrier_id)
+            session_data = draft_barrier.new_report_session_data.strip()
+            self.storage.reset()
+            self.storage.set_step_data("meta", {"barrier_id": str(draft_barrier_id)})
+
+            if session_data == "":
+                # TODO - we could try and map the legacy data here to the relevant steps
+                # Step through the formlist and fields and map to value in legact draft
+                # e.g setting barrier title on the first form
+                self.storage.set_step_data(
+                    "barrier-name", {"title": draft_barrier.title}
+                )
+                self.storage.current_step = self.steps.first
+
+            return redirect(self.get_step_url(self.steps.current))
+
+        elif step_url == "skip":
+            # Save the previously entered data
+            self.save_report_progress()
+
+            # Clear the cache for new report
+            self.storage.reset()
+
+            return HttpResponseRedirect(reverse("barriers:dashboard"))
+
+        elif step_url is None:
+            if "reset" in self.request.GET:
+                self.storage.reset()
+                self.storage.current_step = self.steps.first
+            if self.request.GET:
+                query_string = "?%s" % self.request.GET.urlencode()
+            else:
+                query_string = ""
+            return redirect(self.get_step_url(self.steps.current) + query_string)
+
+        # Is the current step the "done" name/view?
+        elif step_url == self.done_step_name:
+            last_step = self.steps.last
+            form = self.get_form(
+                step=last_step,
+                data=self.storage.get_step_data(last_step),
+                files=self.storage.get_step_files(last_step),
+            )
+            return self.render_done(form, **kwargs)
+
+        # Is the url step name not equal to the step in the storage?
+        # if yes, change the step in the storage (if name exists)
+        elif step_url == self.steps.current:
+            # When passing into the step, we need to save our previously entered
+            # data.
+            self.save_report_progress()
+
+            # URL step name and storage step name are equal, render!
+            form = self.get_form(
+                data=self.storage.current_step_data,
+                files=self.storage.current_step_files,
+            )
+            return self.render(form, **kwargs)
+
+        elif step_url in self.get_form_list():
+            self.storage.current_step = step_url
+            return self.render(
+                self.get_form(
+                    data=self.storage.current_step_data,
+                    files=self.storage.current_step_files,
+                ),
+                **kwargs,
+            )
+        # Invalid step name, reset to first and redirect.
+        else:
+            self.storage.current_step = self.steps.first
+            return redirect(self.get_step_url(self.steps.first))
+
+    def save_report_progress(self):
+        pass
+
+
+    def get_form(self, step=None, data=None, files=None):
+        form = super().get_form(step, data, files)
+        # Determine the step if not given
+        if step is None:
+            step = self.steps.current
+
+
+        return form
+
+
+
+
+
+

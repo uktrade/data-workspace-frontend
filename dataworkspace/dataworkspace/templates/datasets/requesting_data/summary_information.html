@@ -34,17 +34,14 @@
 
 <h1 class="govuk-heading-l">Summary information</h2>
   <form action="" method="post">{% csrf_token %}
-{{ wizard.management_form }}
-{% if wizard.form.forms %}
-    {{ wizard.form.management_form }}
-    {% for form in wizard.form.forms %}
-        {{ wizard.form }}
-    {% endfor %}
-{% endif %}
-<button name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}">{% translate "first step" %}</button>
-<button name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% translate "prev step" %}</button>
-{% endif %}
-<input type="submit" value="{% translate "submit" %}"/>
+  {{ wizard.management_form }}
+      {{ wizard.form.management_form }}
+      {% for form in wizard.form %}
+          {{ form }}
+      {% endfor %}
+
+
+<button type="submit" class="govuk-button">Send</button>
 </form>
 
 <p class="govuk-body">
