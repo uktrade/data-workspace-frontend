@@ -4,14 +4,14 @@ import { Button } from '@govuk-react/button';
 
 import ConfirmDialog from '../../components/ConfirmDialog/';
 
-type PublishUrl = {
-  publishUrl: string;
+type publishData = {
+  publish_action: string;
 };
 
 const ConfirmPublishVisualisation = ({
   data
 }: {
-  data: PublishUrl;
+  data: publishData;
 }): React.ReactNode => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -32,7 +32,7 @@ const ConfirmPublishVisualisation = ({
       </Button>
       {isOpen && (
         <ConfirmDialog
-          actionUrl={data.publishUrl}
+          actionUrl={data.publish_action}
           bodyText={
             'You‘re responsible for the information security and data protection of the data this visualisation uses. All data must be published to the Data Workspace catalogue. Storing and using data from Gitlab is not permitted.'
           }

@@ -1,5 +1,5 @@
 {% extends '_visualisation.html' %}
-
+{% load render_bundle from webpack_loader %}
 
 {% load core_filters %}
 
@@ -40,7 +40,9 @@
 <h3 class="govuk-heading-m">
   Release to production
 </h3>
-{% include "partials/react-slot-data.html" with mount_id="confirm-publish-visualisation" data="{}" test_id="confirm-publish-visualisation" %}
+
+{% include "partials/react-slot-data.html" with mount_id="confirm-publish-visualisation" data=publish_data test_id="confirm-publish-visualisation" %}
+
 <p class="govuk-body">
   {% if approved %}
   You can release your visualisation to production.{{ project_approvals| length }} out of 3 users have approved it.
@@ -72,4 +74,7 @@
   </strong>
 </div>
 {% endif %}
+{% endblock %}
+{% block footer_scripts %}
+{% render_bundle 'confirm-publish-visualisation' 'js' %}
 {% endblock %}

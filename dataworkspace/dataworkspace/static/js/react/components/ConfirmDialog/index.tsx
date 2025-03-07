@@ -48,7 +48,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = (props) => {
   }, [props.open]);
   return (
     <Dialog ref={refModal}>
-      {props.warning ? (
+      {props.warning == true ? (
         <H2 size="LARGE">{props.title}</H2>
       ) : (
         <WarningText>{props.title}</WarningText>

@@ -1537,7 +1537,7 @@ def _visualisation_catalogue_item_is_complete(catalogue_item):
         ]
     )
 
-
+@csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC, STYLE_SRC=settings.WEBPACK_SCRIPT_SRC)
 def _render_visualisation_publish_html(request, gitlab_project, catalogue_item=None, errors=None):
     if not catalogue_item:
         catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
@@ -1572,6 +1572,7 @@ def _render_visualisation_publish_html(request, gitlab_project, catalogue_item=N
             "approved": is_approved_by_all,
             "project_approvals": project_approvals,
             "errors": errors,
+            "publish_data": json.dumps({"publish_action": "publish-visualisation"})
         },
     )
 
