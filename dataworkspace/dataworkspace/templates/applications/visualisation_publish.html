@@ -71,5 +71,10 @@
     You cannot release your visualisation to production. This is because only {{ project_approvals| length }} out of 3 users{{ project_approvals | pluralize }} {{ project_approvals | pluralize:'has,have' }} approved it.
   </strong>
 </div>
+<div>
+  <p class="govuk-body">
+    Go to the <a class="govuk-link" href="{% url 'visualisations:approvals' gitlab_project.id %}">approvals section</a> for more information about this process.
+  </p>
+<div>
 {% endif %}
 {% endblock %}
