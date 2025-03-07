@@ -55,29 +55,29 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         ('descriptions', DatasetDescriptionsForm),
         ('origin', DatasetDataOriginForm),
         ('owners', DatasetOwnersForm),
-#         # ('existing-system', DatasetExistingSystemForm),
-#         # ('published', DatasetPublishedForm),
-#         # ('licence', DatasetLicenceForm),
-#         # ('restrictions', DatasetRestrictionsForm),
-#         # ('purpose', DatasetPurposeForm),
-#         # ('usage', DatasetUsageForm),
-#         # ('security-classification', DatasetSecurityClassificationForm),
-#         # ('personal-data', DatasetPersonalDataForm),
-#         # ('special-personal-data', DatasetSpecialPersonalDataForm),
-#         # ('commercial-sensitive', DatasetCommercialSensitiveForm),
-#         # ('retention-period', DatasetRetentionPeriodForm),
-#         # ('update-frequency', DatasetUpdateFrequencyForm),
-#         # ('current-access', DatasetCurrentAccessForm),
-#         # ('intended-access', DatasetIntendedAccessForm),
-#         # ('location-restrictions', DatasetLocationRestrictionsForm),
-#         # ('security-clearance', DatasetSecurityClearanceForm),
-#         # ('network-restrictions', DatasetNetworkRestrictionsForm),
-#         # ('user-restrictions', DatasetUserRestrictionsForm),
+        # ('existing-system', DatasetExistingSystemForm),
+        #         # ('published', DatasetPublishedForm),
+        #         # ('licence', DatasetLicenceForm),
+        #         # ('restrictions', DatasetRestrictionsForm),
+        #         # ('purpose', DatasetPurposeForm),
+        #         # ('usage', DatasetUsageForm),
+        #         # ('security-classification', DatasetSecurityClassificationForm),
+        #         # ('personal-data', DatasetPersonalDataForm),
+        #         # ('special-personal-data', DatasetSpecialPersonalDataForm),
+        #         # ('commercial-sensitive', DatasetCommercialSensitiveForm),
+        #         # ('retention-period', DatasetRetentionPeriodForm),
+        #         # ('update-frequency', DatasetUpdateFrequencyForm),
+        #         # ('current-access', DatasetCurrentAccessForm),
+        #         # ('intended-access', DatasetIntendedAccessForm),
+        #         # ('location-restrictions', DatasetLocationRestrictionsForm),
+        #         # ('security-clearance', DatasetSecurityClearanceForm),
+        #         # ('network-restrictions', DatasetNetworkRestrictionsForm),
+        #         # ('user-restrictions', DatasetUserRestrictionsForm),
     ]
 
     def get_template_names(self):
         return "datasets/requesting_data/summary_information.html"
-    
+
     # def process_step(self, form):
     #     """
     #     This method is used to postprocess the form data. By default, it
@@ -90,7 +90,6 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
     #     print(form.prefix)
     #     print(form.cleaned_data)
     #     print(self.get_form_step_data(form))
-
 
     #     # During the process, get_cleaned_data_for_step will trigger an error
     #     # if some optional forms have been submitted, then later the user chooses a different path.
@@ -116,7 +115,7 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
     #     #             self.storage.data["step_data"].pop(form_name)
 
     #     return self.get_form_step_data(form)
-    
+
     # def post(self, *args, **kwargs):
     #     print('HELLOOOOOOOOO')
     #     print(self)
@@ -132,9 +131,13 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
 
     def done(self, form_list, **kwargs):
 
+        requesting_dataset = RequestingDataset.objects.create(name=form_list[0].cleaned_data.get("name"))
+        requesting_dataset.save()
+
         for form in form_list:
-            print(">>>>", form.prefix)
-            print(">>>>", form.cleaned_data)
+            for field in form.cleaned_data:
+                setattr(requesting_dataset, field, form.cleaned_data.get(field))
+                requesting_dataset.save()
 
         return HttpResponseRedirect(
             reverse(
@@ -381,7 +384,6 @@ class AddTableFailedView(BaseAddTableTemplateView):
                 self.request.GET["execution_date"], self.request.GET["task_name"]
             )
         return ctx
-    
 
 
 class ReportBarrierWizardView(NamedUrlSessionWizardView, FormPreview):
@@ -396,7 +398,7 @@ class ReportBarrierWizardView(NamedUrlSessionWizardView, FormPreview):
 
     def get_template_names(self):
         return "datasets/requesting_data/summary_information.html"
-    
+
     def get(self, request, *args, **kwargs):
         """
         At this point we should check if the user is returning via a draft url and clear
@@ -501,18 +503,10 @@ class ReportBarrierWizardView(NamedUrlSessionWizardView, FormPreview):
     def save_report_progress(self):
         pass
 
-
     def get_form(self, step=None, data=None, files=None):
         form = super().get_form(step, data, files)
         # Determine the step if not given
         if step is None:
             step = self.steps.current
 
-
         return form
-
-
-
-
-
-
