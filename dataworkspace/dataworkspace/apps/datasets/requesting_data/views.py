@@ -78,44 +78,44 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
     def get_template_names(self):
         return "datasets/requesting_data/summary_information.html"
     
-    def process_step(self, form):
-        """
-        This method is used to postprocess the form data. By default, it
-        returns the raw `form.data` dictionary.
+    # def process_step(self, form):
+    #     """
+    #     This method is used to postprocess the form data. By default, it
+    #     returns the raw `form.data` dictionary.
 
-        """
+    #     """
 
-        print("HELLOOOO*************")
-        print(form)
-        print(form.prefix)
-        print(form.cleaned_data)
-        print(self.get_form_step_data(form))
+    #     print("HELLOOOO*************")
+    #     print(form)
+    #     print(form.prefix)
+    #     print(form.cleaned_data)
+    #     print(self.get_form_step_data(form))
 
 
-        # During the process, get_cleaned_data_for_step will trigger an error
-        # if some optional forms have been submitted, then later the user chooses a different path.
-        # At the root of the branching paths, we need to remove step data if we jump to a different path
-        # so we do not cause a keyerror when looping cleaned_data on the final barrier summary step.
-        # if (
-        #     form.prefix == "barrier-public-eligibility"
-        #     and not form.cleaned_data["public_eligibility"]
-        # ):
-        #     for form_name in [
-        #         "barrier-public-information-gate",
-        #         "barrier-public-title",
-        #         "barrier-public-summary",
-        #     ]:
-        #         if form_name in self.storage.data["step_data"]:
-        #             self.storage.data["step_data"].pop(form_name)
-        # if (
-        #     form.prefix == "barrier-public-information-gate"
-        #     and form.cleaned_data["public_information"] == "false"
-        # ):
-        #     for form_name in ["barrier-public-title", "barrier-public-summary"]:
-        #         if form_name in self.storage.data["step_data"]:
-        #             self.storage.data["step_data"].pop(form_name)
+    #     # During the process, get_cleaned_data_for_step will trigger an error
+    #     # if some optional forms have been submitted, then later the user chooses a different path.
+    #     # At the root of the branching paths, we need to remove step data if we jump to a different path
+    #     # so we do not cause a keyerror when looping cleaned_data on the final barrier summary step.
+    #     # if (
+    #     #     form.prefix == "barrier-public-eligibility"
+    #     #     and not form.cleaned_data["public_eligibility"]
+    #     # ):
+    #     #     for form_name in [
+    #     #         "barrier-public-information-gate",
+    #     #         "barrier-public-title",
+    #     #         "barrier-public-summary",
+    #     #     ]:
+    #     #         if form_name in self.storage.data["step_data"]:
+    #     #             self.storage.data["step_data"].pop(form_name)
+    #     # if (
+    #     #     form.prefix == "barrier-public-information-gate"
+    #     #     and form.cleaned_data["public_information"] == "false"
+    #     # ):
+    #     #     for form_name in ["barrier-public-title", "barrier-public-summary"]:
+    #     #         if form_name in self.storage.data["step_data"]:
+    #     #             self.storage.data["step_data"].pop(form_name)
 
-        return self.get_form_step_data(form)
+    #     return self.get_form_step_data(form)
     
     # def post(self, *args, **kwargs):
     #     print('HELLOOOOOOOOO')
