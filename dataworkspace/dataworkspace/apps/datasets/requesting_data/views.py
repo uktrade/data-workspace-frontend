@@ -28,12 +28,19 @@ from dataworkspace.apps.datasets.requesting_data.forms import DatasetOwnersForm,
 from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.core.utils import get_task_error_message_template
 
+<<<<<<< HEAD
 
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import RequestingDataset, SourceTable
 from dataworkspace.apps.datasets.requesting_data.forms import DaatasetSecurityClassificationForm, DatasetNameForm, DatasetDescriptionsForm, DatasetDataOriginForm
 from dataworkspace.apps.datasets.models import DataSet, DataSetUserPermission, RequestingDataset, SourceTable, VisualisationUserPermission
 from dataworkspace.apps.datasets.requesting_data.forms import DatasetSecurityClassificationForm, DataSetOwnersForm, DatasetNameForm, DatasetDescriptionsForm, DatasetDataOriginForm, DatsetPersonalDataForm
+=======
+from dataworkspace.apps.datasets.models import RequestingDataset, SourceTable
+from dataworkspace.apps.datasets.requesting_data.forms import DatasetNameForm, DatasetDescriptionsForm, DatasetDataOriginForm
+from dataworkspace.apps.datasets.models import RequestingDataset, SourceTable
+from dataworkspace.apps.datasets.requesting_data.forms import DatasetSecurityClassificationForm, DatasetNameForm, DatasetDescriptionsForm, DatasetDataOriginForm, DatsetPersonalDataForm
+>>>>>>> ff6b3ca04 (rebasing)
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
