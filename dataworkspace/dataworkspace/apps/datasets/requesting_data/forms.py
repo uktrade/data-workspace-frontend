@@ -1,24 +1,9 @@
-import re
-
-from django import forms
 from django.contrib.auth import get_user_model
-from django.core.validators import FileExtensionValidator
 from django.forms import ValidationError
 
-from dataworkspace.apps.core.forms import ConditionalSupportTypeRadioWidget
-from dataworkspace.apps.core.storage import malware_file_validator
-from dataworkspace.apps.core.utils import get_postgres_datatype_choices
-from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
-    GOVUKDesignSystemChoiceField,
-    GOVUKDesignSystemFileField,
-    GOVUKDesignSystemFileInputWidget,
     GOVUKDesignSystemForm,
-    GOVUKDesignSystemRadioField,
-    GOVUKDesignSystemRadiosWidget,
-    GOVUKDesignSystemSelectWidget,
-    GOVUKDesignSystemTextCharCountWidget,
     GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
@@ -69,7 +54,7 @@ class DatasetDescriptionsForm(GOVUKDesignSystemForm):
 
 class DatasetDataOriginForm(GOVUKDesignSystemForm):
 
-    data_origin = GOVUKDesignSystemCharField(
+    origin = GOVUKDesignSystemCharField(
         label="What type of dataset is this?",
         required=True,
         widget=GOVUKDesignSystemTextWidget(
