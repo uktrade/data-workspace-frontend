@@ -6,6 +6,7 @@ from dataworkspace.apps.datasets.data_dictionary import views as data_dictionary
 from dataworkspace.apps.datasets.search import suggested_searches
 from dataworkspace.apps.datasets.subscriptions import views as subscription_views
 from dataworkspace.apps.request_access.views import DatasetAccessRequest
+from dataworkspace.apps.datasets.requesting_data.views import RequestingDataWizardView
 
 urlpatterns = [
     path("", login_required(views.find_datasets), name="find_datasets"),
@@ -306,11 +307,9 @@ urlpatterns = [
 
     ),
     path(
-        "requesting-data/",
-        include(
-            ("dataworkspace.apps.datasets.requesting_data.urls", "requesting_data"),
-            namespace="requesting_data",
-        ),
+        "requesting-data/<str:step>",
+        RequestingDataWizardView.as_view(url_name="datasets:requesting-data-step"),
+        name="requesting-data-step",
     ),
 
     path(
