@@ -3,17 +3,17 @@ from django.urls import path
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.datasets.requesting_data.views import DatasetDescriptionsView, DatasetNameView, DatasetOwnersView, DatasetDataOriginView, DatasetSystemView, RequestingDataWizardView, ReportBarrierWizardView
 
-urlpatterns = [
-    path(
-        "<str:step>",
-        RequestingDataWizardView.as_view(url_name="datasets:requesting-data"),
-        name="requesting-data",
-    ),
-    path(
-        "new/<str:step>",
-        ReportBarrierWizardView.as_view(url_name="reports:report-barrier-wizard-step"),
-        name="report-barrier-wizard-step",
-    ),
+# urlpatterns = [
+#     path(
+#         "<str:step>",
+#         RequestingDataWizardView.as_view(url_name="datasets:requesting-data"),
+#         name="requesting-data",
+#     ),
+#     path(
+#         "new/<str:step>",
+#         ReportBarrierWizardView.as_view(url_name="reports:report-barrier-wizard-step"),
+#         name="report-barrier-wizard-step",
+#     ),
 
 
 
@@ -42,4 +42,4 @@ urlpatterns = [
     #     login_required(DatasetSystemView.as_view()),
     #     name="dataset-system",
     # ),
-]
+# ]
