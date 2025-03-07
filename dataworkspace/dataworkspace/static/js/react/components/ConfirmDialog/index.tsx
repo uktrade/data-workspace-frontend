@@ -1,15 +1,18 @@
 import React, { useEffect, useRef } from 'react';
 
 import { SPACING_POINTS } from '@govuk-react/constants';
-import { Button, H2, Link } from 'govuk-react';
+import { Button, H2, Link, Paragraph, WarningText } from 'govuk-react';
 import styled from 'styled-components';
 
 type ConfirmDialogProps = {
   actionUrl: string;
-  buttonText: string;
+  bodyText: string;
+  buttonTextAccept: string;
+  buttonTextCancel: string;
   onClose: () => void;
   open: boolean;
   title: string;
+  warning: boolean;
 };
 
 const ContainerButtonGroup = styled('div')`
@@ -45,23 +48,32 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = (props) => {
   }, [props.open]);
   return (
     <Dialog ref={refModal}>
-      <H2 size="LARGE">{props.title}</H2>
+      {props.warning ? (
+        <H2 size="LARGE">{props.title}</H2>
+      ) : (
+        <WarningText>{props.title}</WarningText>
+      )}
+      {props.bodyText.length > 0 ? (
+        <Paragraph>props.bodyText </Paragraph>
+      ) : (
+        <></>
+      )}
       <ContainerButtonGroup>
         <StyledForm
           action={props.actionUrl}
           aria-label="form"
           method="GET"
-          name="submitRemoveUser"
+          name="submit"
         >
           <Button
             style={{ marginRight: SPACING_POINTS[4] }}
             onSubmit={closeModal}
             type={'submit'}
           >
-            {props.buttonText}
+            {props.buttonTextAccept}
           </Button>
           <StyledLink href="javascript:;" onClick={props.onClose}>
-            Cancel
+            {props.buttonTextCancel}
           </StyledLink>
         </StyledForm>
       </ContainerButtonGroup>

@@ -6,10 +6,13 @@ describe('ConfirmDialog Modal Component', () => {
   const mockOnClose = jest.fn();
   const defaultProps = {
     actionUrl: '/submit-url',
-    buttonText: 'Confirm',
+    bodyText: '""',
+    buttonTextAccept: 'Confirm',
+    buttonTextCancel: 'Cancel',
     onClose: mockOnClose,
     open: false,
-    title: 'Confirmation Dialog'
+    title: 'Confirmation Dialog',
+    warning: false
   };
   afterEach(() => {
     jest.clearAllMocks();

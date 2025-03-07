@@ -16,10 +16,13 @@ export const ConfirmRemoveUser: Story = {
   render: () => (
     <ConfirmDialog
       actionUrl="/submit"
-      buttonText="Remove User?"
+      bodyText='""'
+      buttonTextAccept="Remove User?"
+      buttonTextCancel="Cancel"
       onClose={() => {}}
       open={true}
       title="Are you sure you want to remove Jones?"
+      warning={false}
     />
   )
 };

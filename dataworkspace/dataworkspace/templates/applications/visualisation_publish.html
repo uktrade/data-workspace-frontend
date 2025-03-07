@@ -40,7 +40,7 @@
 <h3 class="govuk-heading-m">
   Release to production
 </h3>
-
+{% include "partials/react-slot-data.html" with mount_id="confirm-publish-visualisation" data="{}" test_id="confirm-publish-visualisation" %}
 <p class="govuk-body">
   {% if approved %}
   You can release your visualisation to production.{{ project_approvals| length }} out of 3 users have approved it.
