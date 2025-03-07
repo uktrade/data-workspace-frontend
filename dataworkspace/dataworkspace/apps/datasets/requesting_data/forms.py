@@ -30,7 +30,10 @@ class DatasetNameForm(GOVUKDesignSystemForm):
     name = GOVUKDesignSystemCharField(
         label="What is the name of the dataset?",
         required=True,
-        widget=GOVUKDesignSystemTextWidget(label_is_heading=True),
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=True,
+            label_size="m",
+        ),
         error_messages={"required": "Enter a table name"},
     )
 
@@ -69,7 +72,10 @@ class DatasetDataOriginForm(GOVUKDesignSystemForm):
     data_origin = GOVUKDesignSystemCharField(
         label="What type of dataset is this?",
         required=True,
-        widget=GOVUKDesignSystemTextWidget(label_is_heading=True),
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=True,
+            label_size="m",
+        ),
     )
 
 
@@ -79,21 +85,30 @@ class DatasetOwnersForm(GOVUKDesignSystemForm):
         label="Name of Information Asset Owner",
         help_text="IAO's are responsible for ensuring information assets are handled and managed appropriately",
         required=True,
-        widget=GOVUKDesignSystemTextWidget(label_is_heading=True),
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=True,
+            label_size="m",
+        ),
     )
 
     information_asset_manager = GOVUKDesignSystemCharField(
         label="Name of Information Asset Owner",
         help_text="IAO's are responsible for ensuring information assets are handled and managed appropriately",
         required=True,
-        widget=GOVUKDesignSystemTextWidget(label_is_heading=True),
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=True,
+            label_size="m",
+        ),
     )
 
     enquiries_contact = GOVUKDesignSystemCharField(
         label="Contact person",
         help_text="Description of contact person",
         required=True,
-        widget=GOVUKDesignSystemTextWidget(label_is_heading=True),
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=True,
+            label_size="m",
+        ),
     )
 
     def clean(self):
