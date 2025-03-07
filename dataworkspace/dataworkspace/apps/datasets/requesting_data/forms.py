@@ -119,7 +119,7 @@ class DatasetOwnersForm(GOVUKDesignSystemForm):
         iao_last_name = cleaned_data.get("information_asset_owner").split(" ")[1].capitalize()
         try:
             iao_user = User.objects.get(first_name=iao_first_name, last_name=iao_last_name)
-            cleaned_data["iao_user"] = iao_user
+            cleaned_data["information_asset_owner"] = iao_user
         except:
             raise ValidationError("This is not a real user")
 
@@ -127,7 +127,7 @@ class DatasetOwnersForm(GOVUKDesignSystemForm):
         iam_last_name = cleaned_data.get("information_asset_manager").split(" ")[1].capitalize()
         try:
             iam_user = User.objects.get(first_name=iam_first_name, last_name=iam_last_name)
-            cleaned_data["iam_user"] = iam_user
+            cleaned_data["information_asset_manager"] = iam_user
         except:
             raise ValidationError("This is not a real user")
 
@@ -135,7 +135,7 @@ class DatasetOwnersForm(GOVUKDesignSystemForm):
         enquiries_contact_last_name = cleaned_data.get("enquiries_contact").split(" ")[1].capitalize()
         try:
             enquiries_contact_user = User.objects.get(first_name=enquiries_contact_first_name, last_name=enquiries_contact_last_name)
-            cleaned_data["enquiries_contact_user"] = enquiries_contact_user
+            cleaned_data["enquiries_contact"] = enquiries_contact_user
         except:
             raise ValidationError("This is not a real user")
 
