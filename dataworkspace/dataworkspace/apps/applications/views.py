@@ -1503,7 +1503,7 @@ def _visualisation_approvals(application_template, request, gitlab_project):
     dw_approvals = VisualisationApproval.objects.filter(
         visualisation=application_template, approved=True
     ).all()
-
+    project_members = []
     if waffle.flag_is_active(request, settings.THIRD_APPROVER):
         if settings.GITLAB_FIXTURES:
             project_members = get_fixture("project_members_fixture.json")
