@@ -1,4 +1,7 @@
 {% extends '_visualisation.html' %}
+
+{% load static waffle_tags %}
+
 {% load core_filters %}
 
 {% block head %}
@@ -25,7 +28,57 @@
   </div>
 </div>
 {% endif %}
+{% flag THIRD_APPROVER %}
+<h1 class="govuk-heading-l govuk-!-margin-bottom-6">
+  <span class="govuk-caption-l">{{ gitlab_project.name }}</span>
+  Publish
+</h1>
 
+<p class="govuk-body">
+  Before you publish this visualisation to the catalogue you need to release it to production. This makes it viewable to users who have the link.
+</p>
+
+<h3 class="govuk-heading-m">
+  Release to production
+</h3>
+
+<p class="govuk-body">
+  {% if approved %}
+  You can release your visualisation to production.{{ project_approvals| length }} out of 3 users have approved it.
+</p>
+  <button type="submit" class="govuk-button govuk-button--secondary
+  {% if not visualisation_published and not approved %}
+   govuk-button--disabled 
+  {% endif %}" 
+  name="action" 
+  value="{% if visualisation_published %}
+    unpublish-visualisation
+  {% else %}
+    publish-visualisation
+  {% endif %}"
+  aria-labelledby="visualisation-explanation"
+  {% if not visualisation_published and not approved %} disabled{% endif %}>
+      {% if visualisation_published %}
+          Unpublish visualisation
+      {% else %}
+          Release to production
+        {% endif %}
+  </button>
+</div>
+{% else %}
+<div class="govuk-warning-text">
+  <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+  <strong class="govuk-warning-text__text">
+    You cannot release your visualisation to production. This is because only {{ project_approvals| length }} out of 3 users{{ project_approvals | pluralize }} {{ project_approvals | pluralize:'has,have' }} approved it.
+  </strong>
+</div>
+<div>
+  <p class="govuk-body">
+    Go to the <a class="govuk-link" href="{% url 'visualisations:approvals' gitlab_project.id %}">approvals section</a> for more information about this process.
+  </p>
+<div>
+{% endif %}
+{% else %}
 <h1 class="govuk-heading-l govuk-!-margin-bottom-6">
   <span class="govuk-caption-l">{{ gitlab_project.name }}</span>
   Publish
@@ -95,5 +148,5 @@
     </form>
   </div>
 </div>
-
+{% endflag %}
 {% endblock %}
