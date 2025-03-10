@@ -24,6 +24,10 @@ const Dialog = styled('dialog')`
   width: 600px;
 `;
 
+const StyledParagraph = styled(Paragraph)`
+  padding-top: 30px;
+`;
+
 const StyledLink = styled(Link)`
   display: inline-block;
   font-size: 20px;
@@ -32,6 +36,12 @@ const StyledLink = styled(Link)`
 const StyledForm = styled('form')`
   display: flex;
   align-items: baseline;
+`;
+
+const StyledWarning = styled(WarningText)`
+  > strong {
+    font-size: 27px;
+  }
 `;
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = (props) => {
@@ -48,13 +58,13 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = (props) => {
   }, [props.open]);
   return (
     <Dialog ref={refModal}>
-      {props.warning == true ? (
+      {props.warning === false ? (
         <H2 size="LARGE">{props.title}</H2>
       ) : (
-        <WarningText>{props.title}</WarningText>
+        <StyledWarning>{props.title}</StyledWarning>
       )}
       {props.bodyText.length > 0 ? (
-        <Paragraph>props.bodyText </Paragraph>
+        <StyledParagraph>{props.bodyText}</StyledParagraph>
       ) : (
         <></>
       )}
@@ -72,9 +82,21 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = (props) => {
           >
             {props.buttonTextAccept}
           </Button>
-          <StyledLink href="javascript:;" onClick={props.onClose}>
-            {props.buttonTextCancel}
-          </StyledLink>
+          {props.warning === false ? (
+            <StyledLink href="javascript:;" onClick={props.onClose}>
+              {props.buttonTextCancel}
+            </StyledLink>
+          ) : (
+            <Button
+              buttonColour="#f3f2f1"
+              buttonShadowColour="#929191"
+              buttonTextColour="#0b0c0c"
+              onClick={props.onClose}
+              style={{ marginLeft: '-10px' }}
+            >
+              Close
+            </Button>
+          )}
         </StyledForm>
       </ContainerButtonGroup>
     </Dialog>

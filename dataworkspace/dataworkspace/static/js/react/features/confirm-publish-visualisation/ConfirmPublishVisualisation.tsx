@@ -6,6 +6,7 @@ import ConfirmDialog from '../../components/ConfirmDialog/';
 
 type publishData = {
   publish_action: string;
+  publish_catalogue: boolean;
 };
 
 const ConfirmPublishVisualisation = ({
@@ -36,10 +37,18 @@ const ConfirmPublishVisualisation = ({
           bodyText={
             'You‘re responsible for the information security and data protection of the data this visualisation uses. All data must be published to the Data Workspace catalogue. Storing and using data from Gitlab is not permitted.'
           }
-          title={'Final review before publishing'}
+          title={
+            data.publish_catalogue
+              ? 'Final review before publishing'
+              : 'Final review before releasing to production'
+          }
           open={isOpen}
           onClose={closeModal}
-          buttonTextAccept={'Publish to catalogue'}
+          buttonTextAccept={
+            data.publish_catalogue
+              ? 'Publish to catalogue'
+              : 'Release to production'
+          }
           buttonTextCancel={'Close'}
           warning={true}
         ></ConfirmDialog>

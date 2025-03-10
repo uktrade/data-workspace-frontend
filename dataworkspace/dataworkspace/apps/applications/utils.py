@@ -1984,5 +1984,4 @@ def visualisation_approvals(dw_approvals, project_members):
         for approver_type in ["owner", "peer reviewer", "team member"]
         if approver_types[approver_type]
     ]
-    is_approved_by_all = has_all_three_approval_types(project_approvals)
-    return (is_approved_by_all, project_approvals)
+    return project_approvals

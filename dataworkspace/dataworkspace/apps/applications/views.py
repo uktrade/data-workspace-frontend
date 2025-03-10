@@ -61,6 +61,7 @@ from dataworkspace.apps.applications.utils import (
     fetch_visualisation_log_events,
     get_quicksight_dashboard_name_url,
     visualisation_approvals,
+    has_all_three_approval_types,
     stop_spawner_and_application,
     sync_quicksight_permissions,
 )
@@ -1108,9 +1109,9 @@ def visualisation_approvals_html_GET(request, gitlab_project):
             gitlab_project["id"], request.user, current_gitlab_user
         )
 
-        is_approved_by_all, project_approvals = visualisation_approvals(
-            dw_approvals, project_members
-        )
+        project_approvals = visualisation_approvals(dw_approvals, project_members)
+        is_approved_by_all = has_all_three_approval_types(project_approvals)
+
     another_user_with_same_type_already_approved = (
         len(
             [
@@ -1497,7 +1498,7 @@ def visualisation_publish_html_view(request, gitlab_project_id):
     return HttpResponse(status=405)
 
 
-def _visualisation_is_approved(application_template, request, gitlab_project):
+def _visualisation_approvals(application_template, request, gitlab_project):
 
     dw_approvals = VisualisationApproval.objects.filter(
         visualisation=application_template, approved=True
@@ -1509,9 +1510,23 @@ def _visualisation_is_approved(application_template, request, gitlab_project):
         else:
             project_members = gitlab_project_members(gitlab_project)
 
-    is_approved_by_all, project_approvals = visualisation_approvals(dw_approvals, project_members)
+    project_approvals = visualisation_approvals(dw_approvals, project_members)
 
-    return (is_approved_by_all, project_approvals)
+    return project_approvals
+
+
+def _visualisation_is_approved(project_approvals, request, application_template):
+
+    if waffle.flag_is_active(request, settings.THIRD_APPROVER):
+        is_approved_by_all = has_all_three_approval_types(project_approvals)
+    else:
+        is_approved_by_all = (
+            VisualisationApproval.objects.filter(
+                visualisation=application_template, approved=True
+            ).count()
+            >= 2
+        )
+    return is_approved_by_all
 
 
 def _visualisation_is_published(application_template):
@@ -1537,13 +1552,15 @@ def _visualisation_catalogue_item_is_complete(catalogue_item):
         ]
     )
 
+
 @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC, STYLE_SRC=settings.WEBPACK_SCRIPT_SRC)
 def _render_visualisation_publish_html(request, gitlab_project, catalogue_item=None, errors=None):
     if not catalogue_item:
         catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
     application_template = catalogue_item.visualisation_template
-    is_approved_by_all, project_approvals = _visualisation_is_approved(
-        application_template, request, gitlab_project
+    project_approvals = _visualisation_approvals(application_template, request, gitlab_project)
+    is_approved_by_all = _visualisation_is_approved(
+        project_approvals, request, application_template
     )
     visualisation_published = _visualisation_is_published(application_template)
     visualisation_domain = (
@@ -1583,8 +1600,12 @@ def visualisation_publish_html_GET(request, gitlab_project):
 
 @transaction.atomic
 def _set_published_on_catalogue_item(request, gitlab_project, catalogue_item, publish):
-    is_approved_by_all, project_approvals = _visualisation_is_approved(
+    project_approvals = _visualisation_approvals(
         catalogue_item.visualisation_template, request, gitlab_project
+    )
+
+    is_approved_by_all = _visualisation_is_approved(
+        project_approvals, request, catalogue_item.visualisation_template
     )
     visualisation_published = _visualisation_is_published(catalogue_item.visualisation_template)
     catalogue_item_complete = _visualisation_catalogue_item_is_complete(catalogue_item)
@@ -1607,7 +1628,7 @@ def _set_published_on_catalogue_item(request, gitlab_project, catalogue_item, pu
 
         return redirect(request.path)
 
-    if is_approved_by_all is False and len(project_approvals) < 3:
+    if is_approved_by_all is False:
         error = (
             reverse("visualisations:approvals", args=(gitlab_project["id"],)),
             "The visualisation must be approved by two developers before it can be published.",
@@ -1635,8 +1656,10 @@ def _set_published_on_catalogue_item(request, gitlab_project, catalogue_item, pu
 
 @transaction.atomic
 def _set_published_on_visualisation(request, gitlab_project, application_template, publish):
-    is_approved_by_all, project_approvals = _visualisation_is_approved(
-        application_template, request, gitlab_project
+    project_approvals = _visualisation_approvals(application_template, request, gitlab_project)
+
+    is_approved_by_all = _visualisation_is_approved(
+        project_approvals, request, application_template
     )
     if publish is False or is_approved_by_all:
         application_template.visible = publish
@@ -1657,7 +1680,7 @@ def _set_published_on_visualisation(request, gitlab_project, application_templat
 
         return redirect(request.path)
 
-    if is_approved_by_all is False and len(project_approvals) < 3:
+    if is_approved_by_all is False:
         error = (
             reverse("visualisations:approvals", args=(gitlab_project["id"],)),
             "The visualisation must be approved by two developers before it can be published.",
