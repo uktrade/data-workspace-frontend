@@ -91,11 +91,13 @@ const ConfirmRemoveUser = ({
         <ConfirmDialog
           actionUrl={selectedUser.remove_user_url}
           bodyText=""
+          csrf_token=""
           title={`Are you sure you want to remove ${selectedUser?.first_name} ${selectedUser?.last_name}'s access to this data?`}
           open={isOpen}
           onClose={closeModal}
           buttonTextAccept={'Yes, remove user'}
           buttonTextCancel={'Cancel'}
+          buttonValueAccept={''}
           warning={false}
         ></ConfirmDialog>
       )}

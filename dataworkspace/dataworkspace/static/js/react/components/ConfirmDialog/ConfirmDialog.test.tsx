@@ -9,6 +9,8 @@ describe('ConfirmDialog Modal Component', () => {
     bodyText: '""',
     buttonTextAccept: 'Confirm',
     buttonTextCancel: 'Cancel',
+    buttonValueAccept: '',
+    csrf_token: '123',
     onClose: mockOnClose,
     open: false,
     title: 'Confirmation Dialog',

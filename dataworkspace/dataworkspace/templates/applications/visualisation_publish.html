@@ -40,47 +40,36 @@
 <h3 class="govuk-heading-m">
   Release to production
 </h3>
-
-{% include "partials/react-slot-data.html" with mount_id="confirm-publish-visualisation" data=publish_data test_id="confirm-publish-visualisation" %}
-
-<p class="govuk-body">
-  {% if approved %}
-  You can release your visualisation to production.{{ project_approvals| length }} out of 3 users have approved it.
-</p>
-  <button type="submit" class="govuk-button govuk-button--secondary
-  {% if not visualisation_published and not approved %}
-   govuk-button--disabled 
-  {% endif %}" 
-  name="action" 
-  value="{% if visualisation_published %}
-    unpublish-visualisation
+{% if approved %}
+  <p class="govuk-body">
+    You can release your visualisation to production.{{ project_approvals| length }} out of 3 users have approved it.
+  </p>
+  {% if not visualisation_published %}
+    {% include "partials/react-slot-data.html" with mount_id="confirm-publish-visualisation" data='{"is_catalogue": false, "crsf_token": "{ csrf_token }" }' test_id="confirm-publish-visualisation" %}
+  {% elif not catalogue_published %}  
+    <p class="govuk-body">
+      This visualisation has been released to production. This makes it viewable to users who have the link.
+    </p>
+    <a class="govuk-link" href="{{ visualisation_link }}">Your visualisation can be found here.</a>
+    <button name="action" type="submit" class="govuk-button govuk-button--secondary" value="unpublish-visualisation"></button>
+    {% include "partials/react-slot-data.html" with mount_id="confirm-publish-visualisation" data='{"is_catalogue": true, "crsf_token": "{ csrf_token }"}'  test_id="confirm-publish-visualisation" %}
   {% else %}
-    publish-visualisation
-  {% endif %}"
-  aria-labelledby="visualisation-explanation"
-  {% if not visualisation_published and not approved %} disabled{% endif %}>
-      {% if visualisation_published %}
-          Unpublish visualisation
-      {% else %}
-          Release to production
-        {% endif %}
-  </button>
-</div>
+   <button  name="action" type="submit" class="govuk-button govuk-button--secondary" value="unpublish-catalogue" aria-labelledby="catalgoue-explanation">Unpublish catalogue page</button>
+  {% endif %}
 {% else %}
-<div class="govuk-warning-text">
-  <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
-  <strong class="govuk-warning-text__text">
-    You cannot release your visualisation to production. This is because only {{ project_approvals| length }} out of 3 users{{ project_approvals | pluralize }} {{ project_approvals | pluralize:'has,have' }} approved it.
-  </strong>
-</div>
+  <div class="govuk-warning-text">
+    <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+    <strong class="govuk-warning-text__text">
+      You cannot release your visualisation to production. This is because only {{ project_approvals| length }} out of 3 users{{ project_approvals | pluralize }} {{ project_approvals | pluralize:'has,have' }} approved it.
+    </strong>
+  </div>
+  <div>
+    <p class="govuk-body">
+      Go to the <a class="govuk-link" href="{% url 'visualisations:approvals' gitlab_project.id %}">approvals section</a> for more information about this process.
+    </p>
+  </div>
 {% endif %}
 {% endblock %}
 {% block footer_scripts %}
 {% render_bundle 'confirm-publish-visualisation' 'js' %}
-<div>
-  <p class="govuk-body">
-    Go to the <a class="govuk-link" href="{% url 'visualisations:approvals' gitlab_project.id %}">approvals section</a> for more information about this process.
-  </p>
-<div>
-{% endif %}
 {% endblock %}

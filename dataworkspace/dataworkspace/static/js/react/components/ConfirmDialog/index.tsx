@@ -9,6 +9,8 @@ type ConfirmDialogProps = {
   bodyText: string;
   buttonTextAccept: string;
   buttonTextCancel: string;
+  buttonValueAccept: string;
+  csrf_token: string;
   onClose: () => void;
   open: boolean;
   title: string;
@@ -72,13 +74,20 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = (props) => {
         <StyledForm
           action={props.actionUrl}
           aria-label="form"
-          method="GET"
+          method={props.warning === true ? 'POST' : 'GET'}
           name="submit"
         >
+          {props.warning === true ? (
+            <input type="hidden" name="_csrf" value={props.csrf_token}></input>
+          ) : (
+            <></>
+          )}
           <Button
+            name={'action'}
             style={{ marginRight: SPACING_POINTS[4] }}
             onSubmit={closeModal}
             type={'submit'}
+            value={props.buttonValueAccept}
           >
             {props.buttonTextAccept}
           </Button>

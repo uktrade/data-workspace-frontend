@@ -1572,7 +1572,14 @@ def _render_visualisation_publish_html(request, gitlab_project, catalogue_item=N
         visualisation_branches = get_fixture("visualisation_branches_fixture.json")
     else:
         visualisation_branches = _visualisation_branches(gitlab_project)
-
+    catalogue_publish_data = json.dumps({
+        
+        "is_catalogue": True,
+    })
+    visualisation_publish_data = json.dumps({
+        
+        "is_catalogue": False,
+    })
     return _render_visualisation(
         request,
         "applications/visualisation_publish.html",
@@ -1586,10 +1593,11 @@ def _render_visualisation_publish_html(request, gitlab_project, catalogue_item=N
             "catalogue_complete": catalogue_item_complete,
             "catalogue_published": catalogue_item.published,
             "visualisation_published": visualisation_published,
-            "approved": is_approved_by_all,
+            "approved": True,
             "project_approvals": project_approvals,
             "errors": errors,
-            "publish_data": json.dumps({"publish_action": "publish-visualisation"})
+            "catalogue_publish_data": catalogue_publish_data,
+            "visualisation_publish_data": visualisation_publish_data,
         },
     )
 
@@ -1696,7 +1704,7 @@ def visualisation_publish_html_POST(request, gitlab_project):
     application_template = _application_template(gitlab_project)
     action = request.POST.get("action", "").lower()
     catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
-
+    print(1707, action)
     if action == "publish-catalogue":
         return _set_published_on_catalogue_item(
             request, gitlab_project, catalogue_item, publish=True

@@ -5,8 +5,8 @@ import { Button } from '@govuk-react/button';
 import ConfirmDialog from '../../components/ConfirmDialog/';
 
 type publishData = {
-  publish_action: string;
-  publish_catalogue: boolean;
+  csrf_token: string;
+  is_catalogue: boolean; // or visualisation
 };
 
 const ConfirmPublishVisualisation = ({
@@ -29,27 +29,29 @@ const ConfirmPublishVisualisation = ({
         buttonTextColour="#0b0c0c"
         onClick={() => openModal()}
       >
-        Publish Visualisation
+        {data.is_catalogue ? 'Publish catalogue page' : 'Release to production'}
       </Button>
       {isOpen && (
         <ConfirmDialog
-          actionUrl={data.publish_action}
+          actionUrl={''}
           bodyText={
             'You‘re responsible for the information security and data protection of the data this visualisation uses. All data must be published to the Data Workspace catalogue. Storing and using data from Gitlab is not permitted.'
           }
+          csrf_token={data.csrf_token}
           title={
-            data.publish_catalogue
+            data.is_catalogue
               ? 'Final review before publishing'
               : 'Final review before releasing to production'
           }
           open={isOpen}
           onClose={closeModal}
           buttonTextAccept={
-            data.publish_catalogue
-              ? 'Publish to catalogue'
-              : 'Release to production'
+            data.is_catalogue ? 'Publish to catalogue' : 'Release to production'
           }
           buttonTextCancel={'Close'}
+          buttonValueAccept={
+            data.is_catalogue ? 'publish-catalogue' : 'publish-visualisation'
+          }
           warning={true}
         ></ConfirmDialog>
       )}
