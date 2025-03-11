@@ -1,5 +1,6 @@
 {% extends '_visualisation.html' %}
 
+{% load static waffle_tags %}
 
 {% load core_filters %}
 
@@ -27,7 +28,7 @@
   </div>
 </div>
 {% endif %}
-
+{% flag THIRD_APPROVER %}
 <h1 class="govuk-heading-l govuk-!-margin-bottom-6">
   <span class="govuk-caption-l">{{ gitlab_project.name }}</span>
   Publish
@@ -77,4 +78,42 @@
   </p>
 <div>
 {% endif %}
+{% else %}
+<h1 class="govuk-heading-l govuk-!-margin-bottom-6">
+  <span class="govuk-caption-l">{{ gitlab_project.name }}</span>
+  Publish
+</h1>
+
+<p class="govuk-body">
+  Before you publish this visualisation to the catalogue you need to release it to production. This makes it viewable to users who have the link.
+</p>
+
+<h3 class="govuk-heading-m">
+  Release to production
+</h3>
+
+<p class="govuk-body">
+  {% if approved %}
+  You can release your visualisation to production.{{ project_approvals| length }} out of 3 users have approved it.
+</p>
+  <button type="submit" class="govuk-button govuk-button--secondary
+  {% if not visualisation_published and not approved %}
+   govuk-button--disabled 
+  {% endif %}" 
+  name="action" 
+  value="{% if visualisation_published %}
+    unpublish-visualisation
+  {% else %}
+    publish-visualisation
+  {% endif %}"
+  aria-labelledby="visualisation-explanation"
+  {% if not visualisation_published and not approved %} disabled{% endif %}>
+      {% if visualisation_published %}
+          Unpublish visualisation
+      {% else %}
+          Release to production
+        {% endif %}
+  </button>
+</div>
+{% endflag %}
 {% endblock %}
