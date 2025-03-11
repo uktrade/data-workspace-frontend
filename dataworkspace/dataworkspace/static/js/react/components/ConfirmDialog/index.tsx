@@ -6,24 +6,24 @@ import styled from 'styled-components';
 
 type ConfirmDialogProps = {
   actionUrl: string;
-  bodyText: string;
+  bodyText?: string;
   buttonTextAccept: string;
   buttonTextCancel: string;
-  buttonValueAccept: string;
-  csrf_token: string;
+  buttonValueAccept?: string;
+  csrf_token?: string;
   onClose: () => void;
   open: boolean;
   title: string;
-  warning: boolean;
+  warning?: boolean;
 };
 
 const ContainerButtonGroup = styled('div')`
   display: flex;
 `;
 
-const Dialog = styled('dialog')`
+const Dialog = styled('dialog')<Pick<ConfirmDialogProps, 'warning'>>`
   padding: 30px 30px 0px;
-  width: 600px;
+  width: ${(props) => (props.warning === true ? '659px' : '600px')};
 `;
 
 const StyledParagraph = styled(Paragraph)`
@@ -59,13 +59,13 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = (props) => {
     }
   }, [props.open]);
   return (
-    <Dialog ref={refModal}>
+    <Dialog ref={refModal} warning={props.warning}>
       {props.warning === false ? (
         <H2 size="LARGE">{props.title}</H2>
       ) : (
         <StyledWarning>{props.title}</StyledWarning>
       )}
-      {props.bodyText.length > 0 ? (
+      {props.bodyText && props.bodyText.length > 0 ? (
         <StyledParagraph>{props.bodyText}</StyledParagraph>
       ) : (
         <></>
@@ -78,7 +78,11 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = (props) => {
           name="submit"
         >
           {props.warning === true ? (
-            <input type="hidden" name="_csrf" value={props.csrf_token}></input>
+            <input
+              type="hidden"
+              name="csrfmiddlewaretoken"
+              value={props.csrf_token}
+            ></input>
           ) : (
             <></>
           )}
@@ -87,7 +91,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = (props) => {
             style={{ marginRight: SPACING_POINTS[4] }}
             onSubmit={closeModal}
             type={'submit'}
-            value={props.buttonValueAccept}
+            value={props.buttonValueAccept ?? ''}
           >
             {props.buttonTextAccept}
           </Button>

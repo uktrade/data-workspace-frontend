@@ -5,7 +5,6 @@ import { Button } from '@govuk-react/button';
 import ConfirmDialog from '../../components/ConfirmDialog/';
 
 type publishData = {
-  csrf_token: string;
   is_catalogue: boolean; // or visualisation
 };
 
@@ -14,8 +13,11 @@ const ConfirmPublishVisualisation = ({
 }: {
   data: publishData;
 }): React.ReactNode => {
+  const csrf_token = document.cookie
+    .split(';')
+    .find((c) => c.trim().startsWith('data_workspace_csrf='))
+    ?.replace('data_workspace_csrf=', '') as string;
   const [isOpen, setIsOpen] = useState(false);
-
   const closeModal = () => {
     setIsOpen(false);
   };
@@ -37,7 +39,7 @@ const ConfirmPublishVisualisation = ({
           bodyText={
             'You‘re responsible for the information security and data protection of the data this visualisation uses. All data must be published to the Data Workspace catalogue. Storing and using data from Gitlab is not permitted.'
           }
-          csrf_token={data.csrf_token}
+          csrf_token={csrf_token}
           title={
             data.is_catalogue
               ? 'Final review before publishing'

@@ -84,4 +84,15 @@ describe('ConfirmDialog Modal Component', () => {
     const form = screen.getByRole('form');
     expect(form).toHaveAttribute('action', '/submit-url');
   });
+
+  it('renders with correct width based on "warning" prop', () => {
+    const { rerender } = render(
+      <ConfirmDialog {...defaultProps} open={true} warning={false} />
+    );
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveStyle('width: 600px');
+
+    rerender(<ConfirmDialog {...defaultProps} open={true} warning={true} />);
+    expect(dialog).toHaveStyle('width: 659px'); // width when warning is true
+  });
 });

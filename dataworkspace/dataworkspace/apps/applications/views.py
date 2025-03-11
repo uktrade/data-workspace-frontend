@@ -1572,14 +1572,6 @@ def _render_visualisation_publish_html(request, gitlab_project, catalogue_item=N
         visualisation_branches = get_fixture("visualisation_branches_fixture.json")
     else:
         visualisation_branches = _visualisation_branches(gitlab_project)
-    catalogue_publish_data = json.dumps({
-        
-        "is_catalogue": True,
-    })
-    visualisation_publish_data = json.dumps({
-        
-        "is_catalogue": False,
-    })
     return _render_visualisation(
         request,
         "applications/visualisation_publish.html",
@@ -1593,11 +1585,9 @@ def _render_visualisation_publish_html(request, gitlab_project, catalogue_item=N
             "catalogue_complete": catalogue_item_complete,
             "catalogue_published": catalogue_item.published,
             "visualisation_published": visualisation_published,
-            "approved": True,
+            "approved": is_approved_by_all,
             "project_approvals": project_approvals,
             "errors": errors,
-            "catalogue_publish_data": catalogue_publish_data,
-            "visualisation_publish_data": visualisation_publish_data,
         },
     )
 
