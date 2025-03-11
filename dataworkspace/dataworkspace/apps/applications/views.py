@@ -1108,11 +1108,6 @@ def visualisation_approvals_html_GET(request, gitlab_project):
     current_user_type = None
     project_approvals = dw_approvals
     if waffle.flag_is_active(request, settings.THIRD_APPROVER):
-
-        def format_date(date_str: datetime) -> str:
-            formatted = date_str.strftime("%d %B %Y, %I:%M%p")
-            return formatted[:-2] + formatted[-2:].lower()
-
         current_user_type = get_approver_type(
             gitlab_project["id"], request.user, current_gitlab_user
         )
@@ -1507,20 +1502,17 @@ def visualisation_publish_html_view(request, gitlab_project_id):
 
 
 def _visualisation_approvals(application_template, request, gitlab_project):
-
     dw_approvals = VisualisationApproval.objects.filter(
         visualisation=application_template, approved=True
     ).all()
-
     if waffle.flag_is_active(request, settings.THIRD_APPROVER):
         if settings.GITLAB_FIXTURES:
             project_members = get_fixture("project_members_fixture.json")
         else:
-            project_members = gitlab_project_members(gitlab_project)
+            project_members = gitlab_project_members(gitlab_project["id"])
 
-    project_approvals = visualisation_approvals(dw_approvals, project_members)
-
-    return project_approvals
+        return visualisation_approvals(dw_approvals, project_members)
+    return dw_approvals
 
 
 def _visualisation_is_approved(project_approvals, request, application_template):
