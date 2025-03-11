@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.views.generic import FormView
 
 from dataworkspace.apps.datasets.models import RequestingDataset
-from dataworkspace.apps.datasets.requesting_data.forms import DatasetOwnersForm, DatasetNameForm, DatasetDescriptionsForm, DatasetDataOriginForm
+from dataworkspace.apps.datasets.requesting_data.forms import DatasetOwnersForm, DatasetNameForm, DatasetDescriptionsForm, DatasetDataOriginForm, DatasetPreviouslyPublishedForm
 
 
 class DatasetBaseView(FormView):
@@ -29,7 +29,7 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         ('origin', DatasetDataOriginForm),
         ('owners', DatasetOwnersForm),
         # ('existing-system', DatasetExistingSystemForm),
-        # ('published', DatasetPublishedForm),
+        ('published', DatasetPreviouslyPublishedForm),
         # ('licence', DatasetLicenceForm),
         # ('restrictions', DatasetRestrictionsForm),
         # ('purpose', DatasetPurposeForm),
@@ -49,7 +49,10 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
     ]
 
     def get_template_names(self):
-        return "datasets/requesting_data/summary_information.html"
+        if self.steps.current == 'published':
+            return "datasets/requesting_data/radio_conditional.html"
+        else:
+            return "datasets/requesting_data/summary_information.html"
 
     def done(self, form_list, **kwargs):
 
