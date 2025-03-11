@@ -1949,6 +1949,7 @@ def visualisation_approvals(dw_approvals, project_members):
     def format_date(date_str: datetime) -> str:
         formatted = date_str.strftime("%d %B %Y, %I:%M%p")
         return formatted[:-2] + formatted[-2:].lower()
+
     approvers = [
         {
             "name": a.approver.get_full_name(),
