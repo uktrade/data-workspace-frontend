@@ -15,8 +15,9 @@ const ConfirmPublishVisualisation = ({
 }): React.ReactNode => {
   const csrf_token = document.cookie
     .split(';')
-    .find((c) => c.trim().startsWith('data_workspace_csrf='))
-    ?.replace('data_workspace_csrf=', '') as string;
+    .find((c) => c.trim().includes('data_workspace_csrf='))
+    ?.split('=')
+    ?.slice(-1)[0] as string;
   const [isOpen, setIsOpen] = useState(false);
   const closeModal = () => {
     setIsOpen(false);
