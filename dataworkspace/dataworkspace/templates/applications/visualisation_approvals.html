@@ -35,7 +35,7 @@
      {% include './visualisation_approvals/peer_reviewer.html' %}
    {% endif %}
  
-   {% if not already_approved %}
+   {% if not current_user_already_approved or not another_user_with_same_type_already_approved %}
    <h2 class="govuk-heading-m">Approve this visualisation</h2>
     <p class="govuk-body">By clicking the button below you’re confirming that this visualisation:</p>
     <ul class="govuk-list govuk-list--bullet" data-test="generic_approval_list">
