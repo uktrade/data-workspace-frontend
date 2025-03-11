@@ -1082,12 +1082,12 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         if settings.GITLAB_FIXTURES:
             project_members = get_fixture("project_members_fixture.json")
         else:
-            project_members = gitlab_project_members(gitlab_project)
+            project_members = gitlab_project_members(gitlab_project["id"])
 
     approval = next(filter(lambda a: a.approver == request.user, dw_approvals), None)
 
     if settings.GITLAB_FIXTURES:
-        current_gitlab_user = get_fixture("user_fixture.json")
+        current_gitlab_user = get_fixture("user_fixture.json")[0]
     else:
         current_gitlab_user = gitlab_api_v4(
             "GET",
@@ -1097,6 +1097,9 @@ def visualisation_approvals_html_GET(request, gitlab_project):
                 ("provider", "oauth2_generic"),
             ),
         )
+        if len(current_gitlab_user) > 1:
+            return HttpResponse(status=500)
+        current_gitlab_user = current_gitlab_user[0]
 
     if settings.GITLAB_FIXTURES:
         visualisation_branches = get_fixture("visualisation_branches_fixture.json")
@@ -1111,13 +1114,12 @@ def visualisation_approvals_html_GET(request, gitlab_project):
 
         project_approvals = visualisation_approvals(dw_approvals, project_members)
         is_approved_by_all = has_all_three_approval_types(project_approvals)
-
     another_user_with_same_type_already_approved = (
         len(
             [
                 p
                 for p in project_approvals
-                if p["status"] == current_user_type and p["name"] != current_gitlab_user[0]["name"]
+                if p["status"] == current_user_type and p["name"] != current_gitlab_user["name"]
             ]
         )
         > 0
