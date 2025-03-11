@@ -33,12 +33,15 @@
 {% endif %}
 
 <h1 class="govuk-heading-l">Summary information</h2>
-  <form action="" method="post">{% csrf_token %}
+
+
+ <form action="" method="post" novalidate>
+  {% csrf_token %}
     {{ wizard.management_form }}
         {{ wizard.form.management_form }}
           {% for form in wizard.form %}
               {{ form }}
-          {% endfor %}
+          {% endfor %}       
       <button type="submit" class="govuk-button">Send</button>
     </form>
 <p class="govuk-body">
