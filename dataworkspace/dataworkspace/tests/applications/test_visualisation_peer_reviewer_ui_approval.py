@@ -241,7 +241,7 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
             .get_text()
             .startswith("You approved this visualisation on 01 January 2025, 01:01am")
         )
-        assert "Currently 1 out of 3 have approved this visualisation." in approval_count_text
+        assert "Currently 1 out of 3 have approved this visualisation:" in approval_count_text
         assert response.status_code == 200
 
     @freeze_time("2025-01-01 01:01:01")
