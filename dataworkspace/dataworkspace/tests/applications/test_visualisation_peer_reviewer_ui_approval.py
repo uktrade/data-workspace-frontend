@@ -1,29 +1,28 @@
 from contextlib import contextmanager
 from unittest import mock
-from freezegun import freeze_time
+
 import pytest
 from bs4 import BeautifulSoup
-
-from waffle.testutils import override_flag
 from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.test import Client, override_settings
 from django.urls import reverse
+from freezegun import freeze_time
+from waffle.testutils import override_flag
 
+from dataworkspace.apps.applications.models import ApplicationInstance, VisualisationApproval
 from dataworkspace.apps.datasets.constants import UserAccessType
-from dataworkspace.apps.applications.models import (
-    ApplicationInstance,
-    VisualisationApproval,
-)
-
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
 
 
 @contextmanager
 def _visualisation_ui_gitlab_mocks(
-    peer_reviewer_access=True, access_level=30, project_members=None
+    peer_reviewer_access=True,
+    access_level=30,
+    project_members=None,
+    user=None,
 ):
     with mock.patch(
         "dataworkspace.apps.applications.views._visualisation_gitlab_project"
@@ -64,28 +63,37 @@ def _visualisation_ui_gitlab_mocks(
                 }
             ]
         )
-        user_mock.return_value = [{"id": 3, "name": "Ledia Luli"}]
+        user_mock.return_value = user if user else [{"id": 3, "name": "Ledia Luli"}]
         approver_type.return_value = "peer reviewer"
 
         yield projects_mock, branches_mock, access_mock, user_mock, project_members_mock, approver_type
 
 
 class TestDataVisualisationPeerReviewerUIApprovalPage:
-    def assert_common_content(self, soup, already_approved_by_peer_reviewer=False):
+    def assert_common_content(
+        self, soup, already_approved_by_peer_reviewer=False, self_approval=False
+    ):
         peer_reviewer_header = soup.find_all("h2")
+        buttons = soup.find_all("button", attrs={"type": "submit"})
         peer_reviewer_body = soup.find_all("p")
         peer_reviewer_header_text = peer_reviewer_header[0].contents
         peer_reviewer_body_text = peer_reviewer_body[1].contents
         generic_approval_list = soup.find_all(attrs={"data-test": "generic_approval_list"})
         if already_approved_by_peer_reviewer is False:
             assert "You're a peer reviewer for this visualisation" in peer_reviewer_header_text
-            assert (
-                "Once you have peer reviewed this visualisation, you can approve it below."
-                in peer_reviewer_body_text
-            )
+            if self_approval is False:
+                assert generic_approval_list
+                assert (
+                    "Once you have peer reviewed this visualisation, you can approve it below."
+                    in peer_reviewer_body_text
+                )
+                assert "Approve" in buttons[0].contents
+            else:
+                assert "Unapprove" in buttons[0].contents
+
         else:
             assert "This visualisation has been peer-reviewed" in peer_reviewer_header_text
-        assert generic_approval_list
+            assert len(buttons) < 1
 
     @override_flag(settings.THIRD_APPROVER, active=True)
     @pytest.mark.django_db
@@ -169,6 +177,71 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
             )
         )
         assert "Currently 1 out of 3 have approved this visualisation:" in approval_count_text
+        assert response.status_code == 200
+
+    @freeze_time("2025-01-01 01:01:01")
+    @override_flag(settings.THIRD_APPROVER, active=True)
+    @override_settings(GITLAB_FIXTURES=False)
+    @pytest.mark.django_db
+    def test_peer_reviewer_view_with_a_self_approval(self):
+        develop_visualisations_permission = Permission.objects.get(
+            codename="develop_visualisations",
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+        peer_reviewer = factories.UserFactory.create(
+            first_name="Bob", last_name="Burger", is_staff=False, is_superuser=False
+        )
+        peer_reviewer.user_permissions.add(develop_visualisations_permission)
+
+        v = factories.VisualisationTemplateFactory.create(gitlab_project_id=1)
+        factories.VisualisationCatalogueItemFactory.create(
+            name="test-gitlab-project",
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            visualisation_template=v,
+        )
+        factories.VisualisationApprovalFactory.create(
+            approved=True, visualisation=v, approver=peer_reviewer
+        )
+
+        client = Client(**get_http_sso_data(peer_reviewer))
+        with _visualisation_ui_gitlab_mocks(
+            access_level=30,
+            project_members=[
+                {
+                    "id": 1,
+                    "name": "Bob Burger",
+                    "username": "bob.burger",
+                    "state": "active",
+                    "access_level": 30,
+                }
+            ],
+            user=[
+                {
+                    "id": 1,
+                    "name": "Bob Burger",
+                    "username": "bob.burger",
+                    "state": "active",
+                    "access_level": 30,
+                }
+            ],
+        ):
+            response = client.get(
+                reverse("visualisations:approvals", args=(1,)),
+                follow=True,
+            )
+        soup = BeautifulSoup(response.content.decode(response.charset), features="lxml")
+        approval_count_text = soup.find("p").contents
+        approval_list = soup.find(attrs={"data-test": "approvals-list"})
+        approval_list_items = approval_list.find_all("li")
+
+        self.assert_common_content(soup, self_approval=True)
+        assert len(approval_list_items) == 1
+        assert (
+            approval_list_items[0]
+            .get_text()
+            .startswith("You approved this visualisation on 01 January 2025, 01:01am")
+        )
+        assert "Currently 1 out of 3 have approved this visualisation." in approval_count_text
         assert response.status_code == 200
 
     @freeze_time("2025-01-01 01:01:01")
