@@ -1102,6 +1102,11 @@ def visualisation_approvals_html_GET(request, gitlab_project):
     already_approved = None
     project_approvals = dw_approvals
     if waffle.flag_is_active(request, settings.THIRD_APPROVER):
+
+        def format_date(date_str: datetime) -> str:
+            formatted = date_str.strftime("%d %B %Y, %I:%M%p")
+            return formatted[:-2] + formatted[-2:].lower()
+
         current_user_type = get_approver_type(
             gitlab_project["id"], request.user, current_gitlab_user
         )
@@ -1109,7 +1114,7 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         approvers = [
             {
                 "name": a.approver.get_full_name(),
-                "date_approved": a.created_date,
+                "date_approved": format_date(a.created_date),
                 "is_superuser": a.approver.is_superuser,
                 "status": None,
             }
@@ -1165,6 +1170,7 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         else None
     )
     form = VisualisationApprovalForm(
+        third_approver_flag=waffle.flag_is_active(request, settings.THIRD_APPROVER),
         instance=approval,
         initial={
             "visualisation": application_template,

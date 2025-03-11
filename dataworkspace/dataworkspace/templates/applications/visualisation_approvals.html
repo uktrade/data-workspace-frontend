@@ -16,7 +16,7 @@
     Approvals
   </h1>
 {% flag THIRD_APPROVER %}
-   <p class="govuk-body">Currently {{ approvals | length }} out of 3 have approved this visualisation.</p>
+   <p class="govuk-body">Currently {{ approvals | length }} out of 3 have approved this visualisation:</p>
      <ul class="govuk-list govuk-list--bullet" data-test="approvals-list">
       {% for approver in approvals %}
         {% if approver.status == 'team member' %}
@@ -41,7 +41,7 @@
     <ul class="govuk-list govuk-list--bullet" data-test="generic_approval_list">
       <li>has been reviewed by yourself</li>
       <li>is ready to be published</li>
-      <li>follows our visualisation guidance</li>
+      <li>follows our <a href="https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/publish-data/publish-an-rpython-visualisation/">visualisation guidance</a></li>
       <li>only uses data that's published to the Data Workspace catalogue</li>
     </ul>
     {% else %}
