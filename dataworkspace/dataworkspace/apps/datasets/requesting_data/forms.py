@@ -161,7 +161,7 @@ class DatasetExistingSystemForm(GOVUKDesignSystemForm):
 
 class DatasetPreviouslyPublishedForm(GOVUKDesignSystemForm):
 
-    published = GOVUKDesignSystemCharField(
+    previously_published = GOVUKDesignSystemCharField(
         label="Enter the URL of where it's currently published",
         required=False,
         widget=GOVUKDesignSystemTextWidget(
@@ -169,12 +169,6 @@ class DatasetPreviouslyPublishedForm(GOVUKDesignSystemForm):
             label_size="m",
         ),
     )
-
-    def clean(self):
-        cleaned_data = super().clean()
-        if not cleaned_data["published"]:
-            cleaned_data["published"] = False
-        return cleaned_data
 
 
 class DatasetLicenceForm(GOVUKDesignSystemForm):
