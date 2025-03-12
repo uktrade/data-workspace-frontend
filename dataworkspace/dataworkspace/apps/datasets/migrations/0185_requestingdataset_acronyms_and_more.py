@@ -188,44 +188,32 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="requestingdataset",
             name="search_vector_english",
-            field=django.contrib.postgres.search.SearchVectorField(
-                blank=True, null=True
-            ),
+            field=django.contrib.postgres.search.SearchVectorField(blank=True, null=True),
         ),
         migrations.AddField(
             model_name="requestingdataset",
             name="search_vector_english_description",
-            field=django.contrib.postgres.search.SearchVectorField(
-                blank=True, null=True
-            ),
+            field=django.contrib.postgres.search.SearchVectorField(blank=True, null=True),
         ),
         migrations.AddField(
             model_name="requestingdataset",
             name="search_vector_english_name",
-            field=django.contrib.postgres.search.SearchVectorField(
-                blank=True, null=True
-            ),
+            field=django.contrib.postgres.search.SearchVectorField(blank=True, null=True),
         ),
         migrations.AddField(
             model_name="requestingdataset",
             name="search_vector_english_short_description",
-            field=django.contrib.postgres.search.SearchVectorField(
-                blank=True, null=True
-            ),
+            field=django.contrib.postgres.search.SearchVectorField(blank=True, null=True),
         ),
         migrations.AddField(
             model_name="requestingdataset",
             name="search_vector_english_tags",
-            field=django.contrib.postgres.search.SearchVectorField(
-                blank=True, null=True
-            ),
+            field=django.contrib.postgres.search.SearchVectorField(blank=True, null=True),
         ),
         migrations.AddField(
             model_name="requestingdataset",
             name="sensitivity",
-            field=models.ManyToManyField(
-                blank=True, null=True, to="datasets.sensitivitytype"
-            ),
+            field=models.ManyToManyField(blank=True, null=True, to="datasets.sensitivitytype"),
         ),
         migrations.AddField(
             model_name="requestingdataset",
@@ -235,9 +223,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="requestingdataset",
             name="tags",
-            field=models.ManyToManyField(
-                blank=True, related_name="+", to="datasets.tag"
-            ),
+            field=models.ManyToManyField(blank=True, related_name="+", to="datasets.tag"),
         ),
         migrations.AddField(
             model_name="requestingdataset",
