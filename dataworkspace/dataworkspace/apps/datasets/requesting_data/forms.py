@@ -32,11 +32,11 @@ class DatasetDescriptionsForm(GOVUKDesignSystemForm):
         help_text="Please provide a brief description of what it contains.",
         required=True,
         widget=GOVUKDesignSystemTextareaWidget(
-              heading="h2",
-              label_size="m",
-              label_is_heading=True,
-              attrs={"rows": 5},
-              extra_label_classes="govuk-!-static-margin-0",
+            heading="h2",
+            label_size="m",
+            label_is_heading=True,
+            attrs={"rows": 5},
+            extra_label_classes="govuk-!-static-margin-0",
         ),
     )
 
@@ -118,10 +118,16 @@ class DatasetOwnersForm(GOVUKDesignSystemForm):
         except:
             raise ValidationError("This is not a real user")
 
-        enquiries_contact_first_name = cleaned_data.get("enquiries_contact").split(" ")[0].capitalize()
-        enquiries_contact_last_name = cleaned_data.get("enquiries_contact").split(" ")[1].capitalize()
+        enquiries_contact_first_name = (
+            cleaned_data.get("enquiries_contact").split(" ")[0].capitalize()
+        )
+        enquiries_contact_last_name = (
+            cleaned_data.get("enquiries_contact").split(" ")[1].capitalize()
+        )
         try:
-            enquiries_contact_user = User.objects.get(first_name=enquiries_contact_first_name, last_name=enquiries_contact_last_name)
+            enquiries_contact_user = User.objects.get(
+                first_name=enquiries_contact_first_name, last_name=enquiries_contact_last_name
+            )
             cleaned_data["enquiries_contact"] = enquiries_contact_user
         except:
             raise ValidationError("This is not a real user")
@@ -137,5 +143,3 @@ class DatasetSystemForm(GOVUKDesignSystemForm):
         widget=GOVUKDesignSystemTextWidget(label_is_heading=True),
         error_messages={"required": "Enter a table name"},
     )
-
-
