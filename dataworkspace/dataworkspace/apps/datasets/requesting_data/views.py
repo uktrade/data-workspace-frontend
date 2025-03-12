@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.views.generic import FormView
 
 from dataworkspace.apps.datasets.models import RequestingDataset
-from dataworkspace.apps.datasets.requesting_data.forms import DatasetOwnersForm, DatasetNameForm, DatasetDescriptionsForm, DatasetDataOriginForm, DatasetPreviouslyPublishedForm
+from dataworkspace.apps.datasets.requesting_data.forms import DatasetOwnersForm, DatasetNameForm, DatasetDescriptionsForm, DatasetDataOriginForm
 
 
 class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
