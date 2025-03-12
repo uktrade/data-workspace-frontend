@@ -75,11 +75,17 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
 
         for form in form_list:
             for field in form.cleaned_data:
-                if field in notes_fields:
-                    requesting_dataset.notes = (
-                        f"{form[field].label} {form.cleaned_data.get(field)}\n"
-                    )
-                    requesting_dataset.save()
+                if field in notes_fields and field:
+                    if requesting_dataset.notes:
+                        requesting_dataset.notes += (
+                            f"{form[field].label} {form.cleaned_data.get(field)}\n"
+                        )
+                        requesting_dataset.save()
+                    else:
+                        requesting_dataset.notes = (
+                            f"{form[field].label} {form.cleaned_data.get(field)}\n"
+                        )
+                        requesting_dataset.save()
                 else:
                     setattr(requesting_dataset, field, form.cleaned_data.get(field))
                 requesting_dataset.save()
