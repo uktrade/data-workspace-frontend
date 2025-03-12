@@ -141,19 +141,3 @@ class DatasetSystemForm(GOVUKDesignSystemForm):
     )
 
 
-class DatasetPreviouslyPublishedForm(GOVUKDesignSystemForm):
-    previously_published = GOVUKDesignSystemRadioField(
-        choices=[("true", "yes"), ("false", "No"),],
-        widget=ConditionalSupportTypeRadioWidget(heading="p", extra_label_classes="govuk-body-l"),
-    )
-
-    message = GOVUKDesignSystemTextareaField(
-        required=True,
-        label="Why are you denying access to this data?",
-        help_text="Your answer below will be emailed to the requestor",
-        widget=GOVUKDesignSystemTextareaWidget(
-            label_is_heading=False,
-            attrs={"rows": 5},
-        ),
-        error_messages={"required": "Enter the reason(s) why you are denying access to the data."},
-    )
