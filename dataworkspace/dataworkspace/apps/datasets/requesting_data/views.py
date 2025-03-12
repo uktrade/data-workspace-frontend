@@ -29,7 +29,7 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         ('origin', DatasetDataOriginForm),
         ('owners', DatasetOwnersForm),
         # ('existing-system', DatasetExistingSystemForm),
-        ('published', DatasetPreviouslyPublishedForm),
+        # ('published', DatasetPreviouslyPublishedForm),
         # ('licence', DatasetLicenceForm),
         # ('restrictions', DatasetRestrictionsForm),
         # ('purpose', DatasetPurposeForm),
@@ -49,10 +49,7 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
     ]
 
     def get_template_names(self):
-        if self.steps.current == 'published':
-            return "datasets/requesting_data/radio_conditional.html"
-        else:
-            return "datasets/requesting_data/summary_information.html"
+        return "datasets/requesting_data/summary_information.html"
 
     def done(self, form_list, **kwargs):
 
