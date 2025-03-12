@@ -1,24 +1,33 @@
 import React, { useEffect, useRef } from 'react';
 
 import { SPACING_POINTS } from '@govuk-react/constants';
-import { Button, H2, Link } from 'govuk-react';
+import { Button, H2, Link, Paragraph, WarningText } from 'govuk-react';
 import styled from 'styled-components';
 
 type ConfirmDialogProps = {
   actionUrl: string;
-  buttonText: string;
+  bodyText?: string;
+  buttonTextAccept: string;
+  buttonTextCancel: string;
+  buttonValueAccept?: string;
+  csrf_token?: string;
   onClose: () => void;
   open: boolean;
   title: string;
+  warning?: boolean;
 };
 
 const ContainerButtonGroup = styled('div')`
   display: flex;
 `;
 
-const Dialog = styled('dialog')`
+const Dialog = styled('dialog')<Pick<ConfirmDialogProps, 'warning'>>`
   padding: 30px 30px 0px;
-  width: 600px;
+  width: ${(props) => (props.warning === true ? '659px' : '600px')};
+`;
+
+const StyledParagraph = styled(Paragraph)`
+  padding-top: 30px;
 `;
 
 const StyledLink = styled(Link)`
@@ -29,6 +38,12 @@ const StyledLink = styled(Link)`
 const StyledForm = styled('form')`
   display: flex;
   align-items: baseline;
+`;
+
+const StyledWarning = styled(WarningText)`
+  > strong {
+    font-size: 27px;
+  }
 `;
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = (props) => {
@@ -44,25 +59,57 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = (props) => {
     }
   }, [props.open]);
   return (
-    <Dialog ref={refModal}>
-      <H2 size="LARGE">{props.title}</H2>
+    <Dialog ref={refModal} warning={props.warning}>
+      {props.warning === false ? (
+        <H2 size="LARGE">{props.title}</H2>
+      ) : (
+        <StyledWarning>{props.title}</StyledWarning>
+      )}
+      {props.bodyText && props.bodyText.length > 0 ? (
+        <StyledParagraph>{props.bodyText}</StyledParagraph>
+      ) : (
+        <></>
+      )}
       <ContainerButtonGroup>
         <StyledForm
           action={props.actionUrl}
           aria-label="form"
-          method="GET"
-          name="submitRemoveUser"
+          method={props.warning === true ? 'POST' : 'GET'}
+          name="submit"
         >
+          {props.warning === true ? (
+            <input
+              type="hidden"
+              name="csrfmiddlewaretoken"
+              value={props.csrf_token}
+            ></input>
+          ) : (
+            <></>
+          )}
           <Button
+            name={'action'}
             style={{ marginRight: SPACING_POINTS[4] }}
             onSubmit={closeModal}
             type={'submit'}
+            value={props.buttonValueAccept ?? ''}
           >
-            {props.buttonText}
+            {props.buttonTextAccept}
           </Button>
-          <StyledLink href="javascript:;" onClick={props.onClose}>
-            Cancel
-          </StyledLink>
+          {props.warning === false ? (
+            <StyledLink href="javascript:;" onClick={props.onClose}>
+              {props.buttonTextCancel}
+            </StyledLink>
+          ) : (
+            <Button
+              buttonColour="#f3f2f1"
+              buttonShadowColour="#929191"
+              buttonTextColour="#0b0c0c"
+              onClick={props.onClose}
+              style={{ marginLeft: '-10px' }}
+            >
+              Close
+            </Button>
+          )}
         </StyledForm>
       </ContainerButtonGroup>
     </Dialog>

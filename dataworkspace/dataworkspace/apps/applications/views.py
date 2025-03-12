@@ -1105,8 +1105,8 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         visualisation_branches = get_fixture("visualisation_branches_fixture.json")
     else:
         visualisation_branches = _visualisation_branches(gitlab_project)
+    another_user_with_same_type_already_approved = None
     current_user_type = None
-    already_approved = None
     project_approvals = dw_approvals
     if waffle.flag_is_active(request, settings.THIRD_APPROVER):
         current_user_type = get_approver_type(
@@ -1115,25 +1115,23 @@ def visualisation_approvals_html_GET(request, gitlab_project):
 
         project_approvals = visualisation_approvals(dw_approvals, project_members)
         is_approved_by_all = has_all_three_approval_types(project_approvals)
-
-    another_user_with_same_type_already_approved = (
-        len(
-            [
-                p
-                for p in project_approvals
-                if p["status"] == current_user_type and p["name"] != current_gitlab_user["name"]
-            ]
+        another_user_with_same_type_already_approved = (
+            len(
+                [
+                    p
+                    for p in project_approvals
+                    if p["status"] == current_user_type
+                    and p["name"] != current_gitlab_user["name"]
+                ]
+            )
+            > 0
         )
-        > 0
-        if waffle.flag_is_active(request, settings.THIRD_APPROVER)
-        else None
-    )
-
     is_approved_by_all = (
         is_approved_by_all if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None
     )
 
     form = VisualisationApprovalForm(
+        third_approver_flag=waffle.flag_is_active(request, settings.THIRD_APPROVER),
         instance=approval,
         initial={
             "visualisation": application_template,
@@ -1154,7 +1152,6 @@ def visualisation_approvals_html_GET(request, gitlab_project):
                 if waffle.flag_is_active(request, settings.THIRD_APPROVER)
                 else dw_approvals
             ),
-            "already_approved": already_approved,
             "another_user_with_same_type_already_approved": another_user_with_same_type_already_approved,
             "current_user_already_approved": approval.approved if approval else False,
             "current_user_type": current_user_type,
@@ -1504,20 +1501,17 @@ def visualisation_publish_html_view(request, gitlab_project_id):
 
 
 def _visualisation_approvals(application_template, request, gitlab_project):
-
     dw_approvals = VisualisationApproval.objects.filter(
         visualisation=application_template, approved=True
     ).all()
-    project_members = []
     if waffle.flag_is_active(request, settings.THIRD_APPROVER):
         if settings.GITLAB_FIXTURES:
             project_members = get_fixture("project_members_fixture.json")
         else:
-            project_members = gitlab_project_members(gitlab_project)
+            project_members = gitlab_project_members(gitlab_project["id"])
 
-    project_approvals = visualisation_approvals(dw_approvals, project_members)
-
-    return project_approvals
+        return visualisation_approvals(dw_approvals, project_members)
+    return dw_approvals
 
 
 def _visualisation_is_approved(project_approvals, request, application_template):
@@ -1558,6 +1552,7 @@ def _visualisation_catalogue_item_is_complete(catalogue_item):
     )
 
 
+@csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC, STYLE_SRC=settings.WEBPACK_SCRIPT_SRC)
 def _render_visualisation_publish_html(request, gitlab_project, catalogue_item=None, errors=None):
     if not catalogue_item:
         catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
@@ -1576,7 +1571,6 @@ def _render_visualisation_publish_html(request, gitlab_project, catalogue_item=N
         visualisation_branches = get_fixture("visualisation_branches_fixture.json")
     else:
         visualisation_branches = _visualisation_branches(gitlab_project)
-
     return _render_visualisation(
         request,
         "applications/visualisation_publish.html",
@@ -1699,7 +1693,6 @@ def visualisation_publish_html_POST(request, gitlab_project):
     application_template = _application_template(gitlab_project)
     action = request.POST.get("action", "").lower()
     catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
-
     if action == "publish-catalogue":
         return _set_published_on_catalogue_item(
             request, gitlab_project, catalogue_item, publish=True

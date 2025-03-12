@@ -16,7 +16,7 @@
     Approvals
   </h1>
 {% flag THIRD_APPROVER %}
-   <p class="govuk-body">Currently {{ approvals | length }} out of 3 have approved this visualisation.</p>
+   <p class="govuk-body">Currently {{ approvals | length }} out of 3 have approved this visualisation:</p>
      <ul class="govuk-list govuk-list--bullet" data-test="approvals-list">
       {% for approver in approvals %}
         {% if approver.status == 'team member' %}
@@ -35,13 +35,13 @@
      {% include './visualisation_approvals/peer_reviewer.html' %}
    {% endif %}
  
-   {% if not already_approved %}
+   {% if not current_user_already_approved or not another_user_with_same_type_already_approved %}
    <h2 class="govuk-heading-m">Approve this visualisation</h2>
     <p class="govuk-body">By clicking the button below you’re confirming that this visualisation:</p>
     <ul class="govuk-list govuk-list--bullet" data-test="generic_approval_list">
       <li>has been reviewed by yourself</li>
       <li>is ready to be published</li>
-      <li>follows our visualisation guidance</li>
+      <li>follows our <a href="https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/publish-data/publish-an-rpython-visualisation/">visualisation guidance</a></li>
       <li>only uses data that's published to the Data Workspace catalogue</li>
     </ul>
     {% else %}
@@ -54,7 +54,7 @@
     {{ form.visualisation }}
     {{ form.approver }}
     {% if not another_user_with_same_type_already_approved %}
-      {% if already_approved %}
+      {% if current_user_already_approved %}
         <button type="submit" class="govuk-button" name="action" value="unapprove">Unapprove</button>
       {% else %}
         {{ form.approved }}
