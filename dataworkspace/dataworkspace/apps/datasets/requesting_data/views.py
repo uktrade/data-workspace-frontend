@@ -27,7 +27,7 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         ("origin", DatasetDataOriginForm),
         ("owners", DatasetOwnersForm),
         ('existing-system', DatasetExistingSystemForm),
-        ('published', DatasetPreviouslyPublishedForm),
+        ('previously-published', DatasetPreviouslyPublishedForm),
         ('licence', DatasetLicenceForm),
         ('restrictions', DatasetRestrictionsForm),
         ('purpose', DatasetPurposeForm),
@@ -54,7 +54,7 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         notes_fields = [
             "origin",
             "existing_system",
-            "published",
+            "previously_published",
             "usage",
             "purpose",
             "special-personal-data",
