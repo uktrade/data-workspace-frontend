@@ -1693,7 +1693,6 @@ def visualisation_publish_html_POST(request, gitlab_project):
     application_template = _application_template(gitlab_project)
     action = request.POST.get("action", "").lower()
     catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
-    print(1707, action)
     if action == "publish-catalogue":
         return _set_published_on_catalogue_item(
             request, gitlab_project, catalogue_item, publish=True
