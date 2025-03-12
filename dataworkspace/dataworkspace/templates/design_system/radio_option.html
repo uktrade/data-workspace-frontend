@@ -6,12 +6,3 @@
   </label>
 </div>
 
-
-<div class="govuk-radios__conditional govuk-radios__conditional--hidden">
-  <div class="govuk-form-group">
-    <label class="govuk-label govuk-radios__label">
-    {{ widget.label }}
-    </label>
-    <input class="govuk-radios__input" name="{{ widget.name }}" type="radio" {% if widget.value != None %} value="{{ widget.value|stringformat:'s' }}"{% endif %}{% include "django/forms/widgets/attrs.html" %}>
-  </div>
-</div>
