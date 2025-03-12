@@ -9,19 +9,6 @@ from dataworkspace.apps.datasets.models import RequestingDataset
 from dataworkspace.apps.datasets.requesting_data.forms import DatasetOwnersForm, DatasetNameForm, DatasetDescriptionsForm, DatasetDataOriginForm, DatasetPreviouslyPublishedForm
 
 
-class DatasetBaseView(FormView):
-    def save_dataset(self, form, fields, page):
-        requesting_dataset = RequestingDataset.objects.get(id=self.kwargs.get("id"))
-        for field in fields:
-            setattr(requesting_dataset, field, form.cleaned_data.get(field))
-            requesting_dataset.save()
-        return HttpResponseRedirect(
-            reverse(
-                f"datasets:requesting_data:{page}",
-            )
-        )
-
-
 class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
     form_list = [
         ('name', DatasetNameForm),
