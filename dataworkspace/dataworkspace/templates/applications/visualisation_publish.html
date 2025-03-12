@@ -1,6 +1,8 @@
 {% extends '_visualisation.html' %}
 {% load render_bundle from webpack_loader %}
 
+{% load static waffle_tags %}
+
 {% load core_filters %}
 {% load static waffle_tags %}
 
@@ -28,7 +30,6 @@
   </div>
 </div>
 {% endif %}
-
 <h1 class="govuk-heading-l govuk-!-margin-bottom-6">
   <span class="govuk-caption-l">{{ gitlab_project.name }}</span>
   Publish
@@ -80,20 +81,20 @@
     This visualisation has been released to production. This makes it viewable to users who have the link.
   </p>
   <a class="govuk-!-font-size-19 govuk-link" href="{{ visualisation_link }}">Your visualisation can be found here.</a>
-  {% if catalogue_published %}
-  <div class="govuk-warning-text govuk-!-margin-top-4">
-    <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
-    <strong class="govuk-warning-text__text">
-      You cannot remove your visualisation from production. This is because you need to unpublish the catalogue page first.
-    </strong>
-  </div>
-  {% else %}
-    <br>
-    <form method="POST" action="{{ request.path }}">
-      {% csrf_token %}
-      <button name="action" type="submit" class="govuk-button govuk-button--secondary govuk-!-margin-top-4" value="unpublish-visualisation" aria-labelledby="visualisation-explanation">Unpublish visualisation</button>
-    </form>
-  {% endif %}
+    {% if catalogue_published %}
+    <div class="govuk-warning-text govuk-!-margin-top-4">
+      <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+      <strong class="govuk-warning-text__text">
+        You cannot remove your visualisation from production. This is because you need to unpublish the catalogue page first.
+      </strong>
+    </div>
+    {% else %}
+      <br>
+      <form method="POST" action="{{ request.path }}">
+        {% csrf_token %}
+        <button name="action" type="submit" class="govuk-button govuk-button--secondary govuk-!-margin-top-4" value="unpublish-visualisation" aria-labelledby="visualisation-explanation">Unpublish visualisation</button>
+      </form>
+    {% endif %}
   {% endif %}
   {% if visualisation_published %}
     {% if catalogue_published %}
