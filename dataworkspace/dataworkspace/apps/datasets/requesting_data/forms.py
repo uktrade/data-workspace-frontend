@@ -78,8 +78,8 @@ class DatasetOwnersForm(GOVUKDesignSystemForm):
     )
 
     information_asset_manager = GOVUKDesignSystemCharField(
-        label="Name of Information Asset Owner",
-        help_text="IAO's are responsible for ensuring information assets are handled and managed appropriately",
+        label="Name of Information Asset Manager",
+        help_text="IAM's have knowledge and duties associated with an asset, and so often support the IAO",
         required=True,
         widget=GOVUKDesignSystemTextWidget(
             label_is_heading=True,
@@ -162,7 +162,7 @@ class DatasetExistingSystemForm(GOVUKDesignSystemForm):
 class DatasetPreviouslyPublishedForm(GOVUKDesignSystemForm):
 
     published = GOVUKDesignSystemCharField(
-        help_text="Enter the URL of where it's currently published",
+        label="Enter the URL of where it's currently published",
         required=True,
         widget=GOVUKDesignSystemTextWidget(
             label_is_heading=True,
@@ -174,7 +174,7 @@ class DatasetPreviouslyPublishedForm(GOVUKDesignSystemForm):
 class DatasetLicenceForm(GOVUKDesignSystemForm):
 
     licence = GOVUKDesignSystemCharField(
-        help_text="What licence fo you have for this data?",
+        label="What licence do you have for this data?",
         required=True,
         widget=GOVUKDesignSystemTextWidget(
             label_is_heading=True,
