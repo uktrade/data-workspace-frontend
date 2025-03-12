@@ -21,7 +21,6 @@ class DatasetNameForm(GOVUKDesignSystemForm):
             label_is_heading=True,
             label_size="m",
         ),
-        error_messages={"required": "Enter a table name"},
     )
 
 
@@ -142,4 +141,88 @@ class DatasetSystemForm(GOVUKDesignSystemForm):
         required=True,
         widget=GOVUKDesignSystemTextWidget(label_is_heading=True),
         error_messages={"required": "Enter a table name"},
+    )
+
+
+class DatasetExistingSystemForm(GOVUKDesignSystemForm):
+
+    existing_system = GOVUKDesignSystemTextareaField(
+        label="Which system is the data set currently stored on?",
+        required=True,
+        widget=GOVUKDesignSystemTextareaWidget(
+            heading="h2",
+            label_size="m",
+            label_is_heading=True,
+            attrs={"rows": 5},
+            extra_label_classes="govuk-!-static-margin-0",
+        ),
+    )
+
+
+class DatasetPreviouslyPublishedForm(GOVUKDesignSystemForm):
+
+    published = GOVUKDesignSystemCharField(
+        help_text="Enter the URL of where it's currently published",
+        required=True,
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=True,
+            label_size="m",
+        ),
+    )
+
+
+class DatasetLicenceForm(GOVUKDesignSystemForm):
+
+    licence = GOVUKDesignSystemCharField(
+        help_text="What licence fo you have for this data?",
+        required=True,
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=True,
+            label_size="m",
+        ),
+    )
+
+
+class DatasetRestrictionsForm(GOVUKDesignSystemForm):
+
+    restrictions = GOVUKDesignSystemTextareaField(
+        label="What are the usage restrictions?",
+        required=True,
+        widget=GOVUKDesignSystemTextareaWidget(
+            heading="h2",
+            label_size="m",
+            label_is_heading=True,
+            attrs={"rows": 5},
+            extra_label_classes="govuk-!-static-margin-0",
+        ),
+    )
+
+
+class DatasetPurposeForm(GOVUKDesignSystemForm):
+
+    purpose = GOVUKDesignSystemTextareaField(
+        label="What purpose has the data been collected for?",
+        required=True,
+        widget=GOVUKDesignSystemTextareaWidget(
+            heading="h2",
+            label_size="m",
+            label_is_heading=True,
+            attrs={"rows": 5},
+            extra_label_classes="govuk-!-static-margin-0",
+        ),
+    )
+
+
+class DatasetUsageForm(GOVUKDesignSystemForm):
+
+    usage = GOVUKDesignSystemTextareaField(
+        label="What will the data be used for on Data Workspace?",
+        required=True,
+        widget=GOVUKDesignSystemTextareaWidget(
+            heading="h2",
+            label_size="m",
+            label_is_heading=True,
+            attrs={"rows": 5},
+            extra_label_classes="govuk-!-static-margin-0",
+        ),
     )
