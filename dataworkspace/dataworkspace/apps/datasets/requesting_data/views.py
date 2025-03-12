@@ -59,7 +59,6 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetNameForm,
     DatasetDescriptionsForm,
     DatasetDataOriginForm,
-    DatsetPersonalDataForm,
 )
 
 
@@ -149,6 +148,8 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
                             f"{form[field].label}\n{form.cleaned_data.get(field)}\n"
                         )
                         requesting_dataset.save()
+                if field == "sensitivity":
+                    requesting_dataset.sensitivity.set(form.cleaned_data.get("sensitivity"))
                 else:
                     setattr(requesting_dataset, field, form.cleaned_data.get(field))
                 requesting_dataset.save()

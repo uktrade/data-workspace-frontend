@@ -365,8 +365,12 @@ class DatasetSecurityClassificationForm(GOVUKDesignSystemModelForm):
         fields = [
             "government_security_classification",
             "sensitivity",
-
         ]
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        print("HERE", cleaned_data)
 
 
 class DatasetPersonalDataForm(GOVUKDesignSystemForm):

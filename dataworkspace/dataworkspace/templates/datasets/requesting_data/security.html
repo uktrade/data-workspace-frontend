@@ -6,9 +6,7 @@
 {{ form.media }}
 {% endblock %}
 
-{% block breadcrumbs %}
-<a href="{% url 'support' %}" class="govuk-back-link">Back</a>
-{% endblock %}
+
 {% block content %}
 {% if form_errors %}
 <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
@@ -51,8 +49,8 @@
         <div class="govuk-radios">
           {% for value, text in form.government_security_classification.field.choices|slice:"1:" %}
             <div class="govuk-radios__item">
-                      <input class="govuk-radios__input" id="{{ value }}_id"
-                              name="government_security_classification" type="radio" value="{{ value }}"
+                      <input class="govuk-radios__input conditional" id="{{ value }}_id"
+                              name="{{ form.government_security_classification.html_name }}" type="radio" value="{{ value }}"
                               {% if value == form.government_security_classification.value %}checked{% endif %}
                       >
               <label class="govuk-label govuk-radios__label"
@@ -105,10 +103,10 @@
 {% block footer_scripts %}
   <script nonce="{{ request.csp_nonce }}">
     const sensitivity = document.getElementById('sensitivitySection')
-        console.log("IM HERE ",document.getElementsByName("government_security_classification"))
-
-    document.getElementsByName("government_security_classification").forEach(item => {
+    console.log("HER", document.querySelectorAll(".conditional"))
+    document.querySelectorAll(".conditional").forEach(item => {
       item.addEventListener("change", event => {
+        console.log('!!!!')
         (event.target.value === "2" ? sensitivity.style.display = "block" : sensitivity.style.display = "none")
       })
     })
