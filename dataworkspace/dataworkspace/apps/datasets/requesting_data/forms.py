@@ -163,19 +163,25 @@ class DatasetPreviouslyPublishedForm(GOVUKDesignSystemForm):
 
     published = GOVUKDesignSystemCharField(
         label="Enter the URL of where it's currently published",
-        required=True,
+        required=False,
         widget=GOVUKDesignSystemTextWidget(
             label_is_heading=True,
             label_size="m",
         ),
     )
 
+    def clean(self):
+        cleaned_data = super().clean()
+        if not cleaned_data["published"]:
+            cleaned_data["published"] = False
+        return cleaned_data
+
 
 class DatasetLicenceForm(GOVUKDesignSystemForm):
 
     licence = GOVUKDesignSystemCharField(
         label="What licence do you have for this data?",
-        required=True,
+        required=False,
         widget=GOVUKDesignSystemTextWidget(
             label_is_heading=True,
             label_size="m",
@@ -187,7 +193,7 @@ class DatasetRestrictionsForm(GOVUKDesignSystemForm):
 
     restrictions = GOVUKDesignSystemTextareaField(
         label="What are the usage restrictions?",
-        required=True,
+        required=False,
         widget=GOVUKDesignSystemTextareaWidget(
             heading="h2",
             label_size="m",
