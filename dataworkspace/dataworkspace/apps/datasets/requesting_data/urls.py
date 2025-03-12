@@ -1,10 +1,15 @@
 from django.urls import path
 
 from dataworkspace.apps.accounts.utils import login_required
-from dataworkspace.apps.datasets.requesting_data.views import DatasetDescriptionsView, DatasetNameView, DatasetDataOriginView, DatasetSecurityClassificationView, DatsetPersonalDataView
+from dataworkspace.apps.datasets.requesting_data.views import (
+    DatasetDescriptionsView,
+    DatasetNameView,
+    DatasetDataOriginView,
+    DatasetSecurityClassificationView,
+    DatsetPersonalDataView,
+)
 
 urlpatterns = [
-
     path(
         "dataset-name",
         login_required(DatasetNameView.as_view()),
@@ -30,5 +35,4 @@ urlpatterns = [
         login_required(DatsetPersonalDataView.as_view()),
         name="dataset-personal-data",
     ),
-
 ]

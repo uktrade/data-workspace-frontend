@@ -1,8 +1,10 @@
+from django import forms
 from django.contrib.auth import get_user_model
 from django.forms import ValidationError
 
 
-from dataworkspace.apps.datasets.models import RequestingDataset
+from dataworkspace.apps.accounts import models
+from dataworkspace.apps.datasets.models import RequestingDataset, SensitivityType
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemForm,
@@ -12,6 +14,7 @@ from dataworkspace.forms import (
     GOVUKDesignSystemRadioField,
     GOVUKDesignSystemRadiosWidget,
     GOVUKDesignSystemModelForm,
+    GOVUKDesignSystemRadioField,
     GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemModelForm,
     GOVUKDesignSystemTextWidget,
@@ -353,30 +356,92 @@ class DatasetUserRestrictionsForm(GOVUKDesignSystemForm):
 
 class DatasetSecurityClassificationForm(GOVUKDesignSystemModelForm):
 
-
-class DatasetSecurityClassificationForm(GOVUKDesignSystemModelForm):
+    sensitivity = forms.ModelMultipleChoiceField(
+        queryset=SensitivityType.objects.all(), widget=forms.CheckboxSelectMultiple, required=False
+    )
 
     class Meta:
         model = RequestingDataset
         fields = [
             "government_security_classification",
             "sensitivity",
+
         ]
-    # sensitivity = GOVUKDesignSystemRadioField(
-    #     required=False,
-    #     label="What would you like to do?",
-    #     choices=SecurityClassificationTypes.choices,
-    #     widget=ConditionalSupportTypeRadioWidget(heading="h2", attrs={'data-type', 'sensitivity'}),
-    # )
 
 
-class DatsetPersonalDataForm(GOVUKDesignSystemForm):
-    personal_data = GOVUKDesignSystemRadioField(
-        label="How can we help you?",
-        help_text="Please choose one of the options below for help.",
-        choices=[("True", "Yes"), ("False", "No")],
+class DatasetPersonalDataForm(GOVUKDesignSystemForm):
+
+    personal_data = GOVUKDesignSystemTextareaField(
+        required=False,
+        label="Does it contain personal data?",
+        help_text="Personal data means any information relating to an identified or identifiable living individual. “Identifiable living individual” means a living individual who can be identified, directly or indirectly, in particular by reference to - (a) an identifier such as a name, an identification number, location data or an online identifier, or (b) one or more factors specific to the physical, physiological, genetic, mental, economic, cultural or social identity of the individual.",
+        widget=GOVUKDesignSystemTextareaWidget(
+            heading="h2",
+            label_size="m",
+            label_is_heading=True,
+            attrs={"rows": 5},
+            extra_label_classes="govuk-!-static-margin-0",
+        ),
+    )
+
+
+class DatasetSpecialPersonalDataForm(GOVUKDesignSystemForm):
+
+    special_personal_data = GOVUKDesignSystemTextareaField(
+        required=False,
+        label="Does it contain special category personal data?",
+        help_text="Special category data is personal data which the GDPR says is more sensitive, and so needs more protection.",
+        widget=GOVUKDesignSystemTextareaWidget(
+            heading="h2",
+            label_size="m",
+            label_is_heading=True,
+            attrs={"rows": 5},
+            extra_label_classes="govuk-!-static-margin-0",
+        ),
+    )
+
+
+class DatasetCommercialSensitiveForm(GOVUKDesignSystemForm):
+
+    special_personal_data = GOVUKDesignSystemTextareaField(
+        required=False,
+        label="Does it contain commercially sensitive data?",
+        help_text="Commercially sensitive information is information that if disclosed, could prejudice a supplier's commercial interests e.g. trade secrets, profit margins or new ideas. This type of information is protected through Confidentiality Agreements.",
+        widget=GOVUKDesignSystemTextareaWidget(
+            heading="h2",
+            label_size="m",
+            label_is_heading=True,
+            attrs={"rows": 5},
+            extra_label_classes="govuk-!-static-margin-0",
+        ),
+    )
+
+
+class DatasetRetentionPeriodForm(GOVUKDesignSystemForm):
+
+    retentio_policy = GOVUKDesignSystemCharField(
+        label="What is the retention period?",
+        required=True,
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=True,
+            label_size="m",
+        ),
+        error_messages={"required": "Enter a table name"},
+    )
+
+
+class DatasetUpdateFrequencyForm(GOVUKDesignSystemForm):
+
+    update_frequency = GOVUKDesignSystemRadioField(
+        label="How often is the source data updated?",
+        choices=[
+            ("constant", "Constant"),
+            ("daily", "Daily"),
+            ("weekly", "Weekly"),
+            ("other", "Other"),
+        ],
         widget=ConditionalSupportTypeRadioWidget(heading="h2"),
-        error_messages={"required": "Please select the type of support you require"},
+        error_messages={"required": "Please select how often the data is updated."},
     )
     message = GOVUKDesignSystemTextareaField(
         required=False,
