@@ -17,6 +17,12 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetRestrictionsForm,
     DatasetPurposeForm,
     DatasetUsageForm,
+    DatasetCurrentAccessForm,
+    DatasetLocationRestrictionsForm,
+    DatasetNetworkRestrictionsForm,
+    DatasetUserRestrictionsForm,
+    DatasetIntendedAccessForm,
+    DatasetSecurityClearanceForm,
 )
 
 
@@ -38,12 +44,12 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         # ('commercial-sensitive', DatasetCommercialSensitiveForm),
         # ('retention-period', DatasetRetentionPeriodForm),
         # ('update-frequency', DatasetUpdateFrequencyForm),
-        # ('current-access', DatasetCurrentAccessForm),
-        # ('intended-access', DatasetIntendedAccessForm),
-        # ('location-restrictions', DatasetLocationRestrictionsForm),
-        # ('security-clearance', DatasetSecurityClearanceForm),
-        # ('network-restrictions', DatasetNetworkRestrictionsForm),
-        # ('user-restrictions', DatasetUserRestrictionsForm),
+        ('current-access', DatasetCurrentAccessForm),
+        ('intended-access', DatasetIntendedAccessForm),
+        ('location-restrictions', DatasetLocationRestrictionsForm),
+        ('security-clearance', DatasetSecurityClearanceForm),
+        ('network-restrictions', DatasetNetworkRestrictionsForm),
+        ('user-restrictions', DatasetUserRestrictionsForm),
     ]
 
     def get_template_names(self):
@@ -60,12 +66,13 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
             "special-personal-data",
             "commercial-sensitive",
             "update-frequency",
-            "current-access",
-            "intended-access",
-            "location-restrictions",
-            "network-restrictions",
-            "security-clearance",
-            "user-restrictions",
+            "current_access",
+            "intended_access",
+            "operational_impact"
+            "location_restrictions",
+            "network_restrictions",
+            "security_clearance",
+            "user_restrictions",
         ]
 
         requesting_dataset = RequestingDataset.objects.create(
