@@ -11,6 +11,12 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetNameForm,
     DatasetDescriptionsForm,
     DatasetDataOriginForm,
+    DatasetExistingSystemForm,
+    DatasetPreviouslyPublishedForm,
+    DatasetLicenceForm,
+    DatasetRestrictionsForm,
+    DatasetPurposeForm,
+    DatasetUsageForm,
 )
 
 
@@ -20,12 +26,12 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         ("descriptions", DatasetDescriptionsForm),
         ("origin", DatasetDataOriginForm),
         ("owners", DatasetOwnersForm),
-        # ('existing-system', DatasetExistingSystemForm),
-        # ('published', DatasetPreviouslyPublishedForm),
-        # ('licence', DatasetLicenceForm),
-        # ('restrictions', DatasetRestrictionsForm),
-        # ('purpose', DatasetPurposeForm),
-        # ('usage', DatasetUsageForm),
+        ('existing-system', DatasetExistingSystemForm),
+        ('published', DatasetPreviouslyPublishedForm),
+        ('licence', DatasetLicenceForm),
+        ('restrictions', DatasetRestrictionsForm),
+        ('purpose', DatasetPurposeForm),
+        ('usage', DatasetUsageForm),
         # ('security-classification', DatasetSecurityClassificationForm),
         # ('personal-data', DatasetPersonalDataForm),
         # ('special-personal-data', DatasetSpecialPersonalDataForm),
@@ -47,7 +53,7 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
 
         notes_fields = [
             "origin",
-            "existing-system",
+            "existing_system",
             "published",
             "usage",
             "purpose",
