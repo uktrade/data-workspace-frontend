@@ -4,6 +4,8 @@ from django.forms import ValidationError
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemForm,
+    GOVUKDesignSystemRadioField,
+    GOVUKDesignSystemRadiosWidget,
     GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
@@ -218,6 +220,120 @@ class DatasetUsageForm(GOVUKDesignSystemForm):
     usage = GOVUKDesignSystemTextareaField(
         label="What will the data be used for on Data Workspace?",
         required=True,
+        widget=GOVUKDesignSystemTextareaWidget(
+            heading="h2",
+            label_size="m",
+            label_is_heading=True,
+            attrs={"rows": 5},
+            extra_label_classes="govuk-!-static-margin-0",
+        ),
+    )
+
+
+class DatasetCurrentAccessForm(GOVUKDesignSystemForm):
+
+    usage = GOVUKDesignSystemTextareaField(
+        label="Who currently has access to this dataset?",
+        required=True,
+        widget=GOVUKDesignSystemTextareaWidget(
+            heading="h2",
+            label_size="m",
+            label_is_heading=True,
+            attrs={"rows": 5},
+            extra_label_classes="govuk-!-static-margin-0",
+        ),
+    )
+
+
+class DatasetCurrentAccessForm(GOVUKDesignSystemForm):
+
+    current_access = GOVUKDesignSystemTextareaField(
+        label="Who currently has access to this dataset?",
+        required=True,
+        widget=GOVUKDesignSystemTextareaWidget(
+            heading="h2",
+            label_size="m",
+            label_is_heading=True,
+            attrs={"rows": 5},
+            extra_label_classes="govuk-!-static-margin-0",
+        ),
+    )
+
+
+
+class DatasetIntendedAccessForm(GOVUKDesignSystemForm):
+
+    intended_access = GOVUKDesignSystemRadioField(
+        required=True,
+        choices=[("yes", "Yes"), ("no", "No")],
+        label="Should access on Data Workspace be open to all users on request?",
+        widget=GOVUKDesignSystemRadiosWidget(heading="p", extra_label_classes="govuk-body-l"),
+    )
+
+    operational_impact = GOVUKDesignSystemTextareaField(
+        label="Will this change of access have any operational impact?",
+        required=False,
+        widget=GOVUKDesignSystemTextareaWidget(
+            heading="h2",
+            label_size="m",
+            label_is_heading=True,
+            attrs={"rows": 5},
+            extra_label_classes="govuk-!-static-margin-0",
+        ),
+    )
+
+
+class DatasetLocationRestrictionsForm(GOVUKDesignSystemForm):
+
+    location_restrictions = GOVUKDesignSystemTextareaField(
+        label="Should there be any location restrictions for access to this data set?",
+        required=False,
+        widget=GOVUKDesignSystemTextareaWidget(
+            heading="h2",
+            label_size="m",
+            label_is_heading=True,
+            attrs={"rows": 5},
+            extra_label_classes="govuk-!-static-margin-0",
+        ),
+    )
+
+
+class DatasetSecurityClearanceForm(GOVUKDesignSystemForm):
+
+    security_clearance = GOVUKDesignSystemRadioField(
+        required=True,
+        choices=[
+            ("BPSS", "Basic level of security clearance(BPSS)"),
+            ("CTC", "Counter Terrorist Check"),
+            ("SC", "Security Check"),
+            ("DV", "Developed Vetting"),
+        ],
+        label="What level of security clearance should be required to access this data?",
+        help_text="All people who work for/in the Civil Service need to have a basic level of security clearance BPSS",
+        widget=GOVUKDesignSystemRadiosWidget(heading="p", extra_label_classes="govuk-body-l"),
+    )
+
+
+class DatasetNetworkRestrictionsForm(GOVUKDesignSystemForm):
+
+    network_restrictions = GOVUKDesignSystemTextareaField(
+        label="Should access be limited based on device types and networks?",
+        required=False,
+        widget=GOVUKDesignSystemTextareaWidget(
+            heading="h2",
+            label_size="m",
+            label_is_heading=True,
+            attrs={"rows": 5},
+            extra_label_classes="govuk-!-static-margin-0",
+        ),
+    )
+
+
+class DatasetUserRestrictionsForm(GOVUKDesignSystemForm):
+
+    user_restrictions = GOVUKDesignSystemTextareaField(
+        label="Should access be trstricted to certain users types?",
+        required=False,
         widget=GOVUKDesignSystemTextareaWidget(
             heading="h2",
             label_size="m",
