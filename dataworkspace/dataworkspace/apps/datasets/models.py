@@ -566,7 +566,9 @@ class RequestingDataset(DeletableTimestampedUserModel):
     name = models.TextField(null=True, blank=True, max_length=128)
     short_description = models.TextField(null=True, blank=True, max_length=255)
     description = RichTextField(null=False, blank=False)
-    type = models.IntegerField(default=DataSetType.MASTER,)
+    type = models.IntegerField(
+        default=DataSetType.MASTER,
+    )
     slug = models.SlugField(max_length=50, db_index=True, null=True, blank=True)
     grouping = models.ForeignKey(DataGrouping, null=True, on_delete=models.CASCADE)
     notes = RichTextField(null=True, blank=True)

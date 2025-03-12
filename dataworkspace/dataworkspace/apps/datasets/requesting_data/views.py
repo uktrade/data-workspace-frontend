@@ -6,15 +6,20 @@ from django.urls import reverse
 from django.views.generic import FormView
 
 from dataworkspace.apps.datasets.models import RequestingDataset
-from dataworkspace.apps.datasets.requesting_data.forms import DatasetOwnersForm, DatasetNameForm, DatasetDescriptionsForm, DatasetDataOriginForm
+from dataworkspace.apps.datasets.requesting_data.forms import (
+    DatasetOwnersForm,
+    DatasetNameForm,
+    DatasetDescriptionsForm,
+    DatasetDataOriginForm,
+)
 
 
 class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
     form_list = [
-        ('name', DatasetNameForm),
-        ('descriptions', DatasetDescriptionsForm),
-        ('origin', DatasetDataOriginForm),
-        ('owners', DatasetOwnersForm),
+        ("name", DatasetNameForm),
+        ("descriptions", DatasetDescriptionsForm),
+        ("origin", DatasetDataOriginForm),
+        ("owners", DatasetOwnersForm),
         # ('existing-system', DatasetExistingSystemForm),
         # ('published', DatasetPreviouslyPublishedForm),
         # ('licence', DatasetLicenceForm),
@@ -40,18 +45,34 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
 
     def done(self, form_list, **kwargs):
 
-        notes_fields = ["origin", "existing-system", "published", "usage", "purpose",
-                        "special-personal-data", "commercial-sensitive", "update-frequency",
-                        "current-access", "intended-access", "location-restrictions",
-                        "network-restrictions", "security-clearance", "user-restrictions"]
+        notes_fields = [
+            "origin",
+            "existing-system",
+            "published",
+            "usage",
+            "purpose",
+            "special-personal-data",
+            "commercial-sensitive",
+            "update-frequency",
+            "current-access",
+            "intended-access",
+            "location-restrictions",
+            "network-restrictions",
+            "security-clearance",
+            "user-restrictions",
+        ]
 
-        requesting_dataset = RequestingDataset.objects.create(name=form_list[0].cleaned_data.get("name"))
+        requesting_dataset = RequestingDataset.objects.create(
+            name=form_list[0].cleaned_data.get("name")
+        )
         requesting_dataset.save()
 
         for form in form_list:
             for field in form.cleaned_data:
                 if field in notes_fields:
-                    requesting_dataset.notes = f"{form[field].label} {form.cleaned_data.get(field)}\n"
+                    requesting_dataset.notes = (
+                        f"{form[field].label} {form.cleaned_data.get(field)}\n"
+                    )
                     requesting_dataset.save()
                 else:
                     setattr(requesting_dataset, field, form.cleaned_data.get(field))
