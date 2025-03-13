@@ -2,7 +2,6 @@
 
 {% load waffle_tags %}
 
-{% block page_title %}Request a new dataset - {{ block.super }}{% endblock page_title %}
 {% block breadcrumbs %}
 <a href="{% url 'support' %}" class="govuk-back-link">Back</a>
 {% endblock %}
@@ -42,7 +41,7 @@
           {% for form in wizard.form %}
               {{ form }}
           {% endfor %}       
-      <button type="submit" class="govuk-button">Send</button>
+      <button type="submit" class="govuk-button">Continue</button>
     </form>
 <p class="govuk-body">
   <a href="{{ link }}" class="govuk-link">{{ link_text }}</a>
