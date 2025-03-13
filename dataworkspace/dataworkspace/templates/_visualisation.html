@@ -133,7 +133,7 @@
 {% endblock %}
 
 {% block nav %}
-<ul class="govuk-list nav govuk-!-font-size-18 govuk-!-margin-bottom-8">
+<ul class="govuk-list nav govuk-!-font-size-18 govuk-!-margin-bottom-6">
     <li class="nav-item{% if current_menu_item == 'branches' %} nav-item--current{% endif %} govuk-!-margin-bottom-6">
         <a href="{% url 'visualisations:branch' gitlab_project.id gitlab_project.default_branch %}" class="govuk-link govuk-link--no-visited-state nav-item-link{% if current_menu_item == 'branches' %} nav-item-link--current{% endif %} underline-on-hover--parent">
             <span class="underline-on-hover">Branches</span>
