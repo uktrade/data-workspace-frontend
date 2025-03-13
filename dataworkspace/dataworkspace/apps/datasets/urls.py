@@ -300,11 +300,7 @@ urlpatterns = [
             namespace="add_table",
         ),
     ),
-    path(
-        "requesting-data/<str:step>",
-        RequestingDataWizardView.as_view(url_name="datasets:requesting-data-step"),
-        name="requesting-data-step",
-    ),
+
     path(
         "<uuid:pk>/review-access/<int:user_id>",
         login_required(views.DataSetReviewAccess.as_view()),

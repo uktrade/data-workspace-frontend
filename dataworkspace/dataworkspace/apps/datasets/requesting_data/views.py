@@ -4,6 +4,7 @@ from formtools.wizard.views import NamedUrlSessionWizardView
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views.generic import FormView
+import waffle
 
 from dataworkspace.apps.datasets.models import RequestingDataset
 from dataworkspace.apps.datasets.requesting_data.forms import (
@@ -73,6 +74,8 @@ class DatasetBaseView(FormView):
                 f"datasets:requesting_data:{page}",
             )
         )
+
+    # if waffle.flag_is_active(request, settings.REQUESTING_DATA)
 
 
 class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
