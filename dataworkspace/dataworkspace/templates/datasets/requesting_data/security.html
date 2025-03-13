@@ -1,0 +1,115 @@
+{% extends '_main.html' %}
+{% load core_filters datasets_tags waffle_tags %}
+
+{% block head %}
+{{ block.super }}
+{{ form.media }}
+{% endblock %}
+
+
+{% block content %}
+{% if form_errors %}
+<div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
+  <h2 class="govuk-error-summary__title" id="error-summary-title">
+    There is a problem
+  </h2>
+  <div class="govuk-error-summary__body">
+    <ul class="govuk-list govuk-error-summary__list">
+    {% for id_for_label, error in form_errors %}
+        <li>
+          <a href="{{ request.path }}#{{ id_for_label }}">{{ error }}</a>
+        </li>
+    {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endif %}
+
+<h1 class="govuk-heading-l">Summary information</h1>
+<h2 class="govuk-heading-m">What is the security classification for this data?</h2>
+
+
+<p class="govuk-body">The Government Classifications policy identifies the value of the information. That value is then used to determine how the information must be protected. The higher the value classification, the greater the damage likely to occur if that information is lost, stolen or inadvertently released.</p>
+
+<form action="" method="post" novalidate>
+  {% csrf_token %}
+      {{ wizard.management_form }}
+        {{ wizard.form.management_form }}
+      <div
+        class="govuk-form-group {% if form.government_security_classification.errors %}govuk-form-group--error{% endif %}">
+        <label class="govuk-label  govuk-!-font-weight-bold" for="id_government_security_classification">
+          {{ form.government_security_classification.label }} *
+        </label>
+        
+        {% if form.government_security_classification.errors %}
+          <span id="id_government_security_classification-error" class="govuk-error-message">
+                              <span class="govuk-visually-hidden">Error: </span> Please choose the appropriate Government Security Classification
+                            </span>
+        {% endif %}
+        <div class="govuk-radios">
+          {% for value, text in form.government_security_classification.field.choices|slice:"1:" %}
+            <div class="govuk-radios__item">
+                      <input class="govuk-radios__input conditional" id="{{ value }}_id"
+                              name="{{ form.government_security_classification.html_name }}" type="radio" value="{{ value }}"
+                              {% if value == form.government_security_classification.value %}checked{% endif %}
+                      >
+              <label class="govuk-label govuk-radios__label"
+                    for="{{ value }}_id">{{ text }}
+              </label>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    <div class="govuk-inset-text" id="sensitivitySection"
+         style="display: {% if form.government_security_classification.value == 2 %}block{% else %}none{% endif %}">
+      <div
+        class="govuk-form-group {% if form.sensitivity.errors %}govuk-form-group--error{% endif %}">
+        {% if form.sensitivity.errors %}
+          {% for error in form.sensitivity.errors %}
+            <span class="govuk-error-message">
+                          <span class="govuk-visually-hidden">Error:</span>
+                          {{ error }}
+                        </span>
+          {% endfor %}
+        {% endif %}
+        <label class="govuk-label  govuk-!-font-weight-bold" for="{{ form.sensitivity.id_for_label }}">
+          {{ form.sensitivity.label }}
+        </label>
+        <span class="govuk-hint">If the data is of a particularly sensitive nature, please choose the relevant options below so that it can be protected and handled the right way.</span>
+        <div class="govuk-checkboxes--small">
+          {% for value, text in form.sensitivity.field.choices %}
+            <div class="govuk-checkboxes__item">
+              <input
+                {% if value in form.sensitivity.value %}checked{% endif %}
+                class="govuk-checkboxes__input"
+                id="id_{{ value }}"
+                name="{{ form.sensitivity.html_name }}"
+                type="checkbox"
+                value="{{ value }}"
+              >
+              <label class="govuk-label govuk-checkboxes__label"
+                     for="id_{{ value }}">
+                {{ text|sensitivity_with_descriptor }}
+              </label>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  <button type="submit" class="govuk-button">Continue</button>
+</form>
+{% endblock %}
+
+{% block footer_scripts %}
+  <script nonce="{{ request.csp_nonce }}">
+    const sensitivity = document.getElementById('sensitivitySection')
+    console.log("HER", document.querySelectorAll(".conditional"))
+    document.querySelectorAll(".conditional").forEach(item => {
+      item.addEventListener("change", event => {
+        (event.target.value === "2" ? sensitivity.style.display = "block" : sensitivity.style.display = "none")
+      })
+    })
+  </script>
+  {{ form.media }}
+    {% include 'partials/ckeditor.html' %}
+{% endblock footer_scripts %}
