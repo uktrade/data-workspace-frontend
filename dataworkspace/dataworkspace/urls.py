@@ -38,6 +38,7 @@ from dataworkspace.apps.core.views import (
     table_data_view,
     welcome_page_view,
 )
+from dataworkspace.apps.datasets.requesting_data.views import RequestingDataWizardView
 from dataworkspace.apps.datasets.views import home_view
 
 logger = logging.getLogger("app")
@@ -132,6 +133,11 @@ urlpatterns = [
         "support/add-dataset-request/",
         login_required(AddDatasetRequestView.as_view()),
         name="add-dataset-request",
+    ),
+    path(
+        "requesting-data/<str:step>",
+        RequestingDataWizardView.as_view(url_name="datasets:requesting-data-step"),
+        name="requesting-data-step",
     ),
     path(
         "support/custom-visualisation-review/",
