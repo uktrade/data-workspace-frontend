@@ -262,7 +262,7 @@ CSP_UPGRADE_INSECURE_REQUESTS = not LOCAL
 CSP_BASE_URI = [APPLICATION_ROOT_DOMAIN]
 CSP_FONT_SRC = [APPLICATION_ROOT_DOMAIN, "data:", "https://fonts.gstatic.com"]
 CSP_FORM_ACTION = [APPLICATION_ROOT_DOMAIN, f"*.{APPLICATION_ROOT_DOMAIN}"]
-CSP_FRAME_ANCESTORS = [APPLICATION_ROOT_DOMAIN]
+CSP_FRAME_ANCESTORS = [APPLICATION_ROOT_DOMAIN, "*.visualwebsiteoptimizer.com", "app.vwo.com"]
 CSP_FRAME_SRC = ["*.visualwebsiteoptimizer.com", "app.vwo.com"]
 CSP_CONNECT_SRC = [
     APPLICATION_ROOT_DOMAIN,
@@ -847,3 +847,5 @@ MAINTENANCE_MODE_IGNORE_URLS = (r"^/healthcheck$",)
 MAINTENANCE_MODE_IGNORE_ADMIN_SITE = True
 MAINTENANCE_MODE_GET_CONTEXT = "dataworkspace.apps.maintenance.maintenance.maintenance_context"
 MAINTENANCE_MODE_STATE_BACKEND = "maintenance_mode.backends.CacheBackend"
+X_FRAME_OPTIONS = "ALLOW-FROM *.visualwebsiteoptimizer.com app.vwo.com"
+SECURE_CROSS_ORIGIN_POLICY_OPENER = None
