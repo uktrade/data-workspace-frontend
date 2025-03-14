@@ -64,6 +64,13 @@ class BasePipelineCreateForm(GOVUKDesignSystemModelForm):
             label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
         ),
     )
+    custom_schedule = GOVUKDesignSystemCharField(
+        label='Enter a custom schedule if you have chosen "Custom schedule" above',
+        required=False,
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False, extra_label_classes="govuk-body govuk-!-font-size-19 govuk-secondary-text-colour"
+        ),
+    )
     notes = GOVUKDesignSystemTextareaField(
         label="Notes",
         required=False,
