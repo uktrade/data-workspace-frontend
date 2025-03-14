@@ -191,9 +191,9 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
             if access_request.catalogue_item_id
             else None
         )
-        name_dataset = catalogue_item
-        url_dataset = request.build_absolute_uri(
-            reverse("datasets:dataset_detail", args=[self.obj.pk])
+        name_dataset = self.obj.name
+        url_dataset = self.request.build_absolute_uri(
+            reverse("datasets:dataset_detail", args=[self.obj.id])
         )
         # In Dev Ignore the API call to Zendesk and notify
         if settings.ENVIRONMENT == "Dev":
