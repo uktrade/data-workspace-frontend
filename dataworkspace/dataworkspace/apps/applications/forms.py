@@ -231,13 +231,14 @@ class VisualisationApprovalForm(GOVUKDesignSystemModelForm):
 
         if self._initial_approved:
             self.fields["approved"].required = False
-
+        self.third_approver_flag = third_approver_flag
         if third_approver_flag:
             self.fields["approved"].widget = HiddenInput()
 
     def clean_approved(self):
-        if not self._initial_approved and not self.cleaned_data["approved"]:
-            raise ValidationError("You must confirm that you have reviewed this visualisation")
+        if not self.third_approver_flag:
+            if not self._initial_approved and not self.cleaned_data["approved"]:
+                raise ValidationError("You must confirm that you have reviewed this visualisation")
         return self.cleaned_data["approved"]
 
     def clean(self):
@@ -245,5 +246,8 @@ class VisualisationApprovalForm(GOVUKDesignSystemModelForm):
 
         if self.data["action"] == "unapprove":
             cleaned_data["approved"] = False
+        if self.third_approver_flag:
+            if self.data["action"] == "approve":
+                cleaned_data["approved"] = True
 
         return cleaned_data
