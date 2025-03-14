@@ -142,16 +142,6 @@ class DatasetOwnersForm(GOVUKDesignSystemForm):
         return cleaned_data
 
 
-class DatasetSystemForm(GOVUKDesignSystemForm):
-
-    name = GOVUKDesignSystemCharField(
-        label="Which system is the data set currently stored on?",
-        required=True,
-        widget=GOVUKDesignSystemTextWidget(label_is_heading=True),
-        error_messages={"required": "Enter a table name"},
-    )
-
-
 class DatasetExistingSystemForm(GOVUKDesignSystemForm):
 
     existing_system = GOVUKDesignSystemTextareaField(
@@ -238,7 +228,7 @@ class DatasetUsageForm(GOVUKDesignSystemForm):
 
 class DatasetCurrentAccessForm(GOVUKDesignSystemForm):
 
-    usage = GOVUKDesignSystemTextareaField(
+    current_access = GOVUKDesignSystemTextareaField(
         label="Who currently has access to this dataset?",
         required=True,
         widget=GOVUKDesignSystemTextareaWidget(

@@ -59,7 +59,7 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         ("licence", DatasetLicenceForm),
         ("restrictions", DatasetRestrictionsForm),
         ("purpose", DatasetPurposeForm),
-        ("usage", DatasetUsageForm),
+        ("current-access", DatasetUsageForm),
         ("security-classification", DatasetSecurityClassificationForm),
         ("personal-data", DatasetPersonalDataForm),
         ("special-personal-data", DatasetSpecialPersonalDataForm),
