@@ -9,23 +9,9 @@ from django.urls import reverse
 from freezegun import freeze_time
 from mock import mock
 
-from dataworkspace.apps.datasets.constants import UserAccessType
+from dataworkspace.apps.datasets.constants import SecurityClassificationAndHandlingInstructionType, UserAccessType
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
-
-
-        # ("security-classification", DatasetSecurityClassificationForm),
-        # ("personal-data", DatasetPersonalDataForm),
-        # ("special-personal-data", DatasetSpecialPersonalDataForm),
-        # ("commercial-sensitive", DatasetCommercialSensitiveForm),
-        # ("retention-period", DatasetRetentionPeriodForm),
-        # ("update-frequency", DatasetUpdateFrequencyForm),
-        # ("current-access", DatasetCurrentAccessForm),
-        # ("intended-access", DatasetIntendedAccessForm),
-        # ("location-restrictions", DatasetLocationRestrictionsForm),
-        # ("security-clearance", DatasetSecurityClearanceForm),
-        # ("network-restrictions", DatasetNetworkRestrictionsForm),
-        # ("user-restrictions", DatasetUserRestrictionsForm),
 
 
 @pytest.mark.django_db
@@ -35,18 +21,40 @@ class TestRequestingData(TestCase):
         self.user = factories.UserFactory.create(is_superuser=False)
         self.client = Client(**get_http_sso_data(self.user))
 
-    def test_name_page(self):
+    def assert_common_content_one_label_page(self, url_name, label):
         response = self.client.get(
-            reverse("requesting-data-step", args={("name")})
+            reverse("requesting-data-step", args={(url_name)})
         )
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         header = soup.find("h1").contents[0]
-        label = soup.find("label").contents[0]
+        input_label = soup.find("label").contents[0]
 
         assert response.status_code == 200
         assert "Summary information" in header
-        assert "What is the name of the dataset?" in label
+        assert label in input_label
+
+    def assert_common_content_radio_buttons_page(self, url_name, label, radio_options):
+        response = self.client.get(
+            reverse("requesting-data-step", args={(url_name)})
+        )
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        header = soup.find("h1").contents[0]
+        # TODO update this in the templates to be label not h2 for consistency
+        input_label = soup.find("h2").contents[0]
+        radios = soup.find_all("input", type="radio")
+        radio_names = [radio.get("value").lower() for radio in radios]
+
+        assert response.status_code == 200
+        assert "Summary information" in header
+        assert label in input_label
+
+        for option in radio_options:
+            assert option.lower() in radio_names
+
+    def test_name_page(self):
+        self.assert_common_content_one_label_page(url_name="name", label="What is the name of the dataset?")
 
     def test_descriptions_page(self):
         response = self.client.get(
@@ -63,17 +71,7 @@ class TestRequestingData(TestCase):
         assert "Describe this dataset" in labels[1].contents[0]
 
     def test_origin_page(self):
-        response = self.client.get(
-            reverse("requesting-data-step", args={("origin")})
-        )
-
-        soup = BeautifulSoup(response.content.decode(response.charset))
-        header = soup.find("h1").contents[0]
-        label = soup.find("label").contents[0]
-
-        assert response.status_code == 200
-        assert "Summary information" in header
-        assert "What type of dataset is this?" in label
+        self.assert_common_content_one_label_page(url_name="origin", label="What type of dataset is this?")
 
     def test_owners_page(self):
         response = self.client.get(
@@ -91,79 +89,69 @@ class TestRequestingData(TestCase):
         assert "Contact person" in labels[2].contents[0]
 
     def test_existing_system_page(self):
-        response = self.client.get(
-            reverse("requesting-data-step", args={("existing-system")})
-        )
-
-        soup = BeautifulSoup(response.content.decode(response.charset))
-        header = soup.find("h1").contents[0]
-        label = soup.find("label").contents[0]
-
-        assert response.status_code == 200
-        assert "Summary information" in header
-        assert "Which system is the data set currently stored on?" in label
+        self.assert_common_content_one_label_page(url_name="existing-system", label="Which system is the data set currently stored on?")
 
     def test_previously_published_page(self):
-        response = self.client.get(
-            reverse("requesting-data-step", args={("previously-published")})
-        )
-
-        soup = BeautifulSoup(response.content.decode(response.charset))
-        header = soup.find("h1").contents[0]
-        label = soup.find("label").contents[0]
-
-        assert response.status_code == 200
-        assert "Summary information" in header
-        assert "Enter the URL of where it's currently published" in label
+        self.assert_common_content_one_label_page(url_name="previously-published", label="Enter the URL of where it's currently published")
 
     def test_licence_page(self):
-        response = self.client.get(
-            reverse("requesting-data-step", args={("licence")})
-        )
-
-        soup = BeautifulSoup(response.content.decode(response.charset))
-        header = soup.find("h1").contents[0]
-        label = soup.find("label").contents[0]
-
-        assert response.status_code == 200
-        assert "Summary information" in header
-        assert "What licence do you have for this data?" in label
+        self.assert_common_content_one_label_page(url_name="licence", label="What licence do you have for this data?")
 
     def test_restrictions_page(self):
-        response = self.client.get(
-            reverse("requesting-data-step", args={("restrictions")})
-        )
-
-        soup = BeautifulSoup(response.content.decode(response.charset))
-        header = soup.find("h1").contents[0]
-        label = soup.find("label").contents[0]
-
-        assert response.status_code == 200
-        assert "Summary information" in header
-        assert "What are the usage restrictions?" in label
+        self.assert_common_content_one_label_page(url_name="restrictions", label="What are the usage restrictions?")
 
     def test_purpose_page(self):
-        response = self.client.get(
-            reverse("requesting-data-step", args={("purpose")})
-        )
-
-        soup = BeautifulSoup(response.content.decode(response.charset))
-        header = soup.find("h1").contents[0]
-        label = soup.find("label").contents[0]
-
-        assert response.status_code == 200
-        assert "Summary information" in header
-        assert "What purpose has the data been collected for?" in label
+        self.assert_common_content_one_label_page(url_name="purpose", label="What purpose has the data been collected for?")
 
     def test_usage_page(self):
-        response = self.client.get(
-            reverse("requesting-data-step", args={("usage")})
+        self.assert_common_content_one_label_page(url_name="usage", label="What will the data be used for on Data Workspace?")
+
+    def test_security_classification_page(self):
+        self.assert_common_content_radio_buttons_page(
+            url_name="security-classification",
+            label="What is the security classification for this data?",
+            radio_options=[str(classification.value) for classification in SecurityClassificationAndHandlingInstructionType],
         )
 
-        soup = BeautifulSoup(response.content.decode(response.charset))
-        header = soup.find("h1").contents[0]
-        label = soup.find("label").contents[0]
+    def test_personal_data_page(self):
+        self.assert_common_content_one_label_page(url_name="personal-data", label="Does it contain personal data?")
 
-        assert response.status_code == 200
-        assert "Summary information" in header
-        assert "What will the data be used for on Data Workspace?" in label
+    def test_special_personal_data_page(self):
+        self.assert_common_content_one_label_page(url_name="special-personal-data", label="Does it contain special category personal data?")
+
+    def test_commercial_sensitive_page(self):
+        self.assert_common_content_one_label_page(url_name="commercial-sensitive", label="Does it contain commercially sensitive data?")
+
+    def test_retention_period_page(self):
+        self.assert_common_content_one_label_page(url_name="retention-period", label="What is the retention period?")
+
+    def test_update_frequency_page(self):
+        self.assert_common_content_radio_buttons_page(
+            url_name="update-frequency",
+            label="How often is the source data updated",
+            radio_options=["Constant", "Daily", "Weekly", "Other"],
+        )
+
+    def test_current_access_page(self):
+        pass
+        # TODO
+
+    def test_intended_access_page(self):
+        pass
+        # TODO
+
+    def test_location_restrictions(self):
+        pass
+        # TODO
+
+    def test_security_clearance(self):
+        pass
+        # TODO
+
+    def test_network_restrictions(self):
+        pass
+        # TODO
+
+    def test_user_restrictions_page(self):
+        pass
+        # TODO
