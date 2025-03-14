@@ -3,23 +3,16 @@ from django.contrib.auth import get_user_model
 from django.forms import ValidationError
 
 
-from dataworkspace.apps.accounts import models
 from dataworkspace.apps.datasets.models import RequestingDataset, SensitivityType
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemForm,
     GOVUKDesignSystemTextWidget,
-    GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
-    GOVUKDesignSystemRadioField,
     GOVUKDesignSystemRadiosWidget,
     GOVUKDesignSystemModelForm,
     GOVUKDesignSystemRadioField,
-    GOVUKDesignSystemTextWidget,
-    GOVUKDesignSystemModelForm,
-    GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextareaField,
-    GOVUKDesignSystemTextareaWidget,
 )
 
 from dataworkspace.apps.core.forms import ConditionalSupportTypeRadioWidget
@@ -258,21 +251,6 @@ class DatasetCurrentAccessForm(GOVUKDesignSystemForm):
     )
 
 
-class DatasetCurrentAccessForm(GOVUKDesignSystemForm):
-
-    current_access = GOVUKDesignSystemTextareaField(
-        label="Who currently has access to this dataset?",
-        required=True,
-        widget=GOVUKDesignSystemTextareaWidget(
-            heading="h2",
-            label_size="m",
-            label_is_heading=True,
-            attrs={"rows": 5},
-            extra_label_classes="govuk-!-static-margin-0",
-        ),
-    )
-
-
 class DatasetIntendedAccessForm(GOVUKDesignSystemForm):
 
     intended_access = GOVUKDesignSystemRadioField(
@@ -368,9 +346,6 @@ class DatasetSecurityClassificationForm(GOVUKDesignSystemModelForm):
             "government_security_classification",
             "sensitivity",
         ]
-
-    def clean(self):
-        cleaned_data = super().clean()
 
 
 class DatasetPersonalDataForm(GOVUKDesignSystemForm):

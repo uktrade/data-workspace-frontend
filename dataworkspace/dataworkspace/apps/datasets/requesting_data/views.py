@@ -8,17 +8,7 @@ from django.urls import reverse
 from django.views.generic import FormView
 
 from dataworkspace.apps.datasets.models import DataSet, RequestingDataset
-from dataworkspace.apps.datasets.requesting_data.forms import (
-    DatasetCommercialSensitiveForm,
-    DatasetOwnersForm,
-    DatasetNameForm,
-    DatasetDescriptionsForm,
-    DatasetDataOriginForm,
-    DatasetRetentionPeriodForm,
-    DatasetSecurityClassificationForm,
-    DatasetSpecialPersonalDataForm,
-    DatasetUpdateFrequencyForm,
-)
+
 from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetOwnersForm,
     DatasetNameForm,
@@ -151,14 +141,19 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
                         )
                         requesting_dataset.save()
                 if field == "enquiries_contact":
-                    requesting_dataset.enquiries_contact = User.objects.get(id=form.cleaned_data.get(field).id)
+                    requesting_dataset.enquiries_contact = User.objects.get(
+                        id=form.cleaned_data.get(field).id
+                    )
                 if field == "sensitivity":
                     requesting_dataset.sensitivity.set(form.cleaned_data.get("sensitivity"))
                 else:
                     setattr(requesting_dataset, field, form.cleaned_data.get(field))
                 requesting_dataset.save()
 
-        data_dict = model_to_dict(requesting_dataset, exclude=['id', 'tags', 'user', 'sensitivity', 'data_catalogue_editors'])
+        data_dict = model_to_dict(
+            requesting_dataset,
+            exclude=["id", "tags", "user", "sensitivity", "data_catalogue_editors"],
+        )
         data_dict["enquiries_contact"] = requesting_dataset.enquiries_contact
         data_dict["information_asset_manager"] = requesting_dataset.information_asset_manager
         data_dict["information_asset_owner"] = requesting_dataset.information_asset_owner
