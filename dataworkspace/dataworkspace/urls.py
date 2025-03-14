@@ -136,7 +136,7 @@ urlpatterns = [
     ),
     path(
         "requesting-data/<str:step>",
-        RequestingDataWizardView.as_view(url_name="datasets:requesting-data-step"),
+        RequestingDataWizardView.as_view(url_name="requesting-data-step"),
         name="requesting-data-step",
     ),
     path(

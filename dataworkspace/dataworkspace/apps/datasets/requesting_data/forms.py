@@ -127,6 +127,7 @@ class DatasetOwnersForm(GOVUKDesignSystemForm):
         try:
             iam_user = User.objects.get(first_name=iam_first_name, last_name=iam_last_name)
             cleaned_data["information_asset_manager"] = iam_user
+
         except:
             raise ValidationError("This is not a real user")
 
@@ -141,6 +142,7 @@ class DatasetOwnersForm(GOVUKDesignSystemForm):
                 first_name=enquiries_contact_first_name, last_name=enquiries_contact_last_name
             )
             cleaned_data["enquiries_contact"] = enquiries_contact_user
+
         except:
             raise ValidationError("This is not a real user")
 
@@ -370,8 +372,6 @@ class DatasetSecurityClassificationForm(GOVUKDesignSystemModelForm):
     def clean(self):
         cleaned_data = super().clean()
 
-        print("HERE", cleaned_data)
-
 
 class DatasetPersonalDataForm(GOVUKDesignSystemForm):
 
@@ -407,7 +407,7 @@ class DatasetSpecialPersonalDataForm(GOVUKDesignSystemForm):
 
 class DatasetCommercialSensitiveForm(GOVUKDesignSystemForm):
 
-    special_personal_data = GOVUKDesignSystemTextareaField(
+    commercial_sensitive = GOVUKDesignSystemTextareaField(
         required=False,
         label="Does it contain commercially sensitive data?",
         help_text="Commercially sensitive information is information that if disclosed, could prejudice a supplier's commercial interests e.g. trade secrets, profit margins or new ideas. This type of information is protected through Confidentiality Agreements.",
@@ -423,7 +423,7 @@ class DatasetCommercialSensitiveForm(GOVUKDesignSystemForm):
 
 class DatasetRetentionPeriodForm(GOVUKDesignSystemForm):
 
-    retentio_policy = GOVUKDesignSystemCharField(
+    retention_policy = GOVUKDesignSystemCharField(
         label="What is the retention period?",
         required=True,
         widget=GOVUKDesignSystemTextWidget(
