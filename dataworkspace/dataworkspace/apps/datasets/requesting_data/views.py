@@ -31,7 +31,7 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetPersonalDataForm,
     DatasetCommercialSensitiveForm,
     DatasetRetentionPeriodForm,
-    DatasetUpdateFrequencyForm
+    DatasetUpdateFrequencyForm,
 )
 
 
