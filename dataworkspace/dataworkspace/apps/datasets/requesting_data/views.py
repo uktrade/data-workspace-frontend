@@ -28,10 +28,6 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetSecurityClearanceForm,
 )
 
-from dataworkspace.apps.datasets.models import (
-    RequestingDataset,
-)
-
 
 class DatasetBaseView(FormView):
     def save_dataset(self, form, fields, page):
