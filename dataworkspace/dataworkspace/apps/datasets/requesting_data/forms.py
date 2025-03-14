@@ -29,6 +29,12 @@ class DatasetNameForm(GOVUKDesignSystemForm):
         ),
     )
 
+    def post(self, *args, **kwargs):
+        response = super().post(*args, **kwargs)
+        print('HELLO')
+        print(response)
+        return response
+
 
 class DatasetDescriptionsForm(GOVUKDesignSystemForm):
 

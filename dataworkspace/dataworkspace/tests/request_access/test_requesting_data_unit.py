@@ -1,5 +1,7 @@
 import io
 import uuid
+import json
+from http import HTTPStatus
 from unittest import mock
 from unittest.mock import patch
 from unittest import TestCase
@@ -155,3 +157,33 @@ class RequestingDataFormsTestCase(TestCase):
     def test_valid_form_update_frequency(self):
         pass
 
+
+
+@pytest.mark.django_db
+class RequestingDataViewsTestCase(TestCase):
+
+    def setUp(self):
+        self.user = factories.UserFactory.create(is_superuser=False)
+        self.client = Client(**get_http_sso_data(self.user))
+
+    @patch("requests.post")
+    def test_name_view(self, mock_post):
+        """
+        A name should be saved to the session, not call the database
+        """
+        response = self.client.post(
+            reverse(
+                "requesting-data-step",
+                args=["name"],
+            ),
+            data={
+                "wizard_current_step": "name",
+                "name-name": "Test name"
+            },
+        )
+
+        assert response.status_code == 200
+
+        session_name = "Test name"
+
+        assert mock_post.called is False

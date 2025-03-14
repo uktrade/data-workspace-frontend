@@ -23,7 +23,7 @@ class TestRequestingData(TestCase):
 
     def assert_common_content_one_label_page(self, url_name, label):
         response = self.client.get(
-            reverse("requesting-data-step", args={(url_name)})
+            reverse("requesting-data-step", args=[url_name])
         )
 
         soup = BeautifulSoup(response.content.decode(response.charset))
@@ -36,7 +36,7 @@ class TestRequestingData(TestCase):
 
     def assert_common_content_radio_buttons_page(self, url_name, label, radio_options):
         response = self.client.get(
-            reverse("requesting-data-step", args={(url_name)})
+            reverse("requesting-data-step", args=[url_name])
         )
 
         soup = BeautifulSoup(response.content.decode(response.charset))
@@ -58,7 +58,7 @@ class TestRequestingData(TestCase):
 
     def test_descriptions_page(self):
         response = self.client.get(
-            reverse("requesting-data-step", args={("descriptions")})
+            reverse("requesting-data-step", args=["descriptions"])
         )
 
         soup = BeautifulSoup(response.content.decode(response.charset))
@@ -75,7 +75,7 @@ class TestRequestingData(TestCase):
 
     def test_owners_page(self):
         response = self.client.get(
-            reverse("requesting-data-step", args={("owners")})
+            reverse("requesting-data-step", args=["owners"])
         )
 
         soup = BeautifulSoup(response.content.decode(response.charset))
