@@ -56,7 +56,7 @@
       Release to production
     </h3>
     {% if approved  %}
-      <p class="govuk-body">
+      <p class="govuk-body govuk-!-margin-bottom-6">
         You can release your visualisation to production. {{ project_approvals| length }} out of 3 users have approved it.
       </p>
       {% include "partials/react-slot-data.html" with mount_id="confirm-publish-visualisation" data='{"is_catalogue": false}' test_id="confirm-publish-visualisation" %}
