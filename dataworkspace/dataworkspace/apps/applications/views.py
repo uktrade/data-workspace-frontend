@@ -1169,6 +1169,7 @@ def visualisation_approvals_html_POST(request, gitlab_project_id):
     approval = next(filter(lambda a: a.approver == request.user, approvals), None)
     form = VisualisationApprovalForm(
         request.POST,
+        third_approver_flag=waffle.flag_is_active(request, settings.THIRD_APPROVER),
         instance=approval,
         initial={
             "visualisation": application_template,

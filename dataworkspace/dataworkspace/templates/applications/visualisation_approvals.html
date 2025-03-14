@@ -22,7 +22,7 @@
         {% if approver.status == 'team member' %}
         <li>A member of the Data Workspace team approved this visualisation on {{ approver.date_approved }}</li>
         {% else %}
-         <li>{% if request.user.get_full_name == approver.name %}You{% else %}{{ approver.name }} ({{approver.status}}){% endif %} approved this visualisation on {{ approver.date_approved }}</li>
+         <li>{% if request.user.get_full_name == approver.name and approver.status == 'owner' %}You{% else %}{{ approver.name }} ({{approver.status}}){% endif %} approved this visualisation on {{ approver.date_approved }}</li>
         {% endif %}
       {% endfor %}
    </ul>
@@ -34,11 +34,11 @@
   {% elif current_user_type == 'peer reviewer'  %}
      {% include './visualisation_approvals/peer_reviewer.html' %}
    {% endif %}
- 
-   {% if not current_user_already_approved or not another_user_with_same_type_already_approved %}
+   <hr class="govuk-section-break govuk-section-break--xl govuk-section-break--visible govuk-!-margin-top-6 govuk-!-margin-bottom-6">
+   {% if not current_user_already_approved %}
    <h2 class="govuk-heading-m">Approve this visualisation</h2>
     <p class="govuk-body">By clicking the button below you’re confirming that this visualisation:</p>
-    <ul class="govuk-list govuk-list--bullet" data-test="generic_approval_list">
+    <ul class="govuk-list govuk-list--bullet govuk-!-margin-left-2" data-test="generic_approval_list">
       <li>has been reviewed by yourself</li>
       <li>is ready to be published</li>
       <li>follows our <a href="https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/publish-data/publish-an-rpython-visualisation/">visualisation guidance</a></li>
@@ -79,11 +79,9 @@
     </div>
   </div>
   {% endif %}
-
   <p class="govuk-body">
     In order to publish this visualisation, at least two users must approve it. One approver must be the creator of the visualisation, and a different approver must have completed a peer review of the visualisation.
   </p>
-
   <p class="govuk-body">
     {% if approvals %}
     So far, the following {{ approvals | length }} user{{ approvals | pluralize }} {{ approvals | pluralize:'has,have' }} approved it.
@@ -91,15 +89,12 @@
     No-one has approved this yet.
     {% endif %}
   </p>
-
   <ul class="govuk-list govuk-list--bullet">
     {% for approval in approvals %}
       <li>{% if request.user == approval.approver %}You{% else %}{{ approval.approver.get_full_name }}{% endif %} approved this visualisation at {{ approval.created_date }}</li>
     {% endfor %}
   </ul>
-
-  <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
-
+  <hr class="govuk-section-break govuk-section-break--visible " />
   {% if not already_approved %}
   <p class="govuk-body">
     By approving that this visualisation is ready to be published, you are confirming that it follows the <a class="govuk-link" href="https://gitlab.data.trade.gov.uk/readme/wiki/-/wikis/Data%20visualisation%20onboarding%20process">onboarding guidance</a>. Please contact the Data Workspace team if you have any questions using the <a class="govuk-link" href="https://data.trade.gov.uk/support-and-feedback/">support and feedback form</a>.
