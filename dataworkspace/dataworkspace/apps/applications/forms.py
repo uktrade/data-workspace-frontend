@@ -246,7 +246,8 @@ class VisualisationApprovalForm(GOVUKDesignSystemModelForm):
 
         if self.data["action"] == "unapprove":
             cleaned_data["approved"] = False
-        elif self.data["action"] == "approve":
-            cleaned_data["approved"] = True
+        if self.third_approver_flag:
+            if self.data["action"] == "approve":
+                cleaned_data["approved"] = True
 
         return cleaned_data

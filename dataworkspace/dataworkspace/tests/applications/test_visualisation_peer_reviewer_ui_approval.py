@@ -239,7 +239,9 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
         assert (
             approval_list_items[0]
             .get_text()
-            .startswith("Bob Burger (peer reviewer) approved this visualisation on 01 January 2025, 01:01am")
+            .startswith(
+                "Bob Burger (peer reviewer) approved this visualisation on 01 January 2025, 01:01am"
+            )
         )
         assert "Currently 1 out of 3 have approved this visualisation:" in approval_count_text
         assert response.status_code == 200
