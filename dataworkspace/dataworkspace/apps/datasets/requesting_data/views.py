@@ -26,6 +26,12 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetUserRestrictionsForm,
     DatasetIntendedAccessForm,
     DatasetSecurityClearanceForm,
+    DatasetSecurityClassificationForm,
+    DatasetSpecialPersonalDataForm,
+    DatasetPersonalDataForm,
+    DatasetCommercialSensitiveForm,
+    DatasetRetentionPeriodForm,
+    DatasetUpdateFrequencyForm
 )
 
 
