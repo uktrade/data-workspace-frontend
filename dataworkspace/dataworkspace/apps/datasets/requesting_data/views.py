@@ -158,15 +158,14 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
                     setattr(requesting_dataset, field, form.cleaned_data.get(field))
                 requesting_dataset.save()
 
-        data_dict = model_to_dict(requesting_dataset, exclude=['id', 'tags', 'user', 'sensitivity'])
+        data_dict = model_to_dict(requesting_dataset, exclude=['id', 'tags', 'user', 'sensitivity', 'data_catalogue_editors'])
         data_dict["enquiries_contact"] = requesting_dataset.enquiries_contact
         data_dict["information_asset_manager"] = requesting_dataset.information_asset_manager
         data_dict["information_asset_owner"] = requesting_dataset.information_asset_owner
         data_dict["slug"] = requesting_dataset.name.lower().replace(" ", "-")
 
         dataset = DataSet.objects.create(**data_dict)
-
-        dataset.set(requesting_dataset.data_catalogue_editors.all())
+        dataset.data_catalogue_editors.set(requesting_dataset.data_catalogue_editors.all())
         dataset.sensitivity.set(requesting_dataset.sensitivity.all())
 
         return HttpResponseRedirect(
