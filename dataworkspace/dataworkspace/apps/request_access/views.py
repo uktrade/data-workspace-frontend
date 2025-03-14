@@ -1,3 +1,4 @@
+import logging
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
@@ -8,6 +9,7 @@ from django.urls import resolve, reverse
 from django.views.generic import CreateView, DetailView, FormView, UpdateView
 
 from dataworkspace import zendesk
+from dataworkspace.notify import EmailSendFailureException, send_email
 from dataworkspace.apps.accounts.models import Profile
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.utils import is_user_email_domain_valid
@@ -21,6 +23,8 @@ from dataworkspace.apps.request_access.forms import (  # pylint: disable=import-
     StataAccessForm,
     ToolsAccessRequestForm,
 )
+
+logger = logging.getLogger("app")
 
 
 class DatasetAccessRequest(CreateView):
@@ -155,12 +159,41 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
     model = models.AccessRequest
     template_name = "request_access/confirmation-page.html"
 
+    def send_notification_email(self, email, name_dataset, url_dataset):
+
+        logger.info(
+            "send_notification_email: Sending email notification to %s for Dataset access request",
+            email,
+        )
+
+        try:
+            send_email(
+                template_id=settings.NOTIFY_DATASET_NOTIFICATIONS_USER_ACCESS_TEMPLATE_ID,
+                email_address=email,
+                personalisation={
+                    "dataset_name": name_dataset,
+                    "dataset_url": url_dataset,
+                },
+            )
+        except EmailSendFailureException:
+            logger.exception("Failed to send email")
+        else:
+            logger.info(
+                "send_notification_email: for %s is set",
+                email,
+            )
+        logger.info("send_notification_email: Stop")
+
     def get(self, request, *args, **kwargs):
         access_request = self.get_object()
         catalogue_item = (
             find_dataset(access_request.catalogue_item_id, self.request.user)
             if access_request.catalogue_item_id
             else None
+        )
+        name_dataset = catalogue_item
+        url_dataset = request.build_absolute_uri(
+            reverse("datasets:dataset_detail", args=[self.obj.pk])
         )
         # In Dev Ignore the API call to Zendesk and notify
         if settings.ENVIRONMENT == "Dev":
@@ -174,6 +207,9 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
                     request,
                     access_request,
                     catalogue_item,
+                )
+                self.send_notification_email(
+                    access_request.requester.email, name_dataset, url_dataset
                 )
             else:
                 access_request.zendesk_reference_number = zendesk.create_zendesk_ticket(
