@@ -1,12 +1,13 @@
+from django.forms import model_to_dict
 from formtools.preview import FormPreview
 from formtools.wizard.views import NamedUrlSessionWizardView
+from django.contrib.auth import get_user_model
 
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views.generic import FormView
-import waffle
 
-from dataworkspace.apps.datasets.models import RequestingDataset
+from dataworkspace.apps.datasets.models import DataSet, RequestingDataset
 from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetCommercialSensitiveForm,
     DatasetOwnersForm,
@@ -75,8 +76,6 @@ class DatasetBaseView(FormView):
             )
         )
 
-    # if waffle.flag_is_active(request, settings.REQUESTING_DATA)
-
 
 class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
     form_list = [
@@ -120,16 +119,18 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
             "previously_published",
             "usage",
             "purpose",
-            "special-personal-data",
-            "commercial-sensitive",
-            "update-frequency",
+            "special_personal_data",
+            "commercial_sensitive",
+            "update_frequency",
             "current_access",
-            "intended_access",
-            "operational_impact" "location_restrictions",
+            "user_restrictions",
+            "operational_impact",
+            "location_restrictions",
             "network_restrictions",
             "security_clearance",
             "user_restrictions",
         ]
+        User = get_user_model()
 
         requesting_dataset = RequestingDataset.objects.create(
             name=form_list[0].cleaned_data.get("name")
@@ -137,7 +138,6 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         requesting_dataset.save()
 
         for form in form_list:
-            print(form.cleaned_data)
             for field in form.cleaned_data:
                 if field in notes_fields and form.cleaned_data.get(field):
                     if requesting_dataset.notes:
@@ -150,11 +150,24 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
                             f"{form[field].label}\n{form.cleaned_data.get(field)}\n"
                         )
                         requesting_dataset.save()
+                if field == "enquiries_contact":
+                    requesting_dataset.enquiries_contact = User.objects.get(id=form.cleaned_data.get(field).id)
                 if field == "sensitivity":
                     requesting_dataset.sensitivity.set(form.cleaned_data.get("sensitivity"))
                 else:
                     setattr(requesting_dataset, field, form.cleaned_data.get(field))
                 requesting_dataset.save()
+
+        data_dict = model_to_dict(requesting_dataset, exclude=['id', 'tags', 'user', 'sensitivity'])
+        data_dict["enquiries_contact"] = requesting_dataset.enquiries_contact
+        data_dict["information_asset_manager"] = requesting_dataset.information_asset_manager
+        data_dict["information_asset_owner"] = requesting_dataset.information_asset_owner
+        data_dict["slug"] = requesting_dataset.name.lower().replace(" ", "-")
+
+        dataset = DataSet.objects.create(**data_dict)
+
+        dataset.set(requesting_dataset.data_catalogue_editors.all())
+        dataset.sensitivity.set(requesting_dataset.sensitivity.all())
 
         return HttpResponseRedirect(
             reverse(
