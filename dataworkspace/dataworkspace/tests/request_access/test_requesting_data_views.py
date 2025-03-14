@@ -133,12 +133,24 @@ class TestRequestingData(TestCase):
         )
 
     def test_current_access_page(self):
-        pass
-        # TODO
+        self.assert_common_content_one_label_page(url_name="current-access", label="Who currently has access to this dataset?")
 
     def test_intended_access_page(self):
-        pass
-        # TODO
+        response = self.client.get(
+            reverse("requesting-data-step", args={("intended-access")})
+        )
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        # header = soup.find("h1").contents[0]
+        header = soup.find("h2").contents[0]
+        labels = soup.find_all("label")
+        print('headers:', soup.findAll("h2"))
+        print('this one:', soup.find("h2").contents)
+
+        assert response.status_code == 200
+        # assert "Access restrictions" in header #TODO change headers for each section
+        assert "Should access on Data Workspace be open to all users by request?" in header
+        assert "Will this change of access have any operational impact?" in labels[1].contents[0]
 
     def test_location_restrictions(self):
         pass
