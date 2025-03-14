@@ -192,7 +192,7 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
             else None
         )
         name_dataset = catalogue_item.name
-        dataset_url = request.build_absolute_uri(catalogue_item.get_absolute_url())
+        url_dataset = request.build_absolute_uri(catalogue_item.get_absolute_url())
         # In Dev Ignore the API call to Zendesk and notify
         if settings.ENVIRONMENT == "Dev":
             access_request.zendesk_reference_number = "Test"
