@@ -194,7 +194,6 @@ class VisualisationApproval(TimeStampedModel):
             )
         elif self._initial_approved is self.approved and self.modified_date is not None:
             raise ValueError("The only change that can be made to an approval is to unapprove it.")
-
         super().save(force_insert, force_update, using, update_fields)
 
         if self.approved:

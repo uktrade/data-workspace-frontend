@@ -189,10 +189,12 @@
                             <dt class="error-message">Last updated:</dt>
                             <dd class="error-message">One or more tables failed to update</dd>
                           </div>  
-                          {% else %}
-                          <dt>Last updated:</dt>
+                        {% else %}
+                            <dt>Last updated:</dt>
                         {% endif %}
                       {% endif %}
+                    {% else %}
+                      <dt>Last updated:</dt>
                     {% endif %}
                   <dd>
                   {{ dataset.last_updated|date_with_gmt_offset|default_if_none:"N/A" }}

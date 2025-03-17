@@ -1,0 +1,12 @@
+{% if another_user_with_same_type_already_approved %}
+   <h2 class="govuk-heading-m">This visualisation has been approved by a Data Workspace Team member</h2>
+   <p class="govuk-body">This visualisation has already been approved by another member of the Data Workspace team. Use Zendesk to find the associated ticket and see who approved it.</p>
+   <p class="govuk-body">Only three approvals are needed: the owner, a peer reviewer and a Data Workspace team member.</p>
+{% else %}
+   <h2 class="govuk-heading-m">You're a Data Workspace team member</h2>
+   <p class="govuk-body">Before you approve this visualisation, you need to check that it:</p>
+      <ul class="govuk-list govuk-list--bullet" data-test="member_approval_list">
+      <li>has been approved by a peer reviewer</li>
+      <li>only uses Data that's published to the catalogue</li>
+      </ul>
+{% endif %}

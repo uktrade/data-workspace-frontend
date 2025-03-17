@@ -249,33 +249,6 @@ def new_private_database_credentials(
         # - ALTER USER ... SET
         # Either can result in "tuple concurrentl updated" errors. So we lock.
         with get_cursor(database_memorable_name) as cur, transaction_and_lock(cur, GLOBAL_LOCK_ID):
-            # Temporarily grant the current user the roles to be able to manage them below
-            all_roles = [db_role, db_user] + db_shared_roles
-            cur.execute(
-                sql.SQL("GRANT {all_roles} TO CURRENT_USER").format(
-                    all_roles=sql.SQL(",").join(sql.Identifier(role) for role in all_roles)
-                )
-            )
-
-            # If the user creates tables in any of the shared schemas, make sure the corresponding
-            # role for that schema have all privilege on them (which unfortunately does not
-            # mean ownership)
-            for db_shared_role in db_shared_roles:
-                cur.execute(
-                    sql.SQL(
-                        """
-                        ALTER DEFAULT PRIVILEGES
-                        FOR USER {}
-                        IN SCHEMA {}
-                        GRANT ALL ON TABLES TO {};
-                        """
-                    ).format(
-                        sql.Identifier(db_role),
-                        sql.Identifier(db_shared_role),
-                        sql.Identifier(db_shared_role),
-                    )
-                )
-
             # Make it so by default, objects created by the user are owned by the role
             # This seems to have a horrible performance impact on connecting, so we don't do it for
             # contexts that can't create objects. The reason for the performance impact on
@@ -319,14 +292,6 @@ def new_private_database_credentials(
                 sql.SQL("ALTER USER {} WITH CONNECTION LIMIT {};").format(
                     sql.Identifier(db_user),
                     sql.Literal(50 if db_user.endswith("_qs") else 10),
-                )
-            )
-
-            # Make sure we don't keep the roles in the current user (we don't need them, and
-            # the master user having a lot of roles can slow login)
-            cur.execute(
-                sql.SQL("REVOKE {all_roles} FROM CURRENT_USER").format(
-                    all_roles=sql.SQL(",").join(sql.Identifier(role) for role in all_roles)
                 )
             )
 

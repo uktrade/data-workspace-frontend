@@ -6,10 +6,15 @@ describe('ConfirmDialog Modal Component', () => {
   const mockOnClose = jest.fn();
   const defaultProps = {
     actionUrl: '/submit-url',
-    buttonText: 'Confirm',
+    bodyText: '""',
+    buttonTextAccept: 'Confirm',
+    buttonTextCancel: 'Cancel',
+    buttonValueAccept: '',
+    csrf_token: '123',
     onClose: mockOnClose,
     open: false,
-    title: 'Confirmation Dialog'
+    title: 'Confirmation Dialog',
+    warning: false
   };
   afterEach(() => {
     jest.clearAllMocks();
@@ -78,5 +83,16 @@ describe('ConfirmDialog Modal Component', () => {
 
     const form = screen.getByRole('form');
     expect(form).toHaveAttribute('action', '/submit-url');
+  });
+
+  it('renders with correct width based on "warning" prop', () => {
+    const { rerender } = render(
+      <ConfirmDialog {...defaultProps} open={true} warning={false} />
+    );
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveStyle('width: 600px');
+
+    rerender(<ConfirmDialog {...defaultProps} open={true} warning={true} />);
+    expect(dialog).toHaveStyle('width: 659px'); // width when warning is true
   });
 });

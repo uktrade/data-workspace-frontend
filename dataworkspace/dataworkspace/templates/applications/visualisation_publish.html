@@ -1,5 +1,10 @@
 {% extends '_visualisation.html' %}
+{% load render_bundle from webpack_loader %}
+
+{% load static waffle_tags %}
+
 {% load core_filters %}
+{% load static waffle_tags %}
 
 {% block head %}
 {{ block.super }}
@@ -25,75 +30,161 @@
   </div>
 </div>
 {% endif %}
-
-<h1 class="govuk-heading-l govuk-!-margin-bottom-6">
+<h1 class="govuk-heading-l">
   <span class="govuk-caption-l">{{ gitlab_project.name }}</span>
   Publish
 </h1>
 
-<p class="govuk-body">
-  In order to publish this visualisation, at least two users must have <a class="govuk-link" href="{% url 'visualisations:approvals' gitlab_project.id %}">approved</a> it.
-</p>
-
-<hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
-
-<div class="govuk-grid-row">
-  <div class="govuk-grid-column-two-thirds">
-    <p class="govuk-body" id="visualisation-explanation">
-      {% if visualisation_published %}
-      Unpublish this visualisation to stop users from accessing it at the
-      <a class="govuk-link" style="white-space: nowrap;" href="{{ visualisation_link }}">production domain</a>.
-      {% else %}
-      Publish this visualisation to make the latest release available for users at the
-      <a class="govuk-link" style="white-space: nowrap;" href="{{ visualisation_link }}">production domain</a>.
-      {% endif %}
-    </p>
-  </div>
-  <div class="govuk-grid-column-one-third">
-    <form method="POST" action="{{ request.path }}">
-      {% csrf_token %}
-      <button type="submit" class="govuk-button app-!-fill-width{% if not visualisation_published and not approved %} govuk-button--disabled{% endif %}" name="action" value="{% if visualisation_published %}unpublish-visualisation{% else %}publish-visualisation{% endif %}" aria-labelledby="visualisation-explanation"{% if not visualisation_published and not approved %} disabled{% endif %}>
-        {% if visualisation_published %}
-          Unpublish visualisation
-        {% else %}
-          Publish visualisation
-        {% endif %}
-      </button>
-    </form>
-  </div>
-</div>
-
-<hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
-
-<div class="govuk-grid-row">
-  <div class="govuk-grid-column-two-thirds">
-    <p class="govuk-body" id="catalogue-explanation">
+{% flag THIRD_APPROVER %}
+  {% if visualisation_published %}
+  <p class="govuk-body">Currently, this visualisation:</p>
+  <ul class="govuk-list govuk-list--bullet govuk-!-margin-left-2">
+      <li>is released to production</li>
       {% if catalogue_published %}
-      Unpublish the
-      <a class="govuk-link" href="{% url 'visualisations:catalogue-item' gitlab_project.id %}">catalogue item</a>
-      to stop users from being able to discover the visualisation on
-      <a class="govuk-link" href="{% url 'root' %}">Data Workspace</a>.
+        <li>is published to the Data Workspace catalogue</li>
       {% else %}
-      Publish the
-      <a class="govuk-link" href="{% url 'visualisations:catalogue-item' gitlab_project.id %}">catalogue item</a>
-      to let users discover this visualisation on
-      <a class="govuk-link" href="{% url 'root' %}">Data Workspace</a>.
+        <li>is not published to the Data Workspace catalogue</li>
       {% endif %}
+  </ul>
+  {% endif %}
+
+  {% if not visualisation_published %}
+  <p class="govuk-body govuk-!-margin-bottom-4">
+    Before you publish this visualisation to the catalogue you need to release it to production. This makes it viewable to users who have the link.
+  </p>
+    <h3 class="govuk-heading-m">
+      Release to production
+    </h3>
+    {% if approved  %}
+      <p class="govuk-body govuk-!-margin-bottom-6">
+        You can release your visualisation to production. {{ project_approvals| length }} out of 3 users have approved it.
+      </p>
+      {% include "partials/react-slot-data.html" with mount_id="confirm-publish-visualisation" data='{"is_catalogue": false}' test_id="confirm-publish-visualisation" %}
+    {% else %}
+      <div class="govuk-warning-text govuk-!-margin-bottom-4">
+        <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+        <strong class="govuk-warning-text__text">
+          You cannot release your visualisation to production. This is because only {{ project_approvals| length }} out of 3 user{{ project_approvals | pluralize }} {{ project_approvals | pluralize:'has,have' }} approved it.
+        </strong>
+      </div>
+      <div>
+        <p class="govuk-body">
+          Go to the <a class="govuk-link" href="{% url 'visualisations:approvals' gitlab_project.id %}">approvals section</a> for more information about this process.
+        </p>
+      </div>
+    {% endif %}  
+  {% else %}
+  <h3 class="govuk-heading-m">
+    Remove from production
+  </h3>
+  <p class="govuk-body">
+    This visualisation has been released to production. This makes it viewable to users who have the link.
+  </p>
+  <a class="govuk-!-margin-bottom-4 govuk-!-font-size-19 govuk-link" href="{{ visualisation_link }}">Your visualisation can be found here.</a>
+    {% if catalogue_published %}
+    <div class="govuk-warning-text govuk-!-margin-top-4 govuk-!-margin-bottom-4">
+      <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+      <strong class="govuk-warning-text__text">
+        You cannot remove your visualisation from production. This is because you need to unpublish the catalogue page first.
+      </strong>
+    </div>
+    {% else %}
+      <br>
+      <form method="POST" action="{{ request.path }}">
+        {% csrf_token %}
+        <button name="action" type="submit" class="govuk-button govuk-button--secondary govuk-!-margin-top-4" value="unpublish-visualisation" aria-labelledby="visualisation-explanation">Unpublish visualisation</button>
+      </form>
+    {% endif %}
+  {% endif %}
+  {% if visualisation_published %}
+    {% if catalogue_published %}
+    <h3 class="govuk-heading-m">
+      Unpublish from the catalogue
+    </h3>
+    <p class="govuk-body">
+      This visualisation is published to the Data Workspace catalogue. This means it's viewable and searchable on Data Workspace.
     </p>
-  </div>
-  <div class="govuk-grid-column-one-third">
-    <form method="POST" action="{{ request.path }}">
-      {% csrf_token %}
+      <form method="POST" action="{{ request.path }}">
+        {% csrf_token %}
+        <button  name="action" type="submit" class="govuk-button govuk-button--secondary" value="unpublish-catalogue" aria-labelledby="catalogue-explanation">Unpublish catalogue page</button>
+      </form>
+    {% else %}
+    <h3 class="govuk-heading-m">
+      Publish to the catalogue
+    </h3>
+    <p class="govuk-body">
+      You can publish this visualisation to the Data Workspace Catalogue. This makes it viewable and searchable on Data Workspace.
+    </p>
+    {% include "partials/react-slot-data.html" with mount_id="confirm-publish-visualisation" data='{"is_catalogue": true }'  test_id="confirm-publish-visualisation" %}
+    {% endif %}
+  {% endif %}
+{% else %}
+  <p class="govuk-body">
+    In order to publish this visualisation, at least two users must have <a class="govuk-link" href="{% url 'visualisations:approvals' gitlab_project.id %}">approved</a> it.
+  </p>
 
-      <button type="submit" class="govuk-button app-!-fill-width{% if not approved or not visualisation_published or not catalogue_complete %} govuk-button--disabled{% endif %}" name="action" value="{% if catalogue_published %}unpublish-catalogue{% else %}publish-catalogue{% endif %}" aria-labelledby="catalogue-explanation"{% if not approved or not visualisation_published or not catalogue_complete %} disabled{% endif %}>
-        {% if catalogue_published %}
-          Unpublish catalogue item
+  <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <p class="govuk-body" id="visualisation-explanation">
+        {% if visualisation_published %}
+        Unpublish this visualisation to stop users from accessing it at the
+        <a class="govuk-link" style="white-space: nowrap;" href="{{ visualisation_link }}">production domain</a>.
         {% else %}
-          Publish catalogue item
+        Publish this visualisation to make the latest release available for users at the
+        <a class="govuk-link" style="white-space: nowrap;" href="{{ visualisation_link }}">production domain</a>.
         {% endif %}
-      </button>
-    </form>
+      </p>
+    </div>
+    <div class="govuk-grid-column-one-third">
+      <form method="POST" action="{{ request.path }}">
+        {% csrf_token %}
+        <button type="submit" class="govuk-button app-!-fill-width{% if not visualisation_published and not approved %} govuk-button--disabled{% endif %}" name="action" value="{% if visualisation_published %}unpublish-visualisation{% else %}publish-visualisation{% endif %}" aria-labelledby="visualisation-explanation"{% if not visualisation_published and not approved %} disabled{% endif %}>
+          {% if visualisation_published %}
+            Unpublish visualisation
+          {% else %}
+            Publish visualisation
+          {% endif %}
+        </button>
+      </form>
+    </div>
   </div>
-</div>
 
+  <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <p class="govuk-body" id="catalogue-explanation">
+        {% if catalogue_published %}
+        Unpublish the
+        <a class="govuk-link" href="{% url 'visualisations:catalogue-item' gitlab_project.id %}">catalogue item</a>
+        to stop users from being able to discover the visualisation on
+        <a class="govuk-link" href="{% url 'root' %}">Data Workspace</a>.
+        {% else %}
+        Publish the
+        <a class="govuk-link" href="{% url 'visualisations:catalogue-item' gitlab_project.id %}">catalogue item</a>
+        to let users discover this visualisation on
+        <a class="govuk-link" href="{% url 'root' %}">Data Workspace</a>.
+        {% endif %}
+      </p>
+    </div>
+    <div class="govuk-grid-column-one-third">
+      <form method="POST" action="{{ request.path }}">
+        {% csrf_token %}
+
+        <button type="submit" class="govuk-button app-!-fill-width{% if not approved or not visualisation_published or not catalogue_complete %} govuk-button--disabled{% endif %}" name="action" value="{% if catalogue_published %}unpublish-catalogue{% else %}publish-catalogue{% endif %}" aria-labelledby="catalogue-explanation"{% if not approved or not visualisation_published or not catalogue_complete %} disabled{% endif %}>
+          {% if catalogue_published %}
+            Unpublish catalogue item
+          {% else %}
+            Publish catalogue item
+          {% endif %}
+        </button>
+      </form>
+    </div>
+  </div>
+{% endflag %}
+{% endblock %}
+{% block footer_scripts %}
+{% render_bundle 'confirm-publish-visualisation' 'js' %}
 {% endblock %}

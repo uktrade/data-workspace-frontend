@@ -1,14 +1,15 @@
 from unittest import mock
-import requests_mock
+
 import pytest
+import requests_mock
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.test import override_settings
 
 from dataworkspace.apps.applications.gitlab import (
     gitlab_has_developer_access,
-    gitlab_is_project_owner,
     is_dataworkspace_team_member,
+    is_project_owner,
 )
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.utils import (
@@ -132,8 +133,8 @@ class TestIsDataWorkspaceTeamMember:
 class TestGitlabIsProjectOwner:
     def test_user_is_project_owner(self, gitlab_mock):
         gitlab_mock.return_value = [{"access_level": 40}]
-        assert gitlab_is_project_owner({"id": 1}, "1") is True
+        assert is_project_owner({"id": 1}, "1") is True
 
     def test_user_is_not_project_owner(self, gitlab_mock):
         gitlab_mock.return_value = [{"access_level": 41}]
-        assert gitlab_is_project_owner({"id": 1}, "1") is False
+        assert is_project_owner({"id": 1}, "1") is False

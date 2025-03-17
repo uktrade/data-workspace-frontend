@@ -93,7 +93,9 @@ const ConfirmRemoveUser = ({
           title={`Are you sure you want to remove ${selectedUser?.first_name} ${selectedUser?.last_name}'s access to this data?`}
           open={isOpen}
           onClose={closeModal}
-          buttonText={'Yes, remove user'}
+          buttonTextAccept={'Yes, remove user'}
+          buttonTextCancel={'Cancel'}
+          warning={false}
         ></ConfirmDialog>
       )}
     </>

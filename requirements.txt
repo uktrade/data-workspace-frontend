@@ -74,7 +74,7 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.2.0
     # via celery
-cryptography==43.0.1
+cryptography==44.0.1
     # via -r requirements.in
 dj-database-url==0.5.0
     # via -r requirements.in
@@ -289,9 +289,7 @@ six==1.15.0
     #   tenacity
     #   zenpy
 smart-open[s3]==6.4.0
-    # via
-    #   -r requirements.in
-    #   smart-open
+    # via -r requirements.in
 soupsieve==2.3.2.post1
     # via beautifulsoup4
 sqlalchemy==2.0.12

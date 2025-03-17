@@ -41,10 +41,10 @@ from dataworkspace.apps.applications.forms import (
 )
 from dataworkspace.apps.applications.gitlab import (
     DEVELOPER_ACCESS_LEVEL,
+    get_approver_type,
     gitlab_api_v4,
     gitlab_api_v4_with_status,
     gitlab_has_developer_access,
-    gitlab_is_project_owner,
     gitlab_project_members,
 )
 from dataworkspace.apps.applications.models import (
@@ -55,14 +55,16 @@ from dataworkspace.apps.applications.models import (
     VisualisationApproval,
     VisualisationTemplate,
 )
+from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import (
     application_options,
     fetch_visualisation_log_events,
     get_quicksight_dashboard_name_url,
+    visualisation_approvals,
+    has_all_three_approval_types,
     stop_spawner_and_application,
     sync_quicksight_permissions,
 )
-from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils_tools import get_grouped_tools
 from dataworkspace.apps.core.errors import (
     DeveloperPermissionRequiredError,
@@ -91,6 +93,7 @@ from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.datasets_db import extract_queried_tables_from_sql_query
 from dataworkspace.notify import decrypt_token, send_email
 from dataworkspace.zendesk import update_zendesk_ticket
+
 from .fixtures.utils import get_fixture
 
 logger = logging.getLogger("app")
@@ -427,7 +430,7 @@ def visualisations_html_GET(request):
             "projects",
             params=(
                 ("archived", "false"),
-                ("min_access_level", DEVELOPER_ACCESS_LEVEL),
+                ("min_access_level", str(DEVELOPER_ACCESS_LEVEL)),
                 ("sudo", gitlab_user["id"]),
                 ("per_page", "100"),
             ),
@@ -821,7 +824,12 @@ def visualisation_users_give_access_html_POST(request, gitlab_project, token_dat
 
 
 def _visualisation_gitlab_project(gitlab_project_id):
-    gitlab_project, status = gitlab_api_v4_with_status("GET", f"projects/{gitlab_project_id}")
+
+    if settings.GITLAB_FIXTURES:
+        gitlab_project = get_fixture("project_fixture.json")
+        status = 200
+    else:
+        gitlab_project, status = gitlab_api_v4_with_status("GET", f"projects/{gitlab_project_id}")
     if status == 404:
         raise Http404
     if status != 200:
@@ -1066,7 +1074,7 @@ def visualisation_approvals_html_view(request, gitlab_project_id):
 
 def visualisation_approvals_html_GET(request, gitlab_project):
     application_template = _application_template(gitlab_project)
-    approvals = VisualisationApproval.objects.filter(
+    dw_approvals = VisualisationApproval.objects.filter(
         visualisation=application_template, approved=True
     ).all()
 
@@ -1074,12 +1082,12 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         if settings.GITLAB_FIXTURES:
             project_members = get_fixture("project_members_fixture.json")
         else:
-            project_members = gitlab_project_members(gitlab_project)
+            project_members = gitlab_project_members(gitlab_project["id"])
 
-    approval = next(filter(lambda a: a.approver == request.user, approvals), None)
+    approval = next(filter(lambda a: a.approver == request.user, dw_approvals), None)
 
     if settings.GITLAB_FIXTURES:
-        current_gitlab_user = get_fixture("user_fixture.json")
+        current_gitlab_user = get_fixture("user_fixture.json")[0]
     else:
         current_gitlab_user = gitlab_api_v4(
             "GET",
@@ -1089,20 +1097,41 @@ def visualisation_approvals_html_GET(request, gitlab_project):
                 ("provider", "oauth2_generic"),
             ),
         )
+        if len(current_gitlab_user) > 1:
+            return HttpResponse(status=500)
+        current_gitlab_user = current_gitlab_user[0]
 
     if settings.GITLAB_FIXTURES:
         visualisation_branches = get_fixture("visualisation_branches_fixture.json")
     else:
         visualisation_branches = _visualisation_branches(gitlab_project)
-
+    another_user_with_same_type_already_approved = None
+    current_user_type = None
+    project_approvals = dw_approvals
     if waffle.flag_is_active(request, settings.THIRD_APPROVER):
-        is_owner = gitlab_is_project_owner(current_gitlab_user[0], gitlab_project["id"])
-        approved_users = [d.approver.get_full_name() for d in approvals]
-        project_approvals = [
-            member for member in project_members if member["name"] in approved_users
-        ]
+        current_user_type = get_approver_type(
+            gitlab_project["id"], request.user, current_gitlab_user
+        )
+
+        project_approvals = visualisation_approvals(dw_approvals, project_members)
+        is_approved_by_all = has_all_three_approval_types(project_approvals)
+        another_user_with_same_type_already_approved = (
+            len(
+                [
+                    p
+                    for p in project_approvals
+                    if p["status"] == current_user_type
+                    and p["name"] != current_gitlab_user["name"]
+                ]
+            )
+            > 0
+        )
+    is_approved_by_all = (
+        is_approved_by_all if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None
+    )
 
     form = VisualisationApprovalForm(
+        third_approver_flag=waffle.flag_is_active(request, settings.THIRD_APPROVER),
         instance=approval,
         initial={
             "visualisation": application_template,
@@ -1110,7 +1139,6 @@ def visualisation_approvals_html_GET(request, gitlab_project):
             "approved": False,
         },
     )
-
     return _render_visualisation(
         request,
         "applications/visualisation_approvals.html",
@@ -1119,30 +1147,29 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         visualisation_branches,
         current_menu_item="approvals",
         template_specific_context={
-            "is_owner": (
-                is_owner if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None
-            ),
             "approvals": (
                 project_approvals
                 if waffle.flag_is_active(request, settings.THIRD_APPROVER)
-                else approvals
+                else dw_approvals
             ),
-            "already_approved": approval.approved if approval else False,
+            "another_user_with_same_type_already_approved": another_user_with_same_type_already_approved,
+            "current_user_already_approved": approval.approved if approval else False,
+            "current_user_type": current_user_type,
+            "is_approved_by_all": is_approved_by_all,
             "form": form,
         },
     )
 
 
-def visualisation_approvals_html_POST(request, gitlab_project):
-    application_template = _application_template(gitlab_project)
+def visualisation_approvals_html_POST(request, gitlab_project_id):
+    application_template = _application_template(gitlab_project_id)
     approvals = VisualisationApproval.objects.filter(
         visualisation=application_template, approved=True
     ).all()
-
     approval = next(filter(lambda a: a.approver == request.user, approvals), None)
-
     form = VisualisationApprovalForm(
         request.POST,
+        third_approver_flag=waffle.flag_is_active(request, settings.THIRD_APPROVER),
         instance=approval,
         initial={
             "visualisation": application_template,
@@ -1153,15 +1180,17 @@ def visualisation_approvals_html_POST(request, gitlab_project):
     if form.is_valid():
         form.save()
         return redirect(request.path)
-
     form_errors = [(field.id_for_label, field.errors[0]) for field in form if field.errors]
-
+    if settings.GITLAB_FIXTURES:
+        visualisation_branches = get_fixture("visualisation_branches_fixture.json")
+    else:
+        visualisation_branches = _visualisation_branches(gitlab_project_id)
     return _render_visualisation(
         request,
         "applications/visualisation_approvals.html",
-        gitlab_project,
+        gitlab_project_id,
         application_template,
-        _visualisation_branches(gitlab_project),
+        visualisation_branches,
         current_menu_item="approvals",
         template_specific_context={"form": form, "form_errors": form_errors},
         status=400 if form_errors else 200,
@@ -1455,11 +1484,13 @@ def visualisation_publish_html_view(request, gitlab_project_id):
         raise ManageVisualisationsPermissionDeniedError(
             "manage visualisations", "To request access"
         )
+    if settings.GITLAB_FIXTURES:
+        gitlab_project = get_fixture("project_fixture.json")
+    else:
+        gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+        if not gitlab_has_developer_access(request.user, gitlab_project_id):
 
-    gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
-
-    if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        raise DeveloperPermissionRequiredError(gitlab_project["name"])
+            raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     if request.method == "GET":
         return visualisation_publish_html_GET(request, gitlab_project)
@@ -1470,13 +1501,32 @@ def visualisation_publish_html_view(request, gitlab_project_id):
     return HttpResponse(status=405)
 
 
-def _visualisation_is_approved(application_template):
-    return (
-        VisualisationApproval.objects.filter(
-            visualisation=application_template, approved=True
-        ).count()
-        >= 2
-    )
+def _visualisation_approvals(application_template, request, gitlab_project):
+    dw_approvals = VisualisationApproval.objects.filter(
+        visualisation=application_template, approved=True
+    ).all()
+    if waffle.flag_is_active(request, settings.THIRD_APPROVER):
+        if settings.GITLAB_FIXTURES:
+            project_members = get_fixture("project_members_fixture.json")
+        else:
+            project_members = gitlab_project_members(gitlab_project["id"])
+
+        return visualisation_approvals(dw_approvals, project_members)
+    return dw_approvals
+
+
+def _visualisation_is_approved(project_approvals, request, application_template):
+
+    if waffle.flag_is_active(request, settings.THIRD_APPROVER):
+        is_approved_by_all = has_all_three_approval_types(project_approvals)
+    else:
+        is_approved_by_all = (
+            VisualisationApproval.objects.filter(
+                visualisation=application_template, approved=True
+            ).count()
+            >= 2
+        )
+    return is_approved_by_all
 
 
 def _visualisation_is_published(application_template):
@@ -1503,22 +1553,31 @@ def _visualisation_catalogue_item_is_complete(catalogue_item):
     )
 
 
+@csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC, STYLE_SRC=settings.WEBPACK_SCRIPT_SRC)
 def _render_visualisation_publish_html(request, gitlab_project, catalogue_item=None, errors=None):
     if not catalogue_item:
         catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
     application_template = catalogue_item.visualisation_template
-    visualisation_approved = _visualisation_is_approved(application_template)
+    project_approvals = _visualisation_approvals(application_template, request, gitlab_project)
+    is_approved_by_all = _visualisation_is_approved(
+        project_approvals, request, application_template
+    )
     visualisation_published = _visualisation_is_published(application_template)
     visualisation_domain = (
         f"{application_template.host_basename}.{settings.APPLICATION_ROOT_DOMAIN}"
     )
     catalogue_item_complete = _visualisation_catalogue_item_is_complete(catalogue_item)
+
+    if settings.GITLAB_FIXTURES:
+        visualisation_branches = get_fixture("visualisation_branches_fixture.json")
+    else:
+        visualisation_branches = _visualisation_branches(gitlab_project)
     return _render_visualisation(
         request,
         "applications/visualisation_publish.html",
         gitlab_project,
         application_template,
-        _visualisation_branches(gitlab_project),
+        visualisation_branches,
         current_menu_item="publish",
         template_specific_context={
             "visualisation_domain": visualisation_domain,
@@ -1526,7 +1585,8 @@ def _render_visualisation_publish_html(request, gitlab_project, catalogue_item=N
             "catalogue_complete": catalogue_item_complete,
             "catalogue_published": catalogue_item.published,
             "visualisation_published": visualisation_published,
-            "approved": visualisation_approved,
+            "approved": is_approved_by_all,
+            "project_approvals": project_approvals,
             "errors": errors,
         },
     )
@@ -1538,11 +1598,17 @@ def visualisation_publish_html_GET(request, gitlab_project):
 
 @transaction.atomic
 def _set_published_on_catalogue_item(request, gitlab_project, catalogue_item, publish):
-    visualisation_approved = _visualisation_is_approved(catalogue_item.visualisation_template)
+    project_approvals = _visualisation_approvals(
+        catalogue_item.visualisation_template, request, gitlab_project
+    )
+
+    is_approved_by_all = _visualisation_is_approved(
+        project_approvals, request, catalogue_item.visualisation_template
+    )
     visualisation_published = _visualisation_is_published(catalogue_item.visualisation_template)
     catalogue_item_complete = _visualisation_catalogue_item_is_complete(catalogue_item)
     if publish is False or (
-        visualisation_approved and visualisation_published and catalogue_item_complete
+        is_approved_by_all and visualisation_published and catalogue_item_complete
     ):
         catalogue_item.published = publish
         catalogue_item.save()
@@ -1560,7 +1626,7 @@ def _set_published_on_catalogue_item(request, gitlab_project, catalogue_item, pu
 
         return redirect(request.path)
 
-    if visualisation_approved is False:
+    if is_approved_by_all is False:
         error = (
             reverse("visualisations:approvals", args=(gitlab_project["id"],)),
             "The visualisation must be approved by two developers before it can be published.",
@@ -1588,8 +1654,12 @@ def _set_published_on_catalogue_item(request, gitlab_project, catalogue_item, pu
 
 @transaction.atomic
 def _set_published_on_visualisation(request, gitlab_project, application_template, publish):
-    visualisation_approved = _visualisation_is_approved(application_template)
-    if publish is False or visualisation_approved:
+    project_approvals = _visualisation_approvals(application_template, request, gitlab_project)
+
+    is_approved_by_all = _visualisation_is_approved(
+        project_approvals, request, application_template
+    )
+    if publish is False or is_approved_by_all:
         application_template.visible = publish
         application_template.save()
 
@@ -1608,7 +1678,7 @@ def _set_published_on_visualisation(request, gitlab_project, application_templat
 
         return redirect(request.path)
 
-    if visualisation_approved is False:
+    if is_approved_by_all is False:
         error = (
             reverse("visualisations:approvals", args=(gitlab_project["id"],)),
             "The visualisation must be approved by two developers before it can be published.",
@@ -1624,7 +1694,6 @@ def visualisation_publish_html_POST(request, gitlab_project):
     application_template = _application_template(gitlab_project)
     action = request.POST.get("action", "").lower()
     catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
-
     if action == "publish-catalogue":
         return _set_published_on_catalogue_item(
             request, gitlab_project, catalogue_item, publish=True

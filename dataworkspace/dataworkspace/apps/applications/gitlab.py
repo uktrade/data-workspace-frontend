@@ -1,4 +1,5 @@
 import logging
+from typing import Union
 
 import requests
 from django.conf import settings
@@ -9,26 +10,38 @@ from django.core.cache import cache
 from django.db import transaction
 from django.utils.encoding import force_str
 
+from dataworkspace.apps.applications.fixtures.utils import get_fixture
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
 )
-from dataworkspace.apps.applications.fixtures.utils import get_fixture
 
 logger = logging.getLogger("app")
 
 ECR_PROJECT_ID = settings.GITLAB_ECR_PROJECT_ID
 RUNNING_PIPELINE_STATUSES = ("running", "pending")
 SUCCESS_PIPELINE_STATUSES = ("success",)
-DEVELOPER_ACCESS_LEVEL = "30"
-MAINTAINER_ACCESS_LEVEL = "40"
+DEVELOPER_ACCESS_LEVEL = 30
+MAINTAINER_ACCESS_LEVEL = 40
 
 
-def gitlab_api_v4(method, path, params=()):
+def get_approver_type(
+    gitlab_project_id: int, user_django=None, user_gitlab: dict = None
+) -> Union[str, None]:
+    if is_project_owner(user_gitlab, gitlab_project_id):
+        return "owner"
+    elif is_dataworkspace_team_member(user_django, gitlab_project_id):
+        return "team member"
+    elif is_peer_reviewer(user_django, gitlab_project_id):
+        return "peer reviewer"
+    return None
+
+
+def gitlab_api_v4(method: str, path: str, params: tuple = ()):
     return gitlab_api_v4_with_status(method, path, params)[0]
 
 
-def gitlab_api_v4_with_status(method, path, params=()):
+def gitlab_api_v4_with_status(method: str, path: str, params: tuple = ()):
     if path.startswith("/"):
         path = path.lstrip("/")
 
@@ -64,7 +77,7 @@ def gitlab_api_v4_ecr_pipeline_trigger(
     return pipeline
 
 
-def gitlab_has_developer_access(user, gitlab_project_id):
+def gitlab_has_developer_access(user, gitlab_project_id: int) -> bool:
     # Having developer access to a project is cached to mitigate slow requests
     # to GitLab. _Not_ having developer access to not cached to allow granting
     # of access to have an immediate effect
@@ -111,7 +124,7 @@ def gitlab_has_developer_access(user, gitlab_project_id):
     has_access = any(
         (
             gitlab_project_user["id"] == gitlab_user["id"]
-            and gitlab_project_user["access_level"] >= int(DEVELOPER_ACCESS_LEVEL)
+            and gitlab_project_user["access_level"] >= DEVELOPER_ACCESS_LEVEL
             for gitlab_project_user in gitlab_project_users
         )
     )
@@ -123,14 +136,33 @@ def gitlab_has_developer_access(user, gitlab_project_id):
     return has_access
 
 
+def is_project_owner(user, gitlab_project_id: int) -> bool:
+    current_gitlab_project_user = gitlab_project_member_by_id(user, gitlab_project_id)
+    return bool(current_gitlab_project_user["access_level"] == MAINTAINER_ACCESS_LEVEL)
+
+
 def is_dataworkspace_team_member(user, gitlab_project_id) -> bool:
-    return bool(user.is_superuser and gitlab_has_developer_access(user, gitlab_project_id))
+    if settings.GITLAB_FIXTURES:
+        (current_gitlab_project_user,) = get_fixture("project_member_fixture.json")
+        return bool(
+            user.is_superuser
+            and current_gitlab_project_user["access_level"] == int(DEVELOPER_ACCESS_LEVEL)
+        )
+    else:
+        return bool(user.is_superuser and gitlab_has_developer_access(user, gitlab_project_id))
 
 
 def is_peer_reviewer(user, gitlab_project_id) -> bool:
-    return bool(
-        user.is_superuser is False and gitlab_has_developer_access(user, gitlab_project_id)
-    )
+    if settings.GITLAB_FIXTURES:
+        (current_gitlab_project_user,) = get_fixture("project_member_fixture.json")
+        return bool(
+            user.is_superuser is False
+            and current_gitlab_project_user["access_level"] == int(DEVELOPER_ACCESS_LEVEL)
+        )
+    else:
+        return bool(
+            user.is_superuser is False and gitlab_has_developer_access(user, gitlab_project_id)
+        )
 
 
 def _ensure_user_has_manage_unpublish_perm(user):
@@ -155,7 +187,15 @@ def _ensure_user_has_manage_unpublish_perm(user):
             )
 
 
-def gitlab_is_project_owner(gitlab_user, gitlab_project_id):
+def gitlab_project_members(gitlab_project_id: int) -> list[dict]:
+    if settings.GITLAB_FIXTURES:
+        project_members = get_fixture("project_members_fixture.json")
+    else:
+        project_members = gitlab_api_v4("GET", f"/projects/{gitlab_project_id}/members/all")
+    return project_members
+
+
+def gitlab_project_member_by_id(gitlab_user, gitlab_project_id: int) -> dict:
     if settings.GITLAB_FIXTURES:
         (current_gitlab_project_user,) = get_fixture("project_member_fixture.json")
     else:
@@ -164,13 +204,4 @@ def gitlab_is_project_owner(gitlab_user, gitlab_project_id):
             f"/projects/{gitlab_project_id}/members/all",
             params=(("user_ids", str(gitlab_user["id"])),),
         )
-
-    return bool(current_gitlab_project_user["access_level"] == int(MAINTAINER_ACCESS_LEVEL))
-
-
-def gitlab_project_members(gitlab_project_id):
-    if settings.GITLAB_FIXTURES:
-        project_members = get_fixture("project_members_fixture.json")
-    else:
-        project_members = gitlab_api_v4("GET", f"/projects/{gitlab_project_id}/members/all")
-    return project_members
+    return current_gitlab_project_user

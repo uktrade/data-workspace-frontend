@@ -1,22 +1,29 @@
 [
   {
     "id": 1,
-    "name": "Ian Leggett",
-    "username": "ian.leggett",
+    "name": "Vyvyan Holland",
+    "username": "vyvyan.holland",
     "state": "active",
-    "access_level": 40
+    "access_level": 30
   },
   {
     "id": 2,
-    "name": "Ledia Luli",
-    "username": "ledia.luli",
+    "name": "Bob Burger",
+    "username": "bob.burger",
     "state": "active",
     "access_level": 30
   },
   {
     "id": 3,
-    "name": "James Robinson",
-    "username": "james.robinson",
+    "name": "Tina Belcher",
+    "username": "tina.belcher",
+    "state": "active",
+    "access_level": 40
+  },
+  {
+    "id": 4,
+    "name": "Gene Belcher",
+    "username": "gene.belcher",
     "state": "active",
     "access_level": 30
   }

@@ -34,7 +34,7 @@ class BulletListSplitArrayWidget(SplitArrayWidget):
         context["widget"]["label"] = self.label
 
         for i, _ in enumerate(context["widget"]["subwidgets"]):
-            context["widget"]["subwidgets"][i]["label"] = f"{self.input_prefix} #{i+1}"
+            context["widget"]["subwidgets"][i]["label"] = f"{self.input_prefix} #{i + 1}"
         return context
 
 
@@ -219,7 +219,7 @@ class VisualisationApprovalForm(GOVUKDesignSystemModelForm):
         ),
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, third_approver_flag=None, **kwargs):
         # If the visualisation has already been approved, we want to render a form that allows the user to unapprove it.
         if kwargs.get("instance") and kwargs.get("instance").approved:
             self._initial_approved = True
@@ -231,10 +231,14 @@ class VisualisationApprovalForm(GOVUKDesignSystemModelForm):
 
         if self._initial_approved:
             self.fields["approved"].required = False
+        self.third_approver_flag = third_approver_flag
+        if third_approver_flag:
+            self.fields["approved"].widget = HiddenInput()
 
     def clean_approved(self):
-        if not self._initial_approved and not self.cleaned_data["approved"]:
-            raise ValidationError("You must confirm that you have reviewed this visualisation")
+        if not self.third_approver_flag:
+            if not self._initial_approved and not self.cleaned_data["approved"]:
+                raise ValidationError("You must confirm that you have reviewed this visualisation")
         return self.cleaned_data["approved"]
 
     def clean(self):
@@ -242,5 +246,8 @@ class VisualisationApprovalForm(GOVUKDesignSystemModelForm):
 
         if self.data["action"] == "unapprove":
             cleaned_data["approved"] = False
+        if self.third_approver_flag:
+            if self.data["action"] == "approve":
+                cleaned_data["approved"] = True
 
         return cleaned_data
