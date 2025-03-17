@@ -111,6 +111,7 @@ class TestDatasetAccessOnly:
         mock_zenpy_client.tickets.create.return_value = MockTicket()
 
         mock_zendesk_client.return_value = mock_zenpy_client
+        mock_zendesk_client.return_value.post.return_value.status_code = 302
 
         mock_upload_to_clamav.return_value = ClamAVResponse({"malware": False})
 
