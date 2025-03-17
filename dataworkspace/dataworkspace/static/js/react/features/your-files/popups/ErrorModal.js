@@ -32,7 +32,7 @@ export function ErrorModal({ open, error, onClose }) {
                       <tr className="govuk-table__row" key={idx}>
                         <td className="govuk-table__cell">{err.key}</td>
                         <td className="govuk-table__cell">
-                          {err.value.toString()}
+                          {JSON.stringify(err.value)}
                         </td>
                       </tr>
                     ))}
