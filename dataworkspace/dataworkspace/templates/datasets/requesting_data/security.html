@@ -8,23 +8,24 @@
 
 
 {% block content %}
-{% if form_errors %}
-<div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
-  <h2 class="govuk-error-summary__title" id="error-summary-title">
-    There is a problem
-  </h2>
-  <div class="govuk-error-summary__body">
-    <ul class="govuk-list govuk-error-summary__list">
-    {% for id_for_label, error in form_errors %}
-        <li>
-          <a href="{{ request.path }}#{{ id_for_label }}">{{ error }}</a>
-        </li>
-    {% endfor %}
-    </ul>
+{% if form.errors %}
+  <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
+    <h2 class="govuk-error-summary__title" id="error-summary-title">
+      There is a problem
+    </h2>
+    <div class="govuk-error-summary__body">
+      <ul class="govuk-list govuk-error-summary__list">
+      {% for field, errors in form.errors.items %}
+          {% for error in errors %}
+              <li>
+              <a href="#id_{{ field }}">{{ error }}</a>
+              </li>
+          {% endfor %}
+      {% endfor %}
+      </ul>
+    </div>
   </div>
-</div>
 {% endif %}
-
 <h1 class="govuk-heading-l">Summary information</h1>
 <h2 class="govuk-heading-m">What is the security classification for this data?</h2>
 
