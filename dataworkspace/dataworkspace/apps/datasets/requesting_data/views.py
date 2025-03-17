@@ -25,7 +25,6 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetNetworkRestrictionsForm,
     DatasetUserRestrictionsForm,
     DatasetIntendedAccessForm,
-    DatasetSecurityClearanceForm,
     DatasetSecurityClassificationForm,
     DatasetSpecialPersonalDataForm,
     DatasetPersonalDataForm,
@@ -69,7 +68,6 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         ("current-access", DatasetCurrentAccessForm),
         ("intended-access", DatasetIntendedAccessForm),
         ("location-restrictions", DatasetLocationRestrictionsForm),
-        ("security-clearance", DatasetSecurityClearanceForm),
         ("network-restrictions", DatasetNetworkRestrictionsForm),
         ("user-restrictions", DatasetUserRestrictionsForm),
     ]

@@ -288,22 +288,6 @@ class DatasetLocationRestrictionsForm(GOVUKDesignSystemForm):
     )
 
 
-class DatasetSecurityClearanceForm(GOVUKDesignSystemForm):
-
-    security_clearance = GOVUKDesignSystemRadioField(
-        required=True,
-        choices=[
-            ("BPSS", "Basic level of security clearance(BPSS)"),
-            ("CTC", "Counter Terrorist Check"),
-            ("SC", "Security Check"),
-            ("DV", "Developed Vetting"),
-        ],
-        label="What level of security clearance should be required to access this data?",
-        help_text="All people who work for/in the Civil Service need to have a basic level of security clearance BPSS",
-        widget=GOVUKDesignSystemRadiosWidget(heading="p", extra_label_classes="govuk-body-l"),
-    )
-
-
 class DatasetNetworkRestrictionsForm(GOVUKDesignSystemForm):
 
     network_restrictions = GOVUKDesignSystemTextareaField(
@@ -322,7 +306,7 @@ class DatasetNetworkRestrictionsForm(GOVUKDesignSystemForm):
 class DatasetUserRestrictionsForm(GOVUKDesignSystemForm):
 
     user_restrictions = GOVUKDesignSystemTextareaField(
-        label="Should access be trstricted to certain users types?",
+        label="Should access be restricted to certain users types?",
         required=False,
         widget=GOVUKDesignSystemTextareaWidget(
             heading="h2",
