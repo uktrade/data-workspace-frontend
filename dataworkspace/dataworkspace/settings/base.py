@@ -848,4 +848,4 @@ MAINTENANCE_MODE_IGNORE_ADMIN_SITE = True
 MAINTENANCE_MODE_GET_CONTEXT = "dataworkspace.apps.maintenance.maintenance.maintenance_context"
 MAINTENANCE_MODE_STATE_BACKEND = "maintenance_mode.backends.CacheBackend"
 X_FRAME_OPTIONS = "ALLOW-FROM *.visualwebsiteoptimizer.com app.vwo.com"
-SECURE_CROSS_ORIGIN_POLICY_OPENER = None
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "unsafe-none"
