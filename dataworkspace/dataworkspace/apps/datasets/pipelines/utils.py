@@ -34,7 +34,7 @@ def save_pipeline_to_dataflow(pipeline, method):
     schema_name, table_name = split_schema_table(pipeline.table_name)
     body = json.dumps(
         {
-            "schedule": pipeline.custom_schedule if pipeline.schedule is PipelineScheduleType.CUSTOM else pipeline.schedule,
+            "schedule": pipeline.custom_schedule if pipeline.schedule == '@custom' else pipeline.schedule,
             "schema_name": schema_name,
             "table_name": table_name,
             "type": pipeline.type,

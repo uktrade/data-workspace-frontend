@@ -70,6 +70,12 @@ class BasePipelineCreateForm(GOVUKDesignSystemModelForm):
         widget=GOVUKDesignSystemTextWidget(
             label_is_heading=False, extra_label_classes="govuk-body govuk-!-font-size-19 govuk-secondary-text-colour"
         ),
+        validators=(
+            RegexValidator(
+                message='Custom Schedule must be a vaild cron expression.',
+                regex=r"^(@(annually|yearly|monthly|weekly|daily|hourly|reboot))|(@every (\d+(ns|us|µs|ms|s|m|h))+)|((((\d+,)+\d+|(\d+(\/|-)\d+)|\d+|\*) ?){5,7})$",
+            ),
+        ),
     )
     notes = GOVUKDesignSystemTextareaField(
         label="Notes",
@@ -104,7 +110,7 @@ class SQLPipelineCreateForm(BasePipelineCreateForm):
 
     class Meta:
         model = Pipeline
-        fields = ["table_name", "sql", "type", "notes", "schedule"]
+        fields = ["table_name", "sql", "type", "notes", "schedule", "custom_schedule"]
 
     def save(self, commit=True):
         pipeline = super().save(commit=False)
