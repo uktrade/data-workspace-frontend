@@ -99,7 +99,13 @@ class TestDatasetAccessOnly:
     @mock.patch("dataworkspace.apps.request_access.views.send_email")
     @override_settings(ENVIRONMENT="Production")
     def test_zendesk_ticket_created_after_form_submission(
-        self, mock_upload_to_clamav, mock_zendesk_client, mock_send_email, client, user, metadata_db
+        self,
+        mock_upload_to_clamav,
+        mock_zendesk_client,
+        mock_send_email,
+        client,
+        user,
+        metadata_db,
     ):
         class MockTicket:
             @property
