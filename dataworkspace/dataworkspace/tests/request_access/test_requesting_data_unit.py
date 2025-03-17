@@ -150,33 +150,36 @@ class RequestingDataViewsTestCase(TestCase):
         self.user = factories.UserFactory.create(is_superuser=False)
         self.client = Client(**get_http_sso_data(self.user))
 
-    @patch("requests.post")
-    def check_view_response(self, mock_post, step):
+    def check_view_response(self, step, field):
+        data = {
+            "requesting_data_wizard_view-current_step": [step],
+            f"{step}-{field}": [f"Test {field}"],
+        }
+
         response = self.client.post(
             reverse(
                 "requesting-data-step",
                 args=[step],
             ),
-            data={
-                "requesting_data_wizard_view-current_step": [step],
-                "name-name": ["Test name"],
-            },
+            data=data,
         )
 
+        return response
+
+    @patch("requests.post")
+    def test_name_view(self, mock_post):
+        response = self.check_view_response(step="name", field="name")
         assert response.status_code == HTTPStatus.FOUND
         assert mock_post.called is False
-
-    def test_name_view(self, mock_post):
-        """
-        A name should be saved to the session, not call the database
-        """
-        self.check_view_response("name")
 
     def test_descriptions_view(self):
         pass
 
-    def test_origin_view(self):
-        pass
+    @patch("requests.post")
+    def test_origin_view(self, mock_post):
+        response = self.check_view_response(step="origin", field="origin")
+        assert response.status_code == HTTPStatus.OK
+        assert mock_post.called is False
 
     def test_owners_view(self):
         pass
