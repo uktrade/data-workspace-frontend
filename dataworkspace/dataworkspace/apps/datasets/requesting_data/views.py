@@ -15,17 +15,13 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetDescriptionsForm,
     DatasetDataOriginForm,
     DatasetExistingSystemForm,
-    DatasetPreviouslyPublishedForm,
     DatasetLicenceForm,
     DatasetRestrictionsForm,
-    DatasetPurposeForm,
     DatasetUsageForm,
-    DatasetCurrentAccessForm,
     DatasetLocationRestrictionsForm,
     DatasetNetworkRestrictionsForm,
     DatasetUserRestrictionsForm,
     DatasetIntendedAccessForm,
-    DatasetSecurityClearanceForm,
     DatasetSecurityClassificationForm,
     DatasetSpecialPersonalDataForm,
     DatasetPersonalDataForm,
@@ -55,10 +51,8 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         ("origin", DatasetDataOriginForm),
         ("owners", DatasetOwnersForm),
         ("existing-system", DatasetExistingSystemForm),
-        ("previously-published", DatasetPreviouslyPublishedForm),
         ("licence", DatasetLicenceForm),
         ("restrictions", DatasetRestrictionsForm),
-        ("purpose", DatasetPurposeForm),
         ("usage", DatasetUsageForm),
         ("security-classification", DatasetSecurityClassificationForm),
         ("personal-data", DatasetPersonalDataForm),
@@ -66,10 +60,8 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         ("commercial-sensitive", DatasetCommercialSensitiveForm),
         ("retention-period", DatasetRetentionPeriodForm),
         ("update-frequency", DatasetUpdateFrequencyForm),
-        ("current-access", DatasetCurrentAccessForm),
         ("intended-access", DatasetIntendedAccessForm),
         ("location-restrictions", DatasetLocationRestrictionsForm),
-        ("security-clearance", DatasetSecurityClearanceForm),
         ("network-restrictions", DatasetNetworkRestrictionsForm),
         ("user-restrictions", DatasetUserRestrictionsForm),
     ]
@@ -87,18 +79,13 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         notes_fields = [
             "origin",
             "existing_system",
-            "previously_published",
-            "usage",
-            "purpose",
             "special_personal_data",
             "commercial_sensitive",
             "update_frequency",
-            "current_access",
             "user_restrictions",
             "operational_impact",
             "location_restrictions",
             "network_restrictions",
-            "security_clearance",
             "user_restrictions",
         ]
         User = get_user_model()
@@ -107,6 +94,8 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
             name=form_list[0].cleaned_data.get("name")
         )
         requesting_dataset.save()
+
+        # DatasetUsageForm to be sent to restrictions on usage.
 
         for form in form_list:
             for field in form.cleaned_data:
