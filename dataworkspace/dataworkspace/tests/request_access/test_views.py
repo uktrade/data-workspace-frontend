@@ -99,13 +99,7 @@ class TestDatasetAccessOnly:
     @mock.patch("dataworkspace.apps.request_access.views.send_email")
     @override_settings(ENVIRONMENT="Production")
     def test_zendesk_ticket_created_after_form_submission(
-        self,
-        mock_upload_to_clamav,
-        mock_zendesk_client,
-        mock_send_email,
-        client,
-        user,
-        metadata_db,
+        self, mock_upload_to_clamav, mock_zendesk_client, mock_send_email, client, user, metadata_db
     ):
         class MockTicket:
             @property
@@ -117,7 +111,6 @@ class TestDatasetAccessOnly:
         mock_zenpy_client.tickets.create.return_value = MockTicket()
 
         mock_zendesk_client.return_value = mock_zenpy_client
-        mock_zendesk_client.return_value.post.return_value.status_code = 302
 
         mock_upload_to_clamav.return_value = ClamAVResponse({"malware": False})
 
@@ -134,7 +127,6 @@ class TestDatasetAccessOnly:
             reverse("request_access:dataset", kwargs={"dataset_uuid": dataset.id}),
             {"contact_email": "test@example.com", "reason_for_access": "I need it"},
         )
-
         access_requests = AccessRequest.objects.all()
 
         # Ensure summary page is shown
