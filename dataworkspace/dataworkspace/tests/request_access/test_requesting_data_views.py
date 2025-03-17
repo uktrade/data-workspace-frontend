@@ -8,7 +8,6 @@ from django.urls import reverse
 
 from dataworkspace.apps.datasets.constants import (
     SecurityClassificationAndHandlingInstructionType,
-    UserAccessType,
 )
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
