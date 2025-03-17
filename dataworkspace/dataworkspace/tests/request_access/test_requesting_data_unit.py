@@ -181,53 +181,85 @@ class RequestingDataViewsTestCase(TestCase):
         assert response.status_code == HTTPStatus.OK
         assert mock_post.called is False
 
-    def test_owners_view(self):
+    @patch("requests.post")
+    def test_owners_view(self, mock_post):
         pass
 
-    def test_existing_system_view(self):
+    @patch("requests.post")
+    def test_existing_system_view(self, mock_post):
+        response = self.check_view_response(step="existing-system", field="existing_system")
+        assert response.status_code == HTTPStatus.OK
+        assert mock_post.called is False
+
+    @patch("requests.post")
+    def test_licence_view(self, mock_post):
+        response = self.check_view_response(step="licence", field="licence")
+        assert response.status_code == HTTPStatus.OK
+        assert mock_post.called is False
+
+    @patch("requests.post")
+    def test_restrictions_view(self, mock_post):
+        response = self.check_view_response(step="restrictions", field="restrictions")
+        assert response.status_code == HTTPStatus.OK
+        assert mock_post.called is False
+
+    @patch("requests.post")
+    def test_usage_view(self, mock_post):
+        response = self.check_view_response(step="usage", field="usage")
+        assert response.status_code == HTTPStatus.OK
+        assert mock_post.called is False
+
+    @patch("requests.post")
+    def test_intended_access_view(self, mock_post):
         pass
 
-    def test_licence_view(self):
+    @patch("requests.post")
+    def test_personal_data_view(self, mock_post):
+        response = self.check_view_response(step="personal-data", field="personal_data")
+        assert response.status_code == HTTPStatus.OK
+        assert mock_post.called is False
+
+    @patch("requests.post")
+    def test_special_personal_data_view(self, mock_post):
+        response = self.check_view_response(step="special-personal-data", field="special_personal_data")
+        assert response.status_code == HTTPStatus.OK
+        assert mock_post.called is False
+
+    @patch("requests.post")
+    def test_commercial_sensitive_form_view(self, mock_post):
+        response = self.check_view_response(step="commercial-sensitive", field="commercial_sensitive")
+        assert response.status_code == HTTPStatus.OK
+        assert mock_post.called is False
+
+    @patch("requests.post")
+    def test_retention_period_view(self, mock_post):
+        response = self.check_view_response(step="retention-period", field="retention_period")
+        assert response.status_code == HTTPStatus.OK
+        assert mock_post.called is False
+
+    @patch("requests.post")
+    def test_update_frequency_view(self, mock_post):
         pass
 
-    def test_restrictions_view(self):
+    @patch("requests.post")
+    def test_intended_access_view(self, mock_post):
         pass
 
-    def test_usage_view(self):
-        pass
+    @patch("requests.post")
+    def test_location_restrictions_view(self, mock_post):
+        response = self.check_view_response(step="location-restrictions", field="location_restrictions")
+        assert response.status_code == HTTPStatus.OK
+        assert mock_post.called is False
 
-    def test_current_access_view(self):
-        pass
+    @patch("requests.post")
+    def test_network_restrictions_view(self, mock_post):
+        response = self.check_view_response(step="network-restrictions", field="network_restrictions")
+        assert response.status_code == HTTPStatus.OK
+        assert mock_post.called is False
 
-    def test_intended_access_view(self):
-        pass
+    @patch("requests.post")
+    def test_user_restrictions_view(self, mock_post):
+        response = self.check_view_response(step="user-restrictions", field="user_restrictions")
+        assert response.status_code == HTTPStatus.OK
+        assert mock_post.called is False
 
-    def test_location_restrictions_view(self):
-        pass
-
-    def test_security_clearance_view(self):
-        pass
-
-    def test_network_restrictions_view(self):
-        pass
-
-    def test_restrictions_view(self):
-        pass
-    
-    def test_security_classification_view(self):
-        pass
-
-    def test_personal_data_view(self):
-        pass
-
-    def test_special_personal_data_view(self):
-        pass
-
-    def test_commercial_sensitive_form_view(self):
-        pass
-
-    def test_retention_period_view(self):
-        pass
-
-    def test_update_frequency_view(self):
-        pass
