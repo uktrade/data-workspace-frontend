@@ -151,22 +151,80 @@ class RequestingDataViewsTestCase(TestCase):
         self.client = Client(**get_http_sso_data(self.user))
 
     @patch("requests.post")
-    def test_name_view(self, mock_post):
-        """
-        A name should be saved to the session, not call the database
-        """
+    def check_view_response(self, mock_post, step):
         response = self.client.post(
             reverse(
                 "requesting-data-step",
-                args=["name"],
+                args=[step],
             ),
             data={
-                "requesting_data_wizard_view-current_step": ["name"],
+                "requesting_data_wizard_view-current_step": [step],
                 "name-name": ["Test name"],
             },
         )
 
         assert response.status_code == HTTPStatus.FOUND
-
         assert mock_post.called is False
 
+    def test_name_view(self, mock_post):
+        """
+        A name should be saved to the session, not call the database
+        """
+        self.check_view_response("name")
+
+    def test_descriptions_view(self):
+        pass
+
+    def test_origin_view(self):
+        pass
+
+    def test_owners_view(self):
+        pass
+
+    def test_existing_system_view(self):
+        pass
+
+    def test_licence_view(self):
+        pass
+
+    def test_restrictions_view(self):
+        pass
+
+    def test_usage_view(self):
+        pass
+
+    def test_current_access_view(self):
+        pass
+
+    def test_intended_access_view(self):
+        pass
+
+    def test_location_restrictions_view(self):
+        pass
+
+    def test_security_clearance_view(self):
+        pass
+
+    def test_network_restrictions_view(self):
+        pass
+
+    def test_restrictions_view(self):
+        pass
+    
+    def test_security_classification_view(self):
+        pass
+
+    def test_personal_data_view(self):
+        pass
+
+    def test_special_personal_data_view(self):
+        pass
+
+    def test_commercial_sensitive_form_view(self):
+        pass
+
+    def test_retention_period_view(self):
+        pass
+
+    def test_update_frequency_view(self):
+        pass
