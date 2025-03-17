@@ -96,9 +96,10 @@ class TestDatasetAccessOnly:
     @mock.patch("dataworkspace.apps.request_access.views.zendesk.Zenpy")
     @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
     @mock.patch("dataworkspace.zendesk.send_email")
+    @mock.patch("dataworkspace.apps.request_access.views.send_email")
     @override_settings(ENVIRONMENT="Production")
     def test_zendesk_ticket_created_after_form_submission(
-        self, send_email, mock_upload_to_clamav, mock_zendesk_client, client, user, metadata_db
+        self, mock_upload_to_clamav, mock_zendesk_client, mock_send_email, client, user, metadata_db
     ):
         class MockTicket:
             @property
@@ -106,7 +107,7 @@ class TestDatasetAccessOnly:
                 return type("ticket", (object,), {"id": 1})()
 
         mock_zenpy_client = mock.MagicMock()
-        send_email.return_value = "mock_response_id"
+        mock_send_email.return_value = "mock_response_id"
         mock_zenpy_client.tickets.create.return_value = MockTicket()
 
         mock_zendesk_client.return_value = mock_zenpy_client
