@@ -58,11 +58,16 @@ class DatasetDescriptionsForm(GOVUKDesignSystemForm):
         ),
     )
 
+    # def clean(self):
+    #     cleaned_data = super().clean()
+    #     if len(cleaned_data['description']) < 30:
+    #         raise ValidationError('Description must have at minimum 30 words.')
+
 
 class DatasetDataOriginForm(GOVUKDesignSystemForm):
 
     origin = GOVUKDesignSystemCharField(
-        label="What type of dataset is this?",
+        label="Where does the data come from?",
         required=True,
         widget=GOVUKDesignSystemTextWidget(
             label_is_heading=True,
@@ -142,16 +147,6 @@ class DatasetOwnersForm(GOVUKDesignSystemForm):
         return cleaned_data
 
 
-class DatasetSystemForm(GOVUKDesignSystemForm):
-
-    name = GOVUKDesignSystemCharField(
-        label="Which system is the data set currently stored on?",
-        required=True,
-        widget=GOVUKDesignSystemTextWidget(label_is_heading=True),
-        error_messages={"required": "Enter a table name"},
-    )
-
-
 class DatasetExistingSystemForm(GOVUKDesignSystemForm):
 
     existing_system = GOVUKDesignSystemTextareaField(
@@ -163,18 +158,6 @@ class DatasetExistingSystemForm(GOVUKDesignSystemForm):
             label_is_heading=True,
             attrs={"rows": 5},
             extra_label_classes="govuk-!-static-margin-0",
-        ),
-    )
-
-
-class DatasetPreviouslyPublishedForm(GOVUKDesignSystemForm):
-
-    previously_published = GOVUKDesignSystemCharField(
-        label="Enter the URL of where it's currently published",
-        required=False,
-        widget=GOVUKDesignSystemTextWidget(
-            label_is_heading=True,
-            label_size="m",
         ),
     )
 
@@ -206,40 +189,10 @@ class DatasetRestrictionsForm(GOVUKDesignSystemForm):
     )
 
 
-class DatasetPurposeForm(GOVUKDesignSystemForm):
-
-    purpose = GOVUKDesignSystemTextareaField(
-        label="What purpose has the data been collected for?",
-        required=True,
-        widget=GOVUKDesignSystemTextareaWidget(
-            heading="h2",
-            label_size="m",
-            label_is_heading=True,
-            attrs={"rows": 5},
-            extra_label_classes="govuk-!-static-margin-0",
-        ),
-    )
-
-
 class DatasetUsageForm(GOVUKDesignSystemForm):
 
     usage = GOVUKDesignSystemTextareaField(
-        label="What will the data be used for on Data Workspace?",
-        required=True,
-        widget=GOVUKDesignSystemTextareaWidget(
-            heading="h2",
-            label_size="m",
-            label_is_heading=True,
-            attrs={"rows": 5},
-            extra_label_classes="govuk-!-static-margin-0",
-        ),
-    )
-
-
-class DatasetCurrentAccessForm(GOVUKDesignSystemForm):
-
-    usage = GOVUKDesignSystemTextareaField(
-        label="Who currently has access to this dataset?",
+        label="How can this data be used on Data Workspace?",
         required=True,
         widget=GOVUKDesignSystemTextareaWidget(
             heading="h2",
@@ -288,27 +241,11 @@ class DatasetLocationRestrictionsForm(GOVUKDesignSystemForm):
     )
 
 
-class DatasetSecurityClearanceForm(GOVUKDesignSystemForm):
-
-    security_clearance = GOVUKDesignSystemRadioField(
-        required=True,
-        choices=[
-            ("BPSS", "Basic level of security clearance(BPSS)"),
-            ("CTC", "Counter Terrorist Check"),
-            ("SC", "Security Check"),
-            ("DV", "Developed Vetting"),
-        ],
-        label="What level of security clearance should be required to access this data?",
-        help_text="All people who work for/in the Civil Service need to have a basic level of security clearance BPSS",
-        widget=GOVUKDesignSystemRadiosWidget(heading="p", extra_label_classes="govuk-body-l"),
-    )
-
-
 class DatasetNetworkRestrictionsForm(GOVUKDesignSystemForm):
-
+    # condicitonal radio buttons
     network_restrictions = GOVUKDesignSystemTextareaField(
         label="Should access be limited based on device types and networks?",
-        required=False,
+        required=True,
         widget=GOVUKDesignSystemTextareaWidget(
             heading="h2",
             label_size="m",
@@ -320,9 +257,9 @@ class DatasetNetworkRestrictionsForm(GOVUKDesignSystemForm):
 
 
 class DatasetUserRestrictionsForm(GOVUKDesignSystemForm):
-
+    # change to a radio conditionaly button at some point in the near future
     user_restrictions = GOVUKDesignSystemTextareaField(
-        label="Should access be trstricted to certain users types?",
+        label="Should access be restricted to certain users types?",
         required=False,
         widget=GOVUKDesignSystemTextareaWidget(
             heading="h2",
@@ -346,6 +283,11 @@ class DatasetSecurityClassificationForm(GOVUKDesignSystemModelForm):
             "government_security_classification",
             "sensitivity",
         ]
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data['government_security_classification'] == None :
+            raise ValidationError('Please select a classification.')
 
 
 class DatasetPersonalDataForm(GOVUKDesignSystemForm):
