@@ -176,7 +176,7 @@ class SharepointPipelineCreateForm(BasePipelineCreateForm):
 
     class Meta:
         model = Pipeline
-        fields = ["table_name", "site_name", "list_name", "type", "notes", "schedule"]
+        fields = ["table_name", "site_name", "list_name", "type", "notes", "schedule", "custom_schedule"]
 
     def save(self, commit=True):
         pipeline = super().save(commit=False)
