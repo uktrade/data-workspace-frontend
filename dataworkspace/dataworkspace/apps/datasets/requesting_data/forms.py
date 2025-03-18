@@ -3,23 +3,16 @@ from django.contrib.auth import get_user_model
 from django.forms import ValidationError
 
 
-from dataworkspace.apps.accounts import models
 from dataworkspace.apps.datasets.models import RequestingDataset, SensitivityType
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemForm,
     GOVUKDesignSystemTextWidget,
-    GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
-    GOVUKDesignSystemRadioField,
     GOVUKDesignSystemRadiosWidget,
     GOVUKDesignSystemModelForm,
     GOVUKDesignSystemRadioField,
-    GOVUKDesignSystemTextWidget,
-    GOVUKDesignSystemModelForm,
-    GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextareaField,
-    GOVUKDesignSystemTextareaWidget,
 )
 
 from dataworkspace.apps.core.forms import ConditionalSupportTypeRadioWidget
@@ -65,11 +58,16 @@ class DatasetDescriptionsForm(GOVUKDesignSystemForm):
         ),
     )
 
+    # def clean(self):
+    #     cleaned_data = super().clean()
+    #     if len(cleaned_data['description']) < 30:
+    #         raise ValidationError('Description must have at minimum 30 words.')
+
 
 class DatasetDataOriginForm(GOVUKDesignSystemForm):
 
     origin = GOVUKDesignSystemCharField(
-        label="What type of dataset is this?",
+        label="Where does the data come from?",
         required=True,
         widget=GOVUKDesignSystemTextWidget(
             label_is_heading=True,
@@ -119,7 +117,7 @@ class DatasetOwnersForm(GOVUKDesignSystemForm):
         try:
             iao_user = User.objects.get(first_name=iao_first_name, last_name=iao_last_name)
             cleaned_data["information_asset_owner"] = iao_user
-        except:
+        except Exception:
             raise ValidationError("This is not a real user")
 
         iam_first_name = cleaned_data.get("information_asset_manager").split(" ")[0].capitalize()
@@ -127,7 +125,8 @@ class DatasetOwnersForm(GOVUKDesignSystemForm):
         try:
             iam_user = User.objects.get(first_name=iam_first_name, last_name=iam_last_name)
             cleaned_data["information_asset_manager"] = iam_user
-        except:
+
+        except Exception:
             raise ValidationError("This is not a real user")
 
         enquiries_contact_first_name = (
@@ -141,20 +140,11 @@ class DatasetOwnersForm(GOVUKDesignSystemForm):
                 first_name=enquiries_contact_first_name, last_name=enquiries_contact_last_name
             )
             cleaned_data["enquiries_contact"] = enquiries_contact_user
-        except:
+
+        except Exception:
             raise ValidationError("This is not a real user")
 
         return cleaned_data
-
-
-class DatasetSystemForm(GOVUKDesignSystemForm):
-
-    name = GOVUKDesignSystemCharField(
-        label="Which system is the data set currently stored on?",
-        required=True,
-        widget=GOVUKDesignSystemTextWidget(label_is_heading=True),
-        error_messages={"required": "Enter a table name"},
-    )
 
 
 class DatasetExistingSystemForm(GOVUKDesignSystemForm):
@@ -168,18 +158,6 @@ class DatasetExistingSystemForm(GOVUKDesignSystemForm):
             label_is_heading=True,
             attrs={"rows": 5},
             extra_label_classes="govuk-!-static-margin-0",
-        ),
-    )
-
-
-class DatasetPreviouslyPublishedForm(GOVUKDesignSystemForm):
-
-    previously_published = GOVUKDesignSystemCharField(
-        label="Enter the URL of where it's currently published",
-        required=False,
-        widget=GOVUKDesignSystemTextWidget(
-            label_is_heading=True,
-            label_size="m",
         ),
     )
 
@@ -211,55 +189,10 @@ class DatasetRestrictionsForm(GOVUKDesignSystemForm):
     )
 
 
-class DatasetPurposeForm(GOVUKDesignSystemForm):
-
-    purpose = GOVUKDesignSystemTextareaField(
-        label="What purpose has the data been collected for?",
-        required=True,
-        widget=GOVUKDesignSystemTextareaWidget(
-            heading="h2",
-            label_size="m",
-            label_is_heading=True,
-            attrs={"rows": 5},
-            extra_label_classes="govuk-!-static-margin-0",
-        ),
-    )
-
-
 class DatasetUsageForm(GOVUKDesignSystemForm):
 
     usage = GOVUKDesignSystemTextareaField(
-        label="What will the data be used for on Data Workspace?",
-        required=True,
-        widget=GOVUKDesignSystemTextareaWidget(
-            heading="h2",
-            label_size="m",
-            label_is_heading=True,
-            attrs={"rows": 5},
-            extra_label_classes="govuk-!-static-margin-0",
-        ),
-    )
-
-
-class DatasetCurrentAccessForm(GOVUKDesignSystemForm):
-
-    usage = GOVUKDesignSystemTextareaField(
-        label="Who currently has access to this dataset?",
-        required=True,
-        widget=GOVUKDesignSystemTextareaWidget(
-            heading="h2",
-            label_size="m",
-            label_is_heading=True,
-            attrs={"rows": 5},
-            extra_label_classes="govuk-!-static-margin-0",
-        ),
-    )
-
-
-class DatasetCurrentAccessForm(GOVUKDesignSystemForm):
-
-    current_access = GOVUKDesignSystemTextareaField(
-        label="Who currently has access to this dataset?",
+        label="How can this data be used on Data Workspace?",
         required=True,
         widget=GOVUKDesignSystemTextareaWidget(
             heading="h2",
@@ -308,27 +241,11 @@ class DatasetLocationRestrictionsForm(GOVUKDesignSystemForm):
     )
 
 
-class DatasetSecurityClearanceForm(GOVUKDesignSystemForm):
-
-    security_clearance = GOVUKDesignSystemRadioField(
-        required=True,
-        choices=[
-            ("BPSS", "Basic level of security clearance(BPSS)"),
-            ("CTC", "Counter Terrorist Check"),
-            ("SC", "Security Check"),
-            ("DV", "Developed Vetting"),
-        ],
-        label="What level of security clearance should be required to access this data?",
-        help_text="All people who work for/in the Civil Service need to have a basic level of security clearance BPSS",
-        widget=GOVUKDesignSystemRadiosWidget(heading="p", extra_label_classes="govuk-body-l"),
-    )
-
-
 class DatasetNetworkRestrictionsForm(GOVUKDesignSystemForm):
-
+    # condicitonal radio buttons
     network_restrictions = GOVUKDesignSystemTextareaField(
         label="Should access be limited based on device types and networks?",
-        required=False,
+        required=True,
         widget=GOVUKDesignSystemTextareaWidget(
             heading="h2",
             label_size="m",
@@ -340,9 +257,9 @@ class DatasetNetworkRestrictionsForm(GOVUKDesignSystemForm):
 
 
 class DatasetUserRestrictionsForm(GOVUKDesignSystemForm):
-
+    # change to a radio conditionaly button at some point in the near future
     user_restrictions = GOVUKDesignSystemTextareaField(
-        label="Should access be trstricted to certain users types?",
+        label="Should access be restricted to certain users types?",
         required=False,
         widget=GOVUKDesignSystemTextareaWidget(
             heading="h2",
@@ -369,8 +286,8 @@ class DatasetSecurityClassificationForm(GOVUKDesignSystemModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-
-        print("HERE", cleaned_data)
+        if cleaned_data['government_security_classification'] == None :
+            raise ValidationError('Please select a classification.')
 
 
 class DatasetPersonalDataForm(GOVUKDesignSystemForm):
@@ -407,7 +324,7 @@ class DatasetSpecialPersonalDataForm(GOVUKDesignSystemForm):
 
 class DatasetCommercialSensitiveForm(GOVUKDesignSystemForm):
 
-    special_personal_data = GOVUKDesignSystemTextareaField(
+    commercial_sensitive = GOVUKDesignSystemTextareaField(
         required=False,
         label="Does it contain commercially sensitive data?",
         help_text="Commercially sensitive information is information that if disclosed, could prejudice a supplier's commercial interests e.g. trade secrets, profit margins or new ideas. This type of information is protected through Confidentiality Agreements.",
@@ -423,7 +340,7 @@ class DatasetCommercialSensitiveForm(GOVUKDesignSystemForm):
 
 class DatasetRetentionPeriodForm(GOVUKDesignSystemForm):
 
-    retentio_policy = GOVUKDesignSystemCharField(
+    retention_policy = GOVUKDesignSystemCharField(
         label="What is the retention period?",
         required=True,
         widget=GOVUKDesignSystemTextWidget(
