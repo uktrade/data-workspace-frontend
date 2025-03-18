@@ -21,8 +21,8 @@ from django.http import Http404
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from psycopg2.sql import SQL, Composed, Identifier, Literal
-from redis.exceptions import LockError, LockNotOwnedError
 from waffle import switch_is_active
+from redis.exceptions import LockError, LockNotOwnedError
 
 from dataworkspace.apps.core.errors import DatasetUnpublishedError
 from dataworkspace.apps.core.utils import (
