@@ -150,10 +150,11 @@ class RequestingDataViewsTestCase(TestCase):
         self.user = factories.UserFactory.create(is_superuser=False)
         self.client = Client(**get_http_sso_data(self.user))
 
-    def check_view_response(self, step, field):
+    @patch("requests.post")
+    def check_view_response(self, mock_post, step, field, test="Test"):
         data = {
             "requesting_data_wizard_view-current_step": [step],
-            f"{step}-{field}": [f"Test {field}"],
+            f"{step}-{field}": [test],
         }
 
         response = self.client.post(
@@ -164,102 +165,79 @@ class RequestingDataViewsTestCase(TestCase):
             data=data,
         )
 
-        return response
-
-    @patch("requests.post")
-    def test_name_view(self, mock_post):
-        response = self.check_view_response(step="name", field="name")
-        assert response.status_code == HTTPStatus.FOUND
+        if step == "name":
+            assert response.status_code == HTTPStatus.FOUND
+        else:
+            assert response.status_code == HTTPStatus.OK
         assert mock_post.called is False
+
+    def test_name_view(self):
+        self.check_view_response(step="name", field="name")
 
     def test_descriptions_view(self):
         pass
 
-    @patch("requests.post")
-    def test_origin_view(self, mock_post):
-        response = self.check_view_response(step="origin", field="origin")
-        assert response.status_code == HTTPStatus.OK
-        assert mock_post.called is False
+    def test_origin_view(self):
+        self.check_view_response(step="origin", field="origin")
 
-    @patch("requests.post")
-    def test_owners_view(self, mock_post):
+    def test_owners_view(self):
         pass
 
-    @patch("requests.post")
-    def test_existing_system_view(self, mock_post):
-        response = self.check_view_response(step="existing-system", field="existing_system")
-        assert response.status_code == HTTPStatus.OK
-        assert mock_post.called is False
+    def test_existing_system_view(self):
+        self.check_view_response(step="existing-system", field="existing_system")
 
-    @patch("requests.post")
-    def test_licence_view(self, mock_post):
-        response = self.check_view_response(step="licence", field="licence")
-        assert response.status_code == HTTPStatus.OK
-        assert mock_post.called is False
+    def test_licence_view(self):
+        self.check_view_response(step="licence", field="licence")
 
-    @patch("requests.post")
-    def test_restrictions_view(self, mock_post):
-        response = self.check_view_response(step="restrictions", field="restrictions")
-        assert response.status_code == HTTPStatus.OK
-        assert mock_post.called is False
+    def test_restrictions_view(self):
+        self.check_view_response(step="restrictions", field="restrictions")
 
-    @patch("requests.post")
-    def test_usage_view(self, mock_post):
-        response = self.check_view_response(step="usage", field="usage")
-        assert response.status_code == HTTPStatus.OK
-        assert mock_post.called is False
+    def test_usage_view(self):
+        self.check_view_response(step="usage", field="usage")
+
+    def test_security_classification(self):
+        pass
+
+    def test_personal_data_view(self):
+        self.check_view_response(step="personal-data", field="personal_data")
+
+    def test_special_personal_data_view(self):
+        self.check_view_response(step="special-personal-data", field="special_personal_data")
+
+    def test_commercial_sensitive_view(self):
+        self.check_view_response(step="commercial-sensitive", field="commercial_sensitive")
+
+    def test_retention_period_view(self):
+        self.check_view_response(step="retention-period", field="retention_period")
+
+    def test_update_frequency_view(self):
+        self.check_view_response(step="update-frequency", field="update_frequency", test="constant")
 
     @patch("requests.post")
     def test_intended_access_view(self, mock_post):
-        pass
+        data = {
+            "requesting_data_wizard_view-current_step": ["intended-access"],
+            "intended-access-intended_access": ["yes"],
+            "intended-access-operational_impact": ["Test intended access"],
+        }
 
-    @patch("requests.post")
-    def test_personal_data_view(self, mock_post):
-        response = self.check_view_response(step="personal-data", field="personal_data")
+        response = self.client.post(
+            reverse(
+                "requesting-data-step",
+                args=["intended-access"],
+            ),
+            data=data,
+        )
+
         assert response.status_code == HTTPStatus.OK
         assert mock_post.called is False
 
-    @patch("requests.post")
-    def test_special_personal_data_view(self, mock_post):
-        response = self.check_view_response(step="special-personal-data", field="special_personal_data")
-        assert response.status_code == HTTPStatus.OK
-        assert mock_post.called is False
+    def test_location_restrictions_view(self):
+        self.check_view_response(step="location-restrictions", field="location_restrictions")
 
-    @patch("requests.post")
-    def test_commercial_sensitive_form_view(self, mock_post):
-        response = self.check_view_response(step="commercial-sensitive", field="commercial_sensitive")
-        assert response.status_code == HTTPStatus.OK
-        assert mock_post.called is False
+    def test_network_restrictions_view(self):
+        self.check_view_response(step="network-restrictions", field="network_restrictions")
 
-    @patch("requests.post")
-    def test_retention_period_view(self, mock_post):
-        response = self.check_view_response(step="retention-period", field="retention_period")
-        assert response.status_code == HTTPStatus.OK
-        assert mock_post.called is False
-
-    @patch("requests.post")
-    def test_update_frequency_view(self, mock_post):
-        pass
-
-    @patch("requests.post")
-    def test_intended_access_view(self, mock_post):
-        pass
-
-    @patch("requests.post")
-    def test_location_restrictions_view(self, mock_post):
-        response = self.check_view_response(step="location-restrictions", field="location_restrictions")
-        assert response.status_code == HTTPStatus.OK
-        assert mock_post.called is False
-
-    @patch("requests.post")
-    def test_network_restrictions_view(self, mock_post):
-        response = self.check_view_response(step="network-restrictions", field="network_restrictions")
-        assert response.status_code == HTTPStatus.OK
-        assert mock_post.called is False
-
-    @patch("requests.post")
-    def test_user_restrictions_view(self, mock_post):
-        response = self.check_view_response(step="user-restrictions", field="user_restrictions")
-        assert response.status_code == HTTPStatus.OK
-        assert mock_post.called is False
+    def test_user_restrictions_view(self):
+        self.check_view_response(step="user-restrictions", field="user_restrictions")
 
