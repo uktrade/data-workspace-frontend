@@ -20,6 +20,7 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetRetentionPeriodForm,
     DatasetSecurityClassificationForm,
     DatasetSpecialPersonalDataForm,
+    DatasetUpdateFrequencyForm,
     DatasetUsageForm,
     DatasetUserRestrictionsForm,
 )
@@ -215,7 +216,18 @@ class RequestingDataFormsTestCase(TestCase):
         )
 
     def test_valid_form_update_frequency(self):
-        pass
+
+        # sensitivity = SensitivityType.objects.all()
+        form = DatasetUpdateFrequencyForm(
+            {
+                "update_frequency": 'daily',
+                "message": "Test update frequency message",
+            }
+        )
+
+        assert form.is_valid()
+        assert "daily" in form.cleaned_data["update_frequency"]
+        assert "Test update frequency message" in form.cleaned_data["message"]
 
 
 @pytest.mark.django_db
