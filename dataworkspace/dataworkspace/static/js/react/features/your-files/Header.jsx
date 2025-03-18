@@ -1,29 +1,32 @@
 /* eslint-disable */
-import React from "react";
-import { TrashIcon } from "./icons/trash";
-import { UploadIcon } from "./icons/upload";
-import { NewFolderIcon } from "./icons/newfolder";
+import React from 'react';
+import { TrashIcon } from './icons/trash';
+import { UploadIcon } from './icons/upload';
+import { NewFolderIcon } from './icons/newfolder';
 
 export class Header extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { spin: false }
+    this.state = { spin: false };
   }
 
   handleRefreshClick() {
     this.props.onRefreshClick();
-    this.setState({ spin: true })
+    this.setState({ spin: true });
   }
 
   render() {
-    const breadCrumbs = this.props.breadCrumbs.map((b) => {
+    const breadCrumbs = this.props.breadCrumbs.reverse().map((b) => {
       return (
-        <li
-          className="browser-breadcrumb"
-          key={b.prefix}
-        >
+        <li className="browser-breadcrumb" key={b.prefix}>
           &nbsp;
-          <a href="" onClick={(e) => this.props.onBreadcrumbClick(e, b)} className="browser-breadcrumb-link">{b.label}</a>
+          <a
+            href=""
+            onClick={(e) => this.props.onBreadcrumbClick(e, b)}
+            className="browser-breadcrumb-link"
+          >
+            {b.label}
+          </a>
           &nbsp;
         </li>
       );

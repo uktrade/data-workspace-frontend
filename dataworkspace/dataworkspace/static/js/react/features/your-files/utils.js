@@ -10,9 +10,9 @@ export function getBreadcrumbs(homePrefix, teamsPrefix, fullCurrentPrefix) {
   const re = new RegExp(`(^${homePrefix}|^${teamsPrefix}).*?`);
   const currentBasePrefixMatch = fullCurrentPrefix.match(re);
   const relativePrefix = fullCurrentPrefix.replace(re, '');
-  const labels = relativePrefix.split('/').filter((lbl) => lbl.length > 0);
+  const labels = relativePrefix.split('/');
   let prefix = currentBasePrefixMatch !== null ? currentBasePrefixMatch[1] : '';
-  for (let i = 0; i < labels.length; i++) {
+  for (let i = 0; i < labels.length - 1; i++) {
     prefix += labels[i] + '/';
     breadcrumbs.push({
       prefix: prefix,
