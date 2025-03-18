@@ -73,12 +73,12 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
             return "datasets/requesting_data/update_frequency_options.html"
         else:
             return "datasets/requesting_data/summary_information.html"
-        
-    def get_form_kwargs(self, step):
-        print('HELLO')
-        print(self.request)
-        print(self.request.__dict__)
-        return {}
+
+    # def get_form_kwargs(self, step):
+    #     print('HELLO')
+    #     print(self.request)
+    #     print(self.request.__dict__)
+    #     return {}
 
     def done(self, form_list, **kwargs):
 

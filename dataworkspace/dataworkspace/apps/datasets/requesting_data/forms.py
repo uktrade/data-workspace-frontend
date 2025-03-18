@@ -347,7 +347,7 @@ class DatasetRetentionPeriodForm(GOVUKDesignSystemForm):
             label_is_heading=True,
             label_size="m",
         ),
-        error_messages={"required": "Enter a table name"},
+        error_messages={"required": "Enter a retention period"},
     )
 
 
