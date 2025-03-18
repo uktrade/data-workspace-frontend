@@ -1,4 +1,5 @@
 from django.forms import model_to_dict
+from dataworkspace.tests.conftest import user
 from formtools.preview import FormPreview
 from formtools.wizard.views import NamedUrlSessionWizardView
 from django.contrib.auth import get_user_model
@@ -28,6 +29,7 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetCommercialSensitiveForm,
     DatasetRetentionPeriodForm,
     DatasetUpdateFrequencyForm,
+    DatasetIAOForm,
 )
 
 
@@ -49,21 +51,22 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         ("name", DatasetNameForm),
         ("descriptions", DatasetDescriptionsForm),
         ("origin", DatasetDataOriginForm),
-        ("owners", DatasetOwnersForm),
-        ("existing-system", DatasetExistingSystemForm),
-        ("licence", DatasetLicenceForm),
-        ("restrictions", DatasetRestrictionsForm),
-        ("usage", DatasetUsageForm),
-        ("security-classification", DatasetSecurityClassificationForm),
-        ("personal-data", DatasetPersonalDataForm),
-        ("special-personal-data", DatasetSpecialPersonalDataForm),
-        ("commercial-sensitive", DatasetCommercialSensitiveForm),
-        ("retention-period", DatasetRetentionPeriodForm),
-        ("update-frequency", DatasetUpdateFrequencyForm),
-        ("intended-access", DatasetIntendedAccessForm),
-        ("location-restrictions", DatasetLocationRestrictionsForm),
-        ("network-restrictions", DatasetNetworkRestrictionsForm),
-        ("user-restrictions", DatasetUserRestrictionsForm),
+        ("iao", DatasetIAOForm),
+        # ("owners", DatasetOwnersForm),
+        # ("existing-system", DatasetExistingSystemForm),
+        # ("licence", DatasetLicenceForm),
+        # ("restrictions", DatasetRestrictionsForm),
+        # ("usage", DatasetUsageForm),
+        # ("security-classification", DatasetSecurityClassificationForm),
+        # ("personal-data", DatasetPersonalDataForm),
+        # ("special-personal-data", DatasetSpecialPersonalDataForm),
+        # ("commercial-sensitive", DatasetCommercialSensitiveForm),
+        # ("retention-period", DatasetRetentionPeriodForm),
+        # ("update-frequency", DatasetUpdateFrequencyForm),
+        # ("intended-access", DatasetIntendedAccessForm),
+        # ("location-restrictions", DatasetLocationRestrictionsForm),
+        # ("network-restrictions", DatasetNetworkRestrictionsForm),
+        # ("user-restrictions", DatasetUserRestrictionsForm),
     ]
 
     def get_template_names(self):
@@ -71,8 +74,50 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
             return "datasets/requesting_data/security.html"
         if self.steps.current == "update-frequency":
             return "datasets/requesting_data/update_frequency_options.html"
+        if self.steps.current == "iao":
+            return "datasets/requesting_data/user_search.html"
         else:
             return "datasets/requesting_data/summary_information.html"
+
+    def render(self, form=None, **kwargs):
+        form = form or self.get_form()
+        context = self.get_context_data(form=form, **kwargs)
+        print('IM IN THE RENDER METHOD')
+        print(form)
+        return self.render_to_response(context)
+
+        
+    def get_context_data(self, form, **kwargs):
+        context = super().get_context_data(form=form, **kwargs)
+        User = get_user_model()
+        if self.steps.current == "iao":
+            try: 
+                self.request.GET.dict()["search"]
+                search = self.request.GET.dict()["search"]
+                iao_first_name = search.split(" ")[0].capitalize()
+                iao_last_name = search.split(" ")[1].capitalize()
+                iao_user = User.objects.get(first_name=iao_first_name, last_name=iao_last_name)
+                search_results = []
+                # for user in iao_user:
+                #     print(user)
+                search_results.append(
+                        {
+                            "id": iao_user.id,
+                            "first_name": iao_user.first_name,
+                            "last_name": iao_user.last_name,
+                            "email": iao_user.email,
+                        }
+                    )
+                context["search_results"] = search_results
+            except:
+                return context
+        return context
+    
+    def process_step(self, form):
+        print('HELLO IM IN THE PROCESS STEP')
+        print(self)
+        return self.get_form_step_data(form)
+
 
     def done(self, form_list, **kwargs):
 
