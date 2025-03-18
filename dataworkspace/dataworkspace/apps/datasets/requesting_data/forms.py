@@ -286,8 +286,8 @@ class DatasetSecurityClassificationForm(GOVUKDesignSystemModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        if cleaned_data['government_security_classification'] == None :
-            raise ValidationError('Please select a classification.')
+        if cleaned_data["government_security_classification"] == None:
+            raise ValidationError("Please select a classification.")
 
 
 class DatasetPersonalDataForm(GOVUKDesignSystemForm):

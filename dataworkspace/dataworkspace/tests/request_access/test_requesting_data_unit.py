@@ -217,10 +217,9 @@ class RequestingDataFormsTestCase(TestCase):
 
     def test_valid_form_update_frequency(self):
 
-        # sensitivity = SensitivityType.objects.all()
         form = DatasetUpdateFrequencyForm(
             {
-                "update_frequency": 'daily',
+                "update_frequency": "daily",
                 "message": "Test update frequency message",
             }
         )
