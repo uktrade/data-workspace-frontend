@@ -175,8 +175,9 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
                     "dataset_url": url_dataset,
                 },
             )
-        except EmailSendFailureException:
+        except EmailSendFailureException as e:
             logger.exception("Failed to send email")
+            logger.exception(f"Failed to send email {e}")
         else:
             logger.info(
                 "send_notification_email: for %s is set",
