@@ -14,11 +14,14 @@ from django.contrib.admin.options import BaseModelAdmin
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.forms import formset_factory
+
+# from django.forms.models import inlineformset_factory
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
+from django_admin_inline_paginator.admin import TabularInlinePaginated
 
 from dataworkspace.apps.applications.models import VisualisationTemplate
 from dataworkspace.apps.applications.utils import get_data_source_id
@@ -131,9 +134,10 @@ class SourceLinkInline(admin.TabularInline, SourceReferenceInlineMixin):
     manage_unpublished_permission_codename = "datasets.manage_unpublished_datacut_datasets"
 
 
-class SourceTableInline(admin.TabularInline, SourceReferenceInlineMixin):
+class SourceTableInline(TabularInlinePaginated, admin.TabularInline, SourceReferenceInlineMixin):
     model = SourceTable
     form = SourceTableForm
+    per_page = 10
     extra = 1
     manage_unpublished_permission_codename = "datasets.manage_unpublished_master_datasets"
 
