@@ -75,6 +75,7 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
             return "datasets/requesting_data/summary_information.html"
 
     def done(self, form_list, **kwargs):
+        # these fields need to added to notes as they no do have fields themselves but are useful to analysts.
 
         notes_fields = [
             "origin",
@@ -95,7 +96,7 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         )
         requesting_dataset.save()
 
-        # DatasetUsageForm to be sent to restrictions on usage.
+        # TODO DatasetUsageForm to be sent to restrictions on usage.
 
         for form in form_list:
             for field in form.cleaned_data:
@@ -132,6 +133,8 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         dataset = DataSet.objects.create(**data_dict)
         dataset.data_catalogue_editors.set(requesting_dataset.data_catalogue_editors.all())
         dataset.sensitivity.set(requesting_dataset.sensitivity.all())
+
+        # TODO delete the requesting_dataset object, leaving ofr now as useful in developement
 
         return HttpResponseRedirect(
             reverse(
