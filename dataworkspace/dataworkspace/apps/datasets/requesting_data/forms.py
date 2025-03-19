@@ -372,3 +372,14 @@ class DatasetUpdateFrequencyForm(GOVUKDesignSystemForm):
             attrs={"rows": 5},
         ),
     )
+
+
+class SummaryPageForm(GOVUKDesignSystemForm):
+
+    summary = GOVUKDesignSystemCharField(
+        required=False,
+        label="SUMMARY",
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False,
+        ),
+    )
