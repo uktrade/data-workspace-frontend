@@ -28,6 +28,7 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetCommercialSensitiveForm,
     DatasetRetentionPeriodForm,
     DatasetUpdateFrequencyForm,
+    SummaryPageForm,
 )
 
 
@@ -49,21 +50,23 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         ("name", DatasetNameForm),
         ("descriptions", DatasetDescriptionsForm),
         ("origin", DatasetDataOriginForm),
-        ("owners", DatasetOwnersForm),
-        ("existing-system", DatasetExistingSystemForm),
-        ("licence", DatasetLicenceForm),
-        ("restrictions", DatasetRestrictionsForm),
-        ("usage", DatasetUsageForm),
-        ("security-classification", DatasetSecurityClassificationForm),
-        ("personal-data", DatasetPersonalDataForm),
-        ("special-personal-data", DatasetSpecialPersonalDataForm),
-        ("commercial-sensitive", DatasetCommercialSensitiveForm),
-        ("retention-period", DatasetRetentionPeriodForm),
-        ("update-frequency", DatasetUpdateFrequencyForm),
-        ("intended-access", DatasetIntendedAccessForm),
-        ("location-restrictions", DatasetLocationRestrictionsForm),
-        ("network-restrictions", DatasetNetworkRestrictionsForm),
-        ("user-restrictions", DatasetUserRestrictionsForm),
+        # ("owners", DatasetOwnersForm),
+        # ("existing-system", DatasetExistingSystemForm),
+        # ("licence", DatasetLicenceForm),
+        # ("restrictions", DatasetRestrictionsForm),
+        # ("usage", DatasetUsageForm),
+        # ("security-classification", DatasetSecurityClassificationForm),
+        # ("personal-data", DatasetPersonalDataForm),
+        # ("special-personal-data", DatasetSpecialPersonalDataForm),
+        # ("commercial-sensitive", DatasetCommercialSensitiveForm),
+        # ("retention-period", DatasetRetentionPeriodForm),
+        # ("update-frequency", DatasetUpdateFrequencyForm),
+        # ("intended-access", DatasetIntendedAccessForm),
+        # ("location-restrictions", DatasetLocationRestrictionsForm),
+        # ("network-restrictions", DatasetNetworkRestrictionsForm),
+        # ("user-restrictions", DatasetUserRestrictionsForm),
+        ("summary", SummaryPageForm),
+
     ]
 
     def get_template_names(self):
@@ -71,6 +74,8 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
             return "datasets/requesting_data/security.html"
         if self.steps.current == "update-frequency":
             return "datasets/requesting_data/update_frequency_options.html"
+        if self.steps.current == "summary":
+            return "datasets/requesting_data/summary.html"
         else:
             return "datasets/requesting_data/summary_information.html"
 
@@ -141,3 +146,25 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
                 "datasets:find_datasets",
             )
         )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        section_one_feilds = ["name", "short_description", "description"]
+
+        section_one = []
+        if self.steps.current == "summary":
+            for step in self.storage.data["step_data"]:
+                for key, value in self.get_cleaned_data_for_step(step).items():
+                    if key in section_one_feilds:
+                        section_one.append(
+                            {step:
+                                {"question": 'question',
+                                "answer": value},
+                            },)
+
+        context["summary"] = section_one
+        return context
+
+
+
