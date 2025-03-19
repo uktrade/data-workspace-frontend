@@ -177,7 +177,8 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
             )
         except EmailSendFailureException as e:
             logger.exception("Failed to send email")
-            logger.exception(f"Failed to send email {e}")
+            logger.exception("Failed to send email %s", e)
+
         else:
             logger.info(
                 "send_notification_email: for %s is set",
