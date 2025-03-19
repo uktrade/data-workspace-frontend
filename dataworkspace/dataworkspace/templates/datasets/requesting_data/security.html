@@ -104,7 +104,6 @@
 {% block footer_scripts %}
   <script nonce="{{ request.csp_nonce }}">
     const sensitivity = document.getElementById('sensitivitySection')
-    console.log("HER", document.querySelectorAll(".conditional"))
     document.querySelectorAll(".conditional").forEach(item => {
       item.addEventListener("change", event => {
         (event.target.value === "2" ? sensitivity.style.display = "block" : sensitivity.style.display = "none")
