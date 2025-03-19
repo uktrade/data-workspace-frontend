@@ -287,7 +287,10 @@ class RequestingDataViewsTestCase(TestCase):
     @patch("requests.post")
     def test_owners_view(self, mock_post):
         user = get_user_model().objects.create(
-            username="test.test@test.com", is_staff=False, is_superuser=False, email="test.test@test.com"
+            username="test.test@test.com",
+            is_staff=False,
+            is_superuser=False,
+            email="test.test@test.com",
         )
 
         data = {
@@ -295,7 +298,6 @@ class RequestingDataViewsTestCase(TestCase):
             "owners-information_asset_owner": user,
             "owners-information_asset_manager": user,
             "owners-enquiries_contact": user,
-
         }
 
         response = self.client.post(
@@ -329,7 +331,6 @@ class RequestingDataViewsTestCase(TestCase):
             "requesting_data_wizard_view-current_step": ["security-classification"],
             "security-classification-government_security_classification": 2,
             "security-classification-sensitivity": sensitivity,
-
         }
 
         response = self.client.post(
@@ -356,7 +357,9 @@ class RequestingDataViewsTestCase(TestCase):
         self.check_view_response(step="retention-period", field="retention_period")
 
     def test_update_frequency_view(self):
-        self.check_view_response(step="update-frequency", field="update_frequency", test="constant")
+        self.check_view_response(
+            step="update-frequency", field="update_frequency", test="constant"
+        )
 
     @patch("requests.post")
     def test_intended_access_view(self, mock_post):
