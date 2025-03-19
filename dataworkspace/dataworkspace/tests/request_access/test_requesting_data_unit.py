@@ -1,6 +1,8 @@
 from http import HTTPStatus
 from unittest.mock import patch
 from unittest import TestCase
+from django.contrib.auth import get_user_model
+
 from django.test import Client
 
 from dataworkspace.apps.datasets.models import SensitivityType
@@ -260,14 +262,52 @@ class RequestingDataViewsTestCase(TestCase):
     def test_name_view(self):
         self.check_view_response(step="name", field="name")
 
-    def test_descriptions_view(self):
-        pass
+    @patch("requests.post")
+    def test_descriptions_view(self, mock_post):
+        data = {
+            "requesting_data_wizard_view-current_step": ["descriptions"],
+            "descriptions-short_description": ["test short description"],
+            "descriptions-access-description": ["test description"],
+        }
+
+        response = self.client.post(
+            reverse(
+                "requesting-data-step",
+                args=["descriptions"],
+            ),
+            data=data,
+        )
+
+        assert response.status_code == HTTPStatus.OK
+        assert mock_post.called is False
 
     def test_origin_view(self):
         self.check_view_response(step="origin", field="origin")
 
-    def test_owners_view(self):
-        pass
+    @patch("requests.post")
+    def test_owners_view(self, mock_post):
+        user = get_user_model().objects.create(
+            username="test.test@test.com", is_staff=False, is_superuser=False, email="test.test@test.com"
+        )
+
+        data = {
+            "requesting_data_wizard_view-current_step": ["owners"],
+            "owners-information_asset_owner": user,
+            "owners-information_asset_manager": user,
+            "owners-enquiries_contact": user,
+
+        }
+
+        response = self.client.post(
+            reverse(
+                "requesting-data-step",
+                args=["owners"],
+            ),
+            data=data,
+        )
+
+        assert response.status_code == HTTPStatus.OK
+        assert mock_post.called is False
 
     def test_existing_system_view(self):
         self.check_view_response(step="existing-system", field="existing_system")
@@ -281,8 +321,27 @@ class RequestingDataViewsTestCase(TestCase):
     def test_usage_view(self):
         self.check_view_response(step="usage", field="usage")
 
-    def test_security_classification(self):
-        pass
+    @patch("requests.post")
+    def test_security_classification(self, mock_post):
+        sensitivity = SensitivityType.objects.all()
+
+        data = {
+            "requesting_data_wizard_view-current_step": ["security-classification"],
+            "security-classification-government_security_classification": 2,
+            "security-classification-sensitivity": sensitivity,
+
+        }
+
+        response = self.client.post(
+            reverse(
+                "requesting-data-step",
+                args=["security-classification"],
+            ),
+            data=data,
+        )
+
+        assert response.status_code == HTTPStatus.OK
+        assert mock_post.called is False
 
     def test_personal_data_view(self):
         self.check_view_response(step="personal-data", field="personal_data")
