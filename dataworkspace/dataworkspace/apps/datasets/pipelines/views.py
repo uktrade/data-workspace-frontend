@@ -11,8 +11,6 @@ from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateVi
 from django.views.generic.list import ListView
 from requests import RequestException
 
-from dataworkspace.apps.explorer.schema import get_user_schema_info
-
 from dataworkspace.apps.core.errors import PipelineBuilderPermissionDeniedError
 from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.apps.datasets.pipelines.forms import PipelineTypeForm, SQLPipelineEditForm
@@ -23,6 +21,7 @@ from dataworkspace.apps.datasets.pipelines.utils import (
     save_pipeline_to_dataflow,
     stop_pipeline,
 )
+from dataworkspace.apps.explorer.schema import get_user_schema_info
 
 logger = logging.getLogger("app")
 

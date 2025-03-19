@@ -7,6 +7,7 @@ celery-redbeat
 celery
 cryptography
 dj-database-url
+django-admin-inline-paginator
 django-admin-sortable2
 django-better-admin-arrayfield
 django-ckeditor
