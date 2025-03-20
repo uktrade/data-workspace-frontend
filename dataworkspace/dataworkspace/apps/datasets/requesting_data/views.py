@@ -1,3 +1,4 @@
+import re
 from django.forms import model_to_dict
 from formtools.preview import FormPreview
 from formtools.wizard.views import NamedUrlSessionWizardView
@@ -150,20 +151,28 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        section_one_feilds = ["name", "short_description", "description"]
+        section_one_feilds = ["name", "short_description", "description", "origin"]
 
-        section_one = []
+        section = []
+        questions = {}
+
+        for name, form in self.form_list.items():
+            for name, field in form.base_fields.items():
+                question = re.sub(r"[,\(\)']", "", field.label)
+                questions[name] = question
+
         if self.steps.current == "summary":
             for step in self.storage.data["step_data"]:
                 for key, value in self.get_cleaned_data_for_step(step).items():
                     if key in section_one_feilds:
-                        section_one.append(
+                        section.append(
                             {step:
-                                {"question": 'question',
-                                "answer": value},
+                                {
+                                    "question": questions[key],
+                                    "answer": value},
                             },)
 
-        context["summary"] = section_one
+        context["summary"] = section
         return context
 
 
