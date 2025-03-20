@@ -1970,7 +1970,7 @@ def visualisation_approvals(dw_approvals, project_members):
                     if approver["is_superuser"] and member["access_level"] == 30
                     else (
                         "owner"
-                        if member["access_level"] == 40
+                        if member["access_level"] >= 40
                         else "peer reviewer" if member["access_level"] == 30 else None
                     )
                 )
