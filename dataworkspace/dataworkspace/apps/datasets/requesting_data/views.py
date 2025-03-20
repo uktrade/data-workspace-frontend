@@ -30,20 +30,8 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetRetentionPeriodForm,
     DatasetUpdateFrequencyForm,
     SummaryPageForm,
+    TrackerPageForm
 )
-
-
-class DatasetBaseView(FormView):
-    def save_dataset(self, form, fields, page):
-        requesting_dataset = RequestingDataset.objects.get(id=self.kwargs.get("id"))
-        for field in fields:
-            setattr(requesting_dataset, field, form.cleaned_data.get(field))
-            requesting_dataset.save()
-        return HttpResponseRedirect(
-            reverse(
-                f"datasets:requesting_data:{page}",
-            )
-        )
 
 
 class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
@@ -56,6 +44,7 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         # ("licence", DatasetLicenceForm),
         # ("restrictions", DatasetRestrictionsForm),
         # ("usage", DatasetUsageForm),
+        ("summary", SummaryPageForm),
         # ("security-classification", DatasetSecurityClassificationForm),
         # ("personal-data", DatasetPersonalDataForm),
         # ("special-personal-data", DatasetSpecialPersonalDataForm),
@@ -70,20 +59,7 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
 
     ]
 
-    def get_template_names(self):
-        if self.steps.current == "security-classification":
-            return "datasets/requesting_data/security.html"
-        if self.steps.current == "update-frequency":
-            return "datasets/requesting_data/update_frequency_options.html"
-        if self.steps.current == "summary":
-            return "datasets/requesting_data/summary.html"
-        else:
-            return "datasets/requesting_data/summary_information.html"
-
-    def done(self, form_list, **kwargs):
-        # these fields need to added to notes as they no do have fields themselves but are useful to analysts.
-
-        notes_fields = [
+    notes_fields = [
             "origin",
             "existing_system",
             "special_personal_data",
@@ -95,28 +71,41 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
             "network_restrictions",
             "user_restrictions",
         ]
-        User = get_user_model()
 
-        data_dict = model_to_dict(
-            requesting_dataset,
-            exclude=["id", "tags", "user", "sensitivity", "data_catalogue_editors"],
-        )
-        data_dict["enquiries_contact"] = requesting_dataset.enquiries_contact
-        data_dict["information_asset_manager"] = requesting_dataset.information_asset_manager
-        data_dict["information_asset_owner"] = requesting_dataset.information_asset_owner
-        data_dict["slug"] = requesting_dataset.name.lower().replace(" ", "-")
+    def get_template_names(self):
+        if self.steps.current == "security-classification":
+            return "datasets/requesting_data/security.html"
+        if self.steps.current == "update-frequency":
+            return "datasets/requesting_data/update_frequency_options.html"
+        if self.steps.current == "summary":
+            return "datasets/requesting_data/summary.html"
+        else:
+            return "datasets/requesting_data/summary_information.html"
 
-        dataset = DataSet.objects.create(**data_dict)
-        dataset.data_catalogue_editors.set(requesting_dataset.data_catalogue_editors.all())
-        dataset.sensitivity.set(requesting_dataset.sensitivity.all())
+    # def done(self, form_list, **kwargs):
+    #     # these fields need to added to notes as they no do have fields themselves but are useful to analysts.
+    #     User = get_user_model()
 
-        # TODO delete the requesting_dataset object, leaving ofr now as useful in developement
+    #     data_dict = model_to_dict(
+    #         requesting_dataset,
+    #         exclude=["id", "tags", "user", "sensitivity", "data_catalogue_editors"],
+    #     )
+    #     data_dict["enquiries_contact"] = requesting_dataset.enquiries_contact
+    #     data_dict["information_asset_manager"] = requesting_dataset.information_asset_manager
+    #     data_dict["information_asset_owner"] = requesting_dataset.information_asset_owner
+    #     data_dict["slug"] = requesting_dataset.name.lower().replace(" ", "-")
 
-        return HttpResponseRedirect(
-            reverse(
-                "datasets:find_datasets",
-            )
-        )
+    #     dataset = DataSet.objects.create(**data_dict)
+    #     dataset.data_catalogue_editors.set(requesting_dataset.data_catalogue_editors.all())
+    #     dataset.sensitivity.set(requesting_dataset.sensitivity.all())
+
+    #     # TODO delete the requesting_dataset object, leaving ofr now as useful in developement
+
+    #     return HttpResponseRedirect(
+    #         reverse(
+    #             "datasets:find_datasets",
+    #         )
+    #     )
 
     def process_step(self, form):
         User = get_user_model()
@@ -128,49 +117,57 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
 
         # TODO DatasetUsageForm to be sent to restrictions on usage.
 
-        for form in self.form_list:
-            for field in form.cleaned_data:
-                if field in notes_fields and form.cleaned_data.get(field):
-                    if requesting_dataset.notes:
-                        requesting_dataset.notes += (
-                            f"{form[field].label}\n{form.cleaned_data.get(field)}\n"
+            for form in self.form_list:
+                for field in form.cleaned_data:
+                    if field in self.notes_fields and form.cleaned_data.get(field):
+                        if requesting_dataset.notes:
+                            requesting_dataset.notes += (
+                                f"{form[field].label}\n{form.cleaned_data.get(field)}\n"
+                            )
+                            requesting_dataset.save()
+                        else:
+                            requesting_dataset.notes = (
+                                f"{form[field].label}\n{form.cleaned_data.get(field)}\n"
+                            )
+                            requesting_dataset.save()
+                    if field == "enquiries_contact":
+                        requesting_dataset.enquiries_contact = User.objects.get(
+                            id=form.cleaned_data.get(field).id
                         )
-                        requesting_dataset.save()
+                    if field == "sensitivity":
+                        requesting_dataset.sensitivity.set(form.cleaned_data.get("sensitivity"))
                     else:
-                        requesting_dataset.notes = (
-                            f"{form[field].label}\n{form.cleaned_data.get(field)}\n"
-                        )
-                        requesting_dataset.save()
-                if field == "enquiries_contact":
-                    requesting_dataset.enquiries_contact = User.objects.get(
-                        id=form.cleaned_data.get(field).id
-                    )
-                if field == "sensitivity":
-                    requesting_dataset.sensitivity.set(form.cleaned_data.get("sensitivity"))
-                else:
-                    setattr(requesting_dataset, field, form.cleaned_data.get(field))
-                requesting_dataset.save()
+                        setattr(requesting_dataset, field, form.cleaned_data.get(field))
+                    requesting_dataset.save()
 
-            requesting_dataset.save()
-            return self.get_form_step_data(form)
+                requesting_dataset.save()
+        return self.get_form_step_data(form)
+        
+        # TODO wipe session
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        section_one_feilds = ["name", "short_description", "description", "origin"]
-
-        section = []
-        questions = {}
-
-        for name, form in self.form_list.items():
-            for name, field in form.base_fields.items():
-                question = re.sub(r"[,\(\)']", "", field.label)
-                questions[name] = question
-
+        
         if self.steps.current == "summary":
+
+            section_one_fields = ["name", "short_description", "description", "origin"]
+
+            section = []
+            questions = {}
+
+            print(self.storage.data["step_data"])
+
+
+            for name, form in self.form_list.items():
+                for name, field in form.base_fields.items():
+                    question = re.sub(r"[,\(\)']", "", field.label)
+                    questions[name] = question
             for step in self.storage.data["step_data"]:
+                print('HELLOOOOOOOOOOOOOOOOOO')
+                print(step)
+                print(type(step))
                 for key, value in self.get_cleaned_data_for_step(step).items():
-                    if key in section_one_feilds:
+                    if key in section_one_fields:
                         section.append(
                             {step:
                                 {
@@ -178,7 +175,7 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
                                     "answer": value},
                             },)
 
-        context["summary"] = section
+            context["summary"] = section
         return context
 
 

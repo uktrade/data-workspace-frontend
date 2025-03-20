@@ -650,6 +650,8 @@ class RequestingDataset(DeletableTimestampedUserModel):
         verbose_name="Make this an ESDA (Essential Shared Data Asset) \
           and share metadata on this data asset with other departments.",
     )
+    stage_one_complete = models.BooleanField(default=False)
+    stage_two_complete = models.BooleanField(default=False)
 
 
 class DataSetUserPermission(models.Model):
