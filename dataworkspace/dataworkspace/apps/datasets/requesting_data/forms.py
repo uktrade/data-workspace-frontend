@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.forms import ValidationError
+from django.views.generic import FormView
 
 
 from dataworkspace.apps.datasets.models import RequestingDataset, SensitivityType
@@ -376,6 +377,15 @@ class DatasetUpdateFrequencyForm(GOVUKDesignSystemForm):
 
 class SummaryPageForm(GOVUKDesignSystemForm):
 
+    summary = GOVUKDesignSystemCharField(
+        required=False,
+        label="SUMMARY",
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False,
+        ),
+    )
+
+class TrackerPageForm(GOVUKDesignSystemForm):
     summary = GOVUKDesignSystemCharField(
         required=False,
         label="SUMMARY",
