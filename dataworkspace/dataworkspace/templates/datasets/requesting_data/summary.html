@@ -31,6 +31,10 @@
   </div>
 {% endif %}
 
+<h1 class="govuk-heading-l">Summary information</h1>
+
+<h2 class="govuk-heading-m">Your answers</h2>
+
 
 {% for answers in summary %} 
   {% for key, qa  in answers.items %}
@@ -53,6 +57,7 @@
 {% endfor%}
 
 {% endfor%}
+      <button type="submit" class="govuk-button">Continue</button>
 
 
 

@@ -97,14 +97,38 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         ]
         User = get_user_model()
 
-        requesting_dataset = RequestingDataset.objects.create(
-            name=form_list[0].cleaned_data.get("name")
+        data_dict = model_to_dict(
+            requesting_dataset,
+            exclude=["id", "tags", "user", "sensitivity", "data_catalogue_editors"],
         )
-        requesting_dataset.save()
+        data_dict["enquiries_contact"] = requesting_dataset.enquiries_contact
+        data_dict["information_asset_manager"] = requesting_dataset.information_asset_manager
+        data_dict["information_asset_owner"] = requesting_dataset.information_asset_owner
+        data_dict["slug"] = requesting_dataset.name.lower().replace(" ", "-")
+
+        dataset = DataSet.objects.create(**data_dict)
+        dataset.data_catalogue_editors.set(requesting_dataset.data_catalogue_editors.all())
+        dataset.sensitivity.set(requesting_dataset.sensitivity.all())
+
+        # TODO delete the requesting_dataset object, leaving ofr now as useful in developement
+
+        return HttpResponseRedirect(
+            reverse(
+                "datasets:find_datasets",
+            )
+        )
+
+    def process_step(self, form):
+        User = get_user_model()
+
+        if self.steps.current == "summary":
+            requesting_dataset = RequestingDataset.objects.create(
+                name=self.form_list[0].cleaned_data.get("name")
+            )
 
         # TODO DatasetUsageForm to be sent to restrictions on usage.
 
-        for form in form_list:
+        for form in self.form_list:
             for field in form.cleaned_data:
                 if field in notes_fields and form.cleaned_data.get(field):
                     if requesting_dataset.notes:
@@ -127,26 +151,8 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
                     setattr(requesting_dataset, field, form.cleaned_data.get(field))
                 requesting_dataset.save()
 
-        data_dict = model_to_dict(
-            requesting_dataset,
-            exclude=["id", "tags", "user", "sensitivity", "data_catalogue_editors"],
-        )
-        data_dict["enquiries_contact"] = requesting_dataset.enquiries_contact
-        data_dict["information_asset_manager"] = requesting_dataset.information_asset_manager
-        data_dict["information_asset_owner"] = requesting_dataset.information_asset_owner
-        data_dict["slug"] = requesting_dataset.name.lower().replace(" ", "-")
-
-        dataset = DataSet.objects.create(**data_dict)
-        dataset.data_catalogue_editors.set(requesting_dataset.data_catalogue_editors.all())
-        dataset.sensitivity.set(requesting_dataset.sensitivity.all())
-
-        # TODO delete the requesting_dataset object, leaving ofr now as useful in developement
-
-        return HttpResponseRedirect(
-            reverse(
-                "datasets:find_datasets",
-            )
-        )
+            requesting_dataset.save()
+            return self.get_form_step_data(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
