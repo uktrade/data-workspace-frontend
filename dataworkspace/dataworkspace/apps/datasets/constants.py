@@ -147,3 +147,4 @@ class PipelineScheduleType(models.TextChoices):
     FRIDAYS = "0 0 * * 6", "Run once a week at midnight on Friday"
     MONTHLY = "@monthly", "Run once a month at midnight of the first day of the month"
     YEARLY = "@yearly", "Run once a year at midnight of January 1"
+    CUSTOM = "@custom", "Custom schedule"
