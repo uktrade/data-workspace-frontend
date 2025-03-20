@@ -277,8 +277,15 @@ def application_api_is_allowed(request, public_host):
         ):
             raise ManageVisualisationsPermissionDeniedError()
 
-        user_source_tables = source_tables_for_user(request.user)
-        app_source_tables = source_tables_for_app(application_template)
+        source_tables_user_non_common, source_tables_user_common = source_tables_for_user(
+            request.user
+        )
+        user_source_tables = source_tables_user_non_common + source_tables_user_common
+
+        source_tables_app_non_common, source_tables_app_common = source_tables_for_app(
+            application_template
+        )
+        app_source_tables = source_tables_app_non_common + source_tables_app_common
 
         user_authorised_datasets = set(
             (source_table["dataset"]["id"] for source_table in user_source_tables)
@@ -931,7 +938,10 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
                 # sure this is a case that can happen - and if it can, we don't care while prototyping.
                 logger.info("Syncing QuickSight resources for %s", dw_user)
 
-                source_tables = source_tables_for_user(dw_user)
+                source_tables_user_non_common, source_tables_user_common = source_tables_for_user(
+                    dw_user
+                )
+
                 db_role_schema_suffix = stable_identification_suffix(str(sso_id), short=True)
 
                 # This creates a DB user for each of our datasets DBs. These users are intended to be long-lived,
@@ -940,7 +950,8 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
                 # from expiring.
                 creds = new_private_database_credentials(
                     db_role_schema_suffix,
-                    source_tables,
+                    source_tables_user_non_common,
+                    source_tables_user_common,
                     postgres_user(user_email, suffix="qs"),
                     dw_user,
                     valid_for=datetime.timedelta(
