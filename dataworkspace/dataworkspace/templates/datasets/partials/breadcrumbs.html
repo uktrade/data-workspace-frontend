@@ -6,7 +6,7 @@
     </li>
     <li class="govuk-breadcrumbs__list-item">
       <a class="govuk-breadcrumbs__link"
-        href="{% url "datasets:dataset_detail" dataset_uuid=object.dataset.id %}#{{ object.dataset.slug }}">{{ object.dataset.name }}</a>
+        href="{% url "datasets:dataset_detail" dataset_uuid=object.dataset.id %}">{{ object.dataset.name }}</a>
     </li>
     <li class="govuk-breadcrumbs__list-item" {% if object.name|length > 30 %} title="{{object.name}}" {% endif %}>{{ object.name|truncatechars_html:30 }}</li>
   </ol>

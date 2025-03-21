@@ -126,4 +126,4 @@ class BookmarkedDatasetSerializer(serializers.Serializer):
         return obj["dataset_id"]
 
     def get_url(self, obj):
-        return f"{reverse('datasets:dataset_detail', args=(obj['dataset_id'],))}#{obj['slug']}"
+        return f"{reverse('datasets:dataset_detail', args=(obj['dataset_id'],))}"

@@ -66,7 +66,7 @@ describe("Requesting data access", () => {
         .should(
           "have.attr",
           "href",
-          `/datasets/${sourceWithTableNoAccess}#source-dataset-access-request`
+          `/datasets/${sourceWithTableNoAccess}`
         );
     });
   });

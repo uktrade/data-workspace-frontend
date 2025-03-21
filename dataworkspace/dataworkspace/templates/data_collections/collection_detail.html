@@ -105,7 +105,7 @@
 
 
 
-                           {{ dataset_collection.dataset.slug }}{% else %}{% url "datasets:dataset_detail" dataset_uuid=dataset_collection.dataset.id %}#{{ dataset_collection.dataset.slug }}{% endif %}">{{ dataset_collection.dataset.name }}</a>
+                           {{ dataset_collection.dataset.slug }}{% else %}{% url "datasets:dataset_detail" dataset_uuid=dataset_collection.dataset.id %}{% endif %}">{{ dataset_collection.dataset.name }}</a>
                   </h3>
                   {% if not collection_for_all %}
                   <a
