@@ -533,11 +533,25 @@ def source_tables_for_user(user):
         "dataset__user_access_type",
     )
 
-    automatically_authorized_tables = SourceTable.objects.filter(
+    automatically_authorized_tables_published = SourceTable.objects.filter(
         dataset__deleted=False,
         dataset__authorized_email_domains__contains=[user_email_domain],
         published=True,
-        **{"dataset__published": True} if not user.is_superuser else {},
+        dataset__published=True,
+    ).values(
+        "database__memorable_name",
+        "schema",
+        "table",
+        "dataset__id",
+        "dataset__name",
+        "dataset__user_access_type",
+    )
+    automatically_authorized_tables_unpublished_if_superuser = SourceTable.objects.filter(
+        Q() if user.is_superuser else Q(pk__in=[]),
+        dataset__deleted=False,
+        dataset__authorized_email_domains__contains=[user_email_domain],
+        published=True,
+        dataset__published=False,
     ).values(
         "database__memorable_name",
         "schema",
@@ -560,7 +574,7 @@ def source_tables_for_user(user):
         .values("external_database__memorable_name", "table_name", "uuid", "name")
     )
 
-    source_tables_non_common = [
+    source_tables_individual = [
         {
             "database": x["database__memorable_name"],
             "schema": x["schema"],
@@ -572,7 +586,7 @@ def source_tables_for_user(user):
             },
         }
         for x in req_authorization_tables.union(
-            automatically_authorized_tables,
+            automatically_authorized_tables_unpublished_if_superuser,
             req_authentication_tables_unpublished_if_superuser,
         )
     ] + [
@@ -587,6 +601,20 @@ def source_tables_for_user(user):
             },
         }
         for x in reference_tables_unpublished_if_superuser
+    ]
+
+    source_tables_email_domain = [
+        {
+            "database": x["database__memorable_name"],
+            "schema": x["schema"],
+            "table": x["table"],
+            "dataset": {
+                "id": x["dataset__id"],
+                "name": x["dataset__name"],
+                "user_access_type": x["dataset__user_access_type"],
+            },
+        }
+        for x in automatically_authorized_tables_published
     ]
 
     source_tables_common = [
@@ -615,7 +643,11 @@ def source_tables_for_user(user):
         for x in req_authentication_tables_published
     ]
 
-    return (source_tables_non_common, source_tables_common)
+    return (
+        source_tables_individual,
+        (user_email_domain, source_tables_email_domain),
+        source_tables_common,
+    )
 
 
 def source_tables_for_app(application_template):
@@ -700,7 +732,7 @@ def source_tables_for_app(application_template):
         for x in req_authentication_tables
     ]
 
-    return (source_tables_non_common, source_tables_common)
+    return (source_tables_non_common, (None, []), source_tables_common)
 
 
 def view_exists(database, schema, view):
