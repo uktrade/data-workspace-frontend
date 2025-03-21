@@ -480,7 +480,7 @@ def source_tables_for_user(user):
     # The `dataset__reference_code` field is not used in many cases, but is accessed
     # in the DataSet's __init__ function, and so results in a database query for
     # each Dataset if it isn't select_related or prefetch_related up-front
-    req_authentication_tables = SourceTable.objects.filter(
+    req_authentication_tables_published = SourceTable.objects.filter(
         Q(
             dataset__user_access_type__in=[
                 UserAccessType.REQUIRES_AUTHENTICATION,
@@ -489,7 +489,26 @@ def source_tables_for_user(user):
         ),
         dataset__deleted=False,
         published=True,
-        **{"dataset__published": True} if not user.is_superuser else {},
+        dataset__published=True,
+    ).values(
+        "database__memorable_name",
+        "schema",
+        "table",
+        "dataset__id",
+        "dataset__name",
+        "dataset__user_access_type",
+    )
+    req_authentication_tables_unpublished_if_superuser = SourceTable.objects.filter(
+        Q() if user.is_superuser else Q(pk__in=[]),
+        Q(
+            dataset__user_access_type__in=[
+                UserAccessType.REQUIRES_AUTHENTICATION,
+                UserAccessType.OPEN,
+            ]
+        ),
+        dataset__deleted=False,
+        published=True,
+        dataset__published=False,
     ).values(
         "database__memorable_name",
         "schema",
@@ -528,9 +547,15 @@ def source_tables_for_user(user):
         "dataset__user_access_type",
     )
 
-    reference_tables = (
+    reference_tables_published = (
         ReferenceDataset.objects.live()
-        .filter(deleted=False, **{"published": True} if not user.is_superuser else {})
+        .filter(deleted=False, published=True)
+        .exclude(external_database=None)
+        .values("external_database__memorable_name", "table_name", "uuid", "name")
+    )
+    reference_tables_unpublished_if_superuser = (
+        ReferenceDataset.objects.live()
+        .filter(Q() if user.is_superuser else Q(pk__in=[]), deleted=False)
         .exclude(external_database=None)
         .values("external_database__memorable_name", "table_name", "uuid", "name")
     )
@@ -546,7 +571,22 @@ def source_tables_for_user(user):
                 "user_access_type": x["dataset__user_access_type"],
             },
         }
-        for x in req_authorization_tables.union(automatically_authorized_tables)
+        for x in req_authorization_tables.union(
+            automatically_authorized_tables,
+            req_authentication_tables_unpublished_if_superuser,
+        )
+    ] + [
+        {
+            "database": x["external_database__memorable_name"],
+            "schema": "public",
+            "table": x["table_name"],
+            "dataset": {
+                "id": x["uuid"],
+                "name": x["name"],
+                "user_access_type": UserAccessType.REQUIRES_AUTHENTICATION,
+            },
+        }
+        for x in reference_tables_unpublished_if_superuser
     ]
 
     source_tables_common = [
@@ -560,7 +600,7 @@ def source_tables_for_user(user):
                 "user_access_type": UserAccessType.REQUIRES_AUTHENTICATION,
             },
         }
-        for x in reference_tables
+        for x in reference_tables_published
     ] + [
         {
             "database": x["database__memorable_name"],
@@ -572,7 +612,7 @@ def source_tables_for_user(user):
                 "user_access_type": x["dataset__user_access_type"],
             },
         }
-        for x in req_authentication_tables
+        for x in req_authentication_tables_published
     ]
 
     return (source_tables_non_common, source_tables_common)
