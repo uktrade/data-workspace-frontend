@@ -204,7 +204,7 @@ packaging==22.0
     # via bleach
 paste==3.4.3
     # via -r requirements.in
-pg-sync-roles==0.0.41
+pg-sync-roles==0.0.42
     # via -r requirements.in
 pglast==3.18
     # via -r requirements.in

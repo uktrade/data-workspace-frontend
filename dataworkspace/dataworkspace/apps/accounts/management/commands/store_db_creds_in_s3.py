@@ -26,13 +26,19 @@ class Command(BaseCommand):
         for user in all_users:
             self.stdout.write(f"Creating credentials for {user.email}")
 
-            source_tables_user_non_common, source_tables_user_common = source_tables_for_user(user)
+            (
+                source_tables_individual,
+                (user_email_domain, source_tables_email_domain),
+                source_tables_common,
+            ) = source_tables_for_user(user)
 
             db_role_schema_suffix = db_role_schema_suffix_for_user(user)
             creds = new_private_database_credentials(
                 db_role_schema_suffix,
-                source_tables_user_non_common,
-                source_tables_user_common,
+                source_tables_individual,
+                user_email_domain,
+                source_tables_email_domain,
+                source_tables_common,
                 postgres_user(user.email),
                 user,
                 valid_for=datetime.timedelta(days=31),

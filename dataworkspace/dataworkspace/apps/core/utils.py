@@ -152,7 +152,9 @@ def transaction_and_lock(cursor, lock_id):
 
 def new_private_database_credentials(
     db_role_and_schema_suffix,
-    source_tables,
+    source_tables_individual,
+    user_email_domain,
+    source_tables_email_domain,
     source_tables_common,
     db_user,
     dw_user: get_user_model(),
@@ -184,7 +186,9 @@ def new_private_database_credentials(
     def postgres_password():
         return "".join(secrets.choice(password_alphabet) for i in range(64))
 
-    def get_new_credentials(database_memorable_name, tables, tables_common):
+    def get_new_credentials(
+        database_memorable_name, tables_individual, tables_email_domain, tables_common
+    ):
         # Each real-world user is given
         # - a private and permanent schema where they can manage tables and rows as needed
         # - a permanent database role that is the owner of the schema
@@ -197,8 +201,12 @@ def new_private_database_credentials(
         database_data = settings.DATABASES_DATA[database_memorable_name]
         valid_until = datetime.datetime.now() + valid_for
 
-        schema_names = without_duplicates_preserve_order(
-            schema_name for schema_name, table_name in tables
+        schema_names_individual = without_duplicates_preserve_order(
+            schema_name for schema_name, table_name in tables_individual
+        )
+
+        schema_names_email_domain = without_duplicates_preserve_order(
+            schema_name for schema_name, table_name in tables_email_domain
         )
 
         schema_names_common = without_duplicates_preserve_order(
@@ -222,18 +230,40 @@ def new_private_database_credentials(
             sync_roles(
                 sync_roles_conn,
                 db_role,
-                grants=tuple(SchemaUsage(schema_name) for schema_name in schema_names)
-                + tuple(TableSelect(schema_name, table_name) for schema_name, table_name in tables)
+                grants=tuple(SchemaUsage(schema_name) for schema_name in schema_names_individual)
+                + tuple(
+                    TableSelect(schema_name, table_name)
+                    for schema_name, table_name in tables_individual
+                )
                 + tuple(RoleMembership(role_name) for role_name in db_shared_roles)
                 + (
                     RoleMembership("common"),
                     SchemaOwnership(db_role),
                     SchemaCreate(db_role),
                     SchemaUsage(db_role),
+                )
+                + (
+                    (RoleMembership("@" + user_email_domain),)
+                    if user_email_domain is not None
+                    else ()
                 ),
                 preserve_existing_grants_in_schemas=(db_role,),
                 lock_key=GLOBAL_LOCK_ID,
             )
+            if user_email_domain is not None:
+                sync_roles(
+                    sync_roles_conn,
+                    "@" + user_email_domain,
+                    grants=tuple(
+                        SchemaUsage(schema_name, direct=True)
+                        for schema_name in schema_names_email_domain
+                    )
+                    + tuple(
+                        TableSelect(schema_name, table_name, direct=True)
+                        for schema_name, table_name in tables_email_domain
+                    ),
+                    lock_key=GLOBAL_LOCK_ID,
+                )
             sync_roles(
                 sync_roles_conn,
                 "common",
@@ -328,13 +358,23 @@ def new_private_database_credentials(
             "db_password": db_password,
         }
 
-    database_to_tables = {
+    database_to_tables_individual = {
         database_memorable_name: [
             (source_table["schema"], source_table["table"])
             for source_table in source_tables_for_database
         ]
         for database_memorable_name, source_tables_for_database in itertools.groupby(
-            source_tables, lambda source_table: source_table["database"]
+            source_tables_individual, lambda source_table: source_table["database"]
+        )
+    }
+
+    database_to_tables_email_domain = {
+        database_memorable_name: [
+            (source_table["schema"], source_table["table"])
+            for source_table in source_tables_for_database
+        ]
+        for database_memorable_name, source_tables_for_database in itertools.groupby(
+            source_tables_email_domain, lambda source_table: source_table["database"]
         )
     }
 
@@ -352,17 +392,24 @@ def new_private_database_credentials(
     # access to tables in that database (e.g. for Data Explorer, where ensuring they can always connect to the database
     # can prevent a number of failure conditions.)
     for extra_db in force_create_for_databases:
-        if extra_db not in database_to_tables:
-            database_to_tables[extra_db] = []
+        if extra_db not in database_to_tables_individual:
+            database_to_tables_individual[extra_db] = []
+        if extra_db not in database_to_tables_email_domain:
+            database_to_tables_email_domain[extra_db] = []
         if extra_db not in database_to_tables_common:
             database_to_tables_common[extra_db] = []
 
-    database_names = set(database_to_tables.keys()) | set(database_to_tables_common.keys())
+    database_names = (
+        set(database_to_tables_individual.keys())
+        | set(database_to_tables_email_domain.keys())
+        | set(database_to_tables_common.keys())
+    )
 
     creds = [
         get_new_credentials(
             database_memorable_name,
-            database_to_tables.get(database_memorable_name, ()),
+            database_to_tables_individual.get(database_memorable_name, ()),
+            database_to_tables_email_domain.get(database_memorable_name, ()),
             database_to_tables_common.get(database_memorable_name, ()),
         )
         for database_memorable_name in database_names
@@ -533,11 +580,25 @@ def source_tables_for_user(user):
         "dataset__user_access_type",
     )
 
-    automatically_authorized_tables = SourceTable.objects.filter(
+    automatically_authorized_tables_published = SourceTable.objects.filter(
         dataset__deleted=False,
         dataset__authorized_email_domains__contains=[user_email_domain],
         published=True,
-        **{"dataset__published": True} if not user.is_superuser else {},
+        dataset__published=True,
+    ).values(
+        "database__memorable_name",
+        "schema",
+        "table",
+        "dataset__id",
+        "dataset__name",
+        "dataset__user_access_type",
+    )
+    automatically_authorized_tables_unpublished_if_superuser = SourceTable.objects.filter(
+        Q() if user.is_superuser else Q(pk__in=[]),
+        dataset__deleted=False,
+        dataset__authorized_email_domains__contains=[user_email_domain],
+        published=True,
+        dataset__published=False,
     ).values(
         "database__memorable_name",
         "schema",
@@ -560,7 +621,7 @@ def source_tables_for_user(user):
         .values("external_database__memorable_name", "table_name", "uuid", "name")
     )
 
-    source_tables_non_common = [
+    source_tables_individual = [
         {
             "database": x["database__memorable_name"],
             "schema": x["schema"],
@@ -572,7 +633,7 @@ def source_tables_for_user(user):
             },
         }
         for x in req_authorization_tables.union(
-            automatically_authorized_tables,
+            automatically_authorized_tables_unpublished_if_superuser,
             req_authentication_tables_unpublished_if_superuser,
         )
     ] + [
@@ -587,6 +648,20 @@ def source_tables_for_user(user):
             },
         }
         for x in reference_tables_unpublished_if_superuser
+    ]
+
+    source_tables_email_domain = [
+        {
+            "database": x["database__memorable_name"],
+            "schema": x["schema"],
+            "table": x["table"],
+            "dataset": {
+                "id": x["dataset__id"],
+                "name": x["dataset__name"],
+                "user_access_type": x["dataset__user_access_type"],
+            },
+        }
+        for x in automatically_authorized_tables_published
     ]
 
     source_tables_common = [
@@ -615,7 +690,11 @@ def source_tables_for_user(user):
         for x in req_authentication_tables_published
     ]
 
-    return (source_tables_non_common, source_tables_common)
+    return (
+        source_tables_individual,
+        (user_email_domain, source_tables_email_domain),
+        source_tables_common,
+    )
 
 
 def source_tables_for_app(application_template):
@@ -700,7 +779,7 @@ def source_tables_for_app(application_template):
         for x in req_authentication_tables
     ]
 
-    return (source_tables_non_common, source_tables_common)
+    return (source_tables_non_common, (None, []), source_tables_common)
 
 
 def view_exists(database, schema, view):
