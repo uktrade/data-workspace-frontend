@@ -15,11 +15,10 @@ describe("Dataset list page searching", () => {
       cy.findAllByTestId("search-result")
         .should("have.length.least", 1)
         .each(($el) => {
-          cy.wrap($el).should("have.attr", "href").should("contain", "datasets/");
-          cy.wrap($el).should(
-            "contain.text",
-            "dataset")
-          
+          cy.wrap($el)
+            .should("have.attr", "href")
+            .should("contain", "datasets/");
+          cy.wrap($el).should("contain.text", "dataset");
         });
     });
   });
