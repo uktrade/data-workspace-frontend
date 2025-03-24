@@ -256,7 +256,7 @@ def new_private_database_credentials(
                 + (
                     RoleMembership("common"),
                     SchemaOwnership(db_role),
-                    SchemaCreate(db_role),
+                    SchemaCreate(db_role, direct=True),
                     SchemaUsage(db_role, direct=True),
                 )
                 + (
@@ -308,7 +308,7 @@ def new_private_database_credentials(
                     db_team_role,
                     grants=(
                         SchemaOwnership(db_team_role),
-                        SchemaCreate(db_team_role),
+                        SchemaCreate(db_team_role, direct=True),
                         SchemaUsage(db_team_role, direct=True),
                     ),
                     preserve_existing_grants_in_schemas=(db_team_role,),
