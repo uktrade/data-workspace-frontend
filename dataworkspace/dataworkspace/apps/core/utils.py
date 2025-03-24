@@ -257,7 +257,7 @@ def new_private_database_credentials(
                     RoleMembership("common"),
                     SchemaOwnership(db_role),
                     SchemaCreate(db_role),
-                    SchemaUsage(db_role),
+                    SchemaUsage(db_role, direct=True),
                 )
                 + (
                     (RoleMembership("@" + user_email_domain),)
@@ -309,7 +309,7 @@ def new_private_database_credentials(
                     grants=(
                         SchemaOwnership(db_team_role),
                         SchemaCreate(db_team_role),
-                        SchemaUsage(db_team_role),
+                        SchemaUsage(db_team_role, direct=True),
                     ),
                     preserve_existing_grants_in_schemas=(db_team_role,),
                     lock_key=GLOBAL_LOCK_ID,
