@@ -71,93 +71,24 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         else:
             return "datasets/requesting_data/summary_information.html"
         
-    def search_for_users(self, context, query):
-
-        if search_query:
-            if "\n" in search_query:
-                email_matches = []
-                non_email_matches = []
-                for query in search_query.splitlines():
-                    if not query.strip():
-                        continue
-                    matches_for_query = get_user_model().objects.filter(
-                        Q(email__iexact=query.strip())
-                    )
-                    for match in matches_for_query:
-                        email_matches.append(match)
-                    if not matches_for_query:
-                        non_email_matches.append(query)
-                context["search_results"] = email_matches
-                context["non_matches"] = non_email_matches
-
-            else:
-                search_query = search_query.strip()
-                email_filter = Q(email__icontains=search_query)
-                name_filter = Q(first_name__icontains=search_query) | Q(
-                    last_name__icontains=search_query
-                )
-                users = get_user_model().objects.filter(Q(email_filter | name_filter))
-                if not users.exists() and len(search_query.split("@")) != 1:
-                    users = get_user_model().objects.filter(
-                        email__istartswith=search_query.split("@")[0]
-                    )
-                if isinstance(self.obj, DataSet):
-                    permissions = DataSetUserPermission.objects.filter(dataset=self.obj)
-                else:
-                    permissions = VisualisationUserPermission.objects.filter(
-                        visualisation=self.obj
-                    )
-
-                users_with_permission = [p.user.id for p in permissions]
-                search_results = []
-
-                for user in users:
-                    search_results.append(
-                        {
-                            "id": user.id,
-                            "first_name": user.first_name,
-                            "last_name": user.last_name,
-                            "email": user.email,
-                            "has_access": user.id in users_with_permission,
-                        }
-                    )
-
-                context["search_results"] = search_results
-        
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form=form, **kwargs)
-        User = get_user_model()
         if self.steps.current == "iao":
             try: 
                 search_query = self.request.GET.dict()["search"]
+                context["search_query"] = search_query
                 if search_query:
-                    if "\n" in search_query:
-                        email_matches = []
-                        non_email_matches = []
-                        for query in search_query.splitlines():
-                            if not query.strip():
-                                continue
-                            matches_for_query = get_user_model().objects.filter(
-                                Q(email__iexact=query.strip())
-                            )
-                            for match in matches_for_query:
-                                email_matches.append(match)
-                            if not matches_for_query:
-                                non_email_matches.append(query)
-                        context["search_results"] = email_matches
-                        context["non_matches"] = non_email_matches
-
-                    else:
+                        User = get_user_model()
                         search_query = search_query.strip()
                         email_filter = Q(email__icontains=search_query)
                         name_filter = Q(first_name__icontains=search_query) | Q(
                             last_name__icontains=search_query
+                        ) | Q(
+                            first_name__icontains=search_query.split(" ")[0]
+                        ) | Q(
+                            last_name__icontains=search_query.split(" ")[1]
                         )
-                        users = get_user_model().objects.filter(Q(email_filter | name_filter))
-                        if not users.exists() and len(search_query.split("@")) != 1:
-                            users = get_user_model().objects.filter(
-                                email__istartswith=search_query.split("@")[0]
-                            )
+                        users = User.objects.filter(Q(email_filter | name_filter))
 
                         search_results = []
 
