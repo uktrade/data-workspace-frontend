@@ -7,31 +7,12 @@
 {% endblock %}
 
 {% load i18n %}
-
 {% block head %}
 {{ wizard.form.media }}
 {% endblock %}
 {% block content %}
-{% if form.errors %}
-  <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
-    <h2 class="govuk-error-summary__title" id="error-summary-title">
-      There is a problem
-    </h2>
-    <div class="govuk-error-summary__body">
-      <ul class="govuk-list govuk-error-summary__list">
-      {% for field, errors in form.errors.items %}
-          {% for error in errors %}
-              <li>
-              <a href="#id_{{ field }}">{{ error }}</a>
-              </li>
-          {% endfor %}
-      {% endfor %}
-      </ul>
-    </div>
-  </div>
-{% endif %}
 
-    <div class="govuk-grid-row">
+    <!-- <div class="govuk-grid-row">
       <div class="govuk-grid-column-two-thirds">
           <h1 class="govuk-heading-l">Summary information</h1>
             <label class="govuk-label govuk-label--m ">Name of information asset owners</label>
@@ -64,12 +45,13 @@
                   </ul>
                   {% endif %}
                   {% if search_results %}
-                  <form action="{% url 'requesting-data-step' 'iao' %}" method="post" novalidate>
+                  <form action="" method="post" novalidate>
                     {% csrf_token %}
                       {{ wizard.management_form }}
                         <table class="govuk-table">
                           <caption class="govuk-table__caption govuk-table__caption--m">Found {{ search_results.count }} matching user{% if search_results.count > 1 %}s{% else %} for {{ search_query }}{% endif %}</caption>
                           <tbody class="govuk-table__body">
+
                               {% for result in search_results %}
                               <tr class="govuk-table__row">
                                   <td class="govuk-table__cell">{{ result.first_name }} {{ result.last_name }}</td>
@@ -90,7 +72,14 @@
               </div>
               {% endif %}
       </div>
-  </div>
+  </div> -->
+
+  <form action="" method="post">
+    {% csrf_token %}
+      {{ wizard.management_form }}
+      <input id="information_asset_owner" name="information_asset_owner" value="{{search_results}}">
+        <button type="submit" class="govuk-button">Continue</button>
+  </form>
 
 
 {% endblock %}

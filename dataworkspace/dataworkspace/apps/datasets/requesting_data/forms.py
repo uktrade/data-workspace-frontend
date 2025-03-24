@@ -75,21 +75,32 @@ class DatasetDataOriginForm(GOVUKDesignSystemForm):
         ),
     )
 
-class DatasetIAOForm(GOVUKDesignSystemForm):
-
-    information_asset_owner = GOVUKDesignSystemCharField(
-        label="Name of Information Asset Owner",
-        help_text="IAO's are responsible for ensuring information assets are handled and managed appropriately",
-        required=True,
-        widget=GOVUKDesignSystemTextWidget(
-            label_is_heading=True,
-            label_size="m",
-        ),
-    )
-
     def clean(self):
+        User = get_user_model()
         cleaned_data = super().clean()
         print('HELLO IM IN THE CLEANED DATA')
+        print(cleaned_data)
+        return cleaned_data
+
+class DatasetIAOForm(forms.Form):
+    
+
+    # information_asset_owner = GOVUKDesignSystemCharField(
+    #     label="Name of Information Asset Owner",
+    #     help_text="IAO's are responsible for ensuring information assets are handled and managed appropriately",
+    #     required=True,
+    #     widget=GOVUKDesignSystemTextWidget(
+    #         label_is_heading=True,
+    #         label_size="m",
+    #     ),
+    # )
+
+
+    def clean(self):
+        User = get_user_model()
+        cleaned_data = super().clean()
+        print('HELLO IM IN THE CLEANED DATA')
+        cleaned_data["information_asset_owner"] = User.objects.get(first_name="Vyvyan")
         print(cleaned_data)
         return cleaned_data
 

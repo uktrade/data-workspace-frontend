@@ -78,25 +78,33 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
             return "datasets/requesting_data/user_search.html"
         else:
             return "datasets/requesting_data/summary_information.html"
-
-    def render(self, form=None, **kwargs):
-        form = form or self.get_form()
-        context = self.get_context_data(form=form, **kwargs)
-        print('IM IN THE RENDER METHOD')
-        print(form)
-        return self.render_to_response(context)
-
         
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form=form, **kwargs)
         User = get_user_model()
         if self.steps.current == "iao":
-            try: 
-                self.request.GET.dict()["search"]
-                search = self.request.GET.dict()["search"]
-                iao_first_name = search.split(" ")[0].capitalize()
-                iao_last_name = search.split(" ")[1].capitalize()
-                iao_user = User.objects.get(first_name=iao_first_name, last_name=iao_last_name)
+            # try: 
+            #     # self.request.GET.dict()["search"]
+            #     # search = self.request.GET.dict()["search"]
+            #     # iao_first_name = search.split(" ")[0].capitalize()
+            #     # iao_last_name = search.split(" ")[1].capitalize()
+            #     # iao_user = User.objects.get(first_name=iao_first_name, last_name=iao_last_name)
+            #     iao_user = User.objects.get(first_name="Vyvyan")
+            #     search_results = []
+            #     # for user in iao_user:
+            #     #     print(user)
+            #     search_results.append(
+            #             {
+            #                 "id": iao_user.id,
+            #                 "first_name": iao_user.first_name,
+            #                 "last_name": iao_user.last_name,
+            #                 "email": iao_user.email,
+            #             }
+            #         )
+            #     context["search_results"] = search_results
+            # except:
+            #     return context
+                iao_user = User.objects.get(first_name="Vyvyan")
                 search_results = []
                 # for user in iao_user:
                 #     print(user)
@@ -109,15 +117,16 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
                         }
                     )
                 context["search_results"] = search_results
-            except:
-                return context
         return context
     
     def process_step(self, form):
         print('HELLO IM IN THE PROCESS STEP')
-        print(self)
+        print(form)
         return self.get_form_step_data(form)
-
+    
+    # def post(self, request, *args, **kwargs):
+    #     print('HELLO IM IN THE POST METHOD')
+    #     print(request.__dict__)
 
     def done(self, form_list, **kwargs):
 
@@ -136,7 +145,7 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         User = get_user_model()
 
         requesting_dataset = RequestingDataset.objects.create(
-            name=form_list[0].cleaned_data.get("name")
+            name=form_list[0].cleaned_data.get("name"),
         )
         requesting_dataset.save()
 
