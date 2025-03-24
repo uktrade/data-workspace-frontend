@@ -12,7 +12,7 @@
 {% endblock %}
 {% block content %}
 
-    <!-- <div class="govuk-grid-row">
+    <div class="govuk-grid-row">
       <div class="govuk-grid-column-two-thirds">
           <h1 class="govuk-heading-l">Summary information</h1>
             <label class="govuk-label govuk-label--m ">Name of information asset owners</label>
@@ -51,12 +51,11 @@
                         <table class="govuk-table">
                           <caption class="govuk-table__caption govuk-table__caption--m">Found {{ search_results.count }} matching user{% if search_results.count > 1 %}s{% else %} for {{ search_query }}{% endif %}</caption>
                           <tbody class="govuk-table__body">
-
                               {% for result in search_results %}
                               <tr class="govuk-table__row">
                                   <td class="govuk-table__cell">{{ result.first_name }} {{ result.last_name }}</td>
                                   <td class="govuk-table__cell">{{ result.email }}</td>
-                                  <input id="information_asset_owner" name="information_asset_owner" value="{{result}}">
+                                  <input id="information_asset_owner" name="iao-information_asset_owner" value="{{result.id}}">
                                   <td class="govuk-table__cell"><button type="submit" class="govuk-button">Add</button></td>
                                 </tr>
                               {% endfor %}
@@ -72,14 +71,16 @@
               </div>
               {% endif %}
       </div>
-  </div> -->
+  </div>
 
-  <form action="" method="post">
+  <!-- <form action="" method="post">
     {% csrf_token %}
       {{ wizard.management_form }}
-      <input id="information_asset_owner" name="information_asset_owner" value="{{search_results}}">
+      {% for result in search_results %}
+      <input id="information_asset_owner" name="iao-information_asset_owner" value="{{result.id}}">
         <button type="submit" class="govuk-button">Continue</button>
-  </form>
+      {% endfor %}
+  </form> -->
 
 
 {% endblock %}
