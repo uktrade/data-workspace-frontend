@@ -16,7 +16,7 @@ amqp==5.1.1
     # via kombu
 asgiref==3.7.2
     # via django
-async-timeout==4.0.2
+async-timeout==5.0.1
     # via
     #   aiohttp
     #   redis
@@ -85,6 +85,7 @@ dj-database-url==0.5.0
 django==4.2.20
     # via
     #   -r requirements.in
+    #   django-admin-inline-paginator
     #   django-admin-sortable2
     #   django-appconf
     #   django-celery-results
@@ -98,6 +99,8 @@ django==4.2.20
     #   django-redis
     #   django-staff-sso-client
     #   djangorestframework
+django-admin-inline-paginator==0.4.0
+    # via -r requirements.in
 django-admin-sortable2==2.1.10
     # via -r requirements.in
 django-appconf==1.0.4
