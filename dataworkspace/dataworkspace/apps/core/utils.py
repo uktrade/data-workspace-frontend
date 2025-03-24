@@ -152,7 +152,10 @@ def transaction_and_lock(cursor, lock_id):
 
 def new_private_database_credentials(
     db_role_and_schema_suffix,
-    source_tables,
+    source_tables_individual,
+    user_email_domain,
+    source_tables_email_domain,
+    source_tables_common,
     db_user,
     dw_user: get_user_model(),
     valid_for: datetime.timedelta,
@@ -183,7 +186,9 @@ def new_private_database_credentials(
     def postgres_password():
         return "".join(secrets.choice(password_alphabet) for i in range(64))
 
-    def get_new_credentials(database_memorable_name, tables):
+    def get_new_credentials(
+        database_memorable_name, tables_individual, tables_email_domain, tables_common
+    ):
         # Each real-world user is given
         # - a private and permanent schema where they can manage tables and rows as needed
         # - a permanent database role that is the owner of the schema
@@ -196,8 +201,33 @@ def new_private_database_credentials(
         database_data = settings.DATABASES_DATA[database_memorable_name]
         valid_until = datetime.datetime.now() + valid_for
 
-        schema_names = without_duplicates_preserve_order(
-            schema_name for schema_name, table_name in tables
+        tables_individual_by_dataset_id = [
+            (dataset_id, tuple(tables_for_dataset_id))
+            for dataset_id, tables_for_dataset_id in itertools.groupby(
+                sorted(tables_individual), lambda t: t[0]
+            )
+        ]
+
+        schema_names_common = without_duplicates_preserve_order(
+            schema_name for dataset_id, schema_name, table_name in tables_common
+        )
+
+        schema_names_common_set = set(schema_names_common)
+        schema_names_email_domain = tuple(
+            schema_name
+            for schema_name in without_duplicates_preserve_order(
+                _schema_name for dataset_id, _schema_name, table_name in tables_email_domain
+            )
+            if schema_name not in schema_names_common_set
+        )
+
+        schema_names_email_domain_set = set(schema_names_email_domain)
+        schema_names_individual = tuple(
+            schema_name
+            for schema_name in without_duplicates_preserve_order(
+                _schema_name for dataset_id, _schema_name, table_name in tables_individual
+            )
+            if schema_name not in schema_names_email_domain_set
         )
 
         with database_engine(database_data).connect() as sync_roles_conn:
@@ -217,15 +247,56 @@ def new_private_database_credentials(
             sync_roles(
                 sync_roles_conn,
                 db_role,
-                grants=tuple(SchemaUsage(schema_name) for schema_name in schema_names)
-                + tuple(TableSelect(schema_name, table_name) for schema_name, table_name in tables)
+                grants=tuple(SchemaUsage(schema_name) for schema_name in schema_names_individual)
+                + tuple(
+                    RoleMembership("dataset-" + str(dataset_id))
+                    for dataset_id, _ in tables_individual_by_dataset_id
+                )
                 + tuple(RoleMembership(role_name) for role_name in db_shared_roles)
                 + (
+                    RoleMembership("common"),
                     SchemaOwnership(db_role),
                     SchemaCreate(db_role),
                     SchemaUsage(db_role),
+                )
+                + (
+                    (RoleMembership("@" + user_email_domain),)
+                    if user_email_domain is not None
+                    else ()
                 ),
                 preserve_existing_grants_in_schemas=(db_role,),
+                lock_key=GLOBAL_LOCK_ID,
+            )
+            if user_email_domain is not None:
+                sync_roles(
+                    sync_roles_conn,
+                    "@" + user_email_domain,
+                    grants=tuple(
+                        TableSelect(schema_name, table_name, direct=True)
+                        for dataset_id, schema_name, table_name in tables_email_domain
+                    ),
+                    lock_key=GLOBAL_LOCK_ID,
+                )
+            for dataset_id, tables_for_dataset_id in tables_individual_by_dataset_id:
+                sync_roles(
+                    sync_roles_conn,
+                    "dataset-" + str(dataset_id),
+                    grants=tuple(
+                        TableSelect(schema_name, table_name, direct=True)
+                        for _, schema_name, table_name in tables_for_dataset_id
+                    ),
+                    lock_key=GLOBAL_LOCK_ID,
+                )
+            sync_roles(
+                sync_roles_conn,
+                "common",
+                grants=tuple(
+                    SchemaUsage(schema_name, direct=True) for schema_name in schema_names_common
+                )
+                + tuple(
+                    TableSelect(schema_name, table_name, direct=True)
+                    for dataset_id, schema_name, table_name in tables_common
+                ),
                 lock_key=GLOBAL_LOCK_ID,
             )
             # ... which have ownership of a single schema each, its team schema. We don't call
@@ -310,26 +381,61 @@ def new_private_database_credentials(
             "db_password": db_password,
         }
 
-    database_to_tables = {
+    database_to_tables_individual = {
         database_memorable_name: [
-            (source_table["schema"], source_table["table"])
+            (source_table["dataset"]["id"], source_table["schema"], source_table["table"])
             for source_table in source_tables_for_database
         ]
         for database_memorable_name, source_tables_for_database in itertools.groupby(
-            source_tables, lambda source_table: source_table["database"]
+            source_tables_individual, lambda source_table: source_table["database"]
         )
     }
 
-    # Sometime we want to make sure credentials have been created for a database, even if the user has no explicit
+    database_to_tables_email_domain = {
+        database_memorable_name: [
+            (source_table["dataset"]["id"], source_table["schema"], source_table["table"])
+            for source_table in source_tables_for_database
+        ]
+        for database_memorable_name, source_tables_for_database in itertools.groupby(
+            source_tables_email_domain, lambda source_table: source_table["database"]
+        )
+    }
+
+    database_to_tables_common = {
+        database_memorable_name: [
+            (source_table["dataset"]["id"], source_table["schema"], source_table["table"])
+            for source_table in source_tables_for_database
+        ]
+        for database_memorable_name, source_tables_for_database in itertools.groupby(
+            source_tables_common, lambda source_table: source_table["database"]
+        )
+    }
+
+    # Sometimes we want to make sure credentials have been created for a database, even if the user has no explicit
     # access to tables in that database (e.g. for Data Explorer, where ensuring they can always connect to the database
     # can prevent a number of failure conditions.)
     for extra_db in force_create_for_databases:
-        if extra_db not in database_to_tables:
-            database_to_tables[extra_db] = []
+        if extra_db not in database_to_tables_individual:
+            database_to_tables_individual[extra_db] = []
+        if extra_db not in database_to_tables_email_domain:
+            database_to_tables_email_domain[extra_db] = []
+        if extra_db not in database_to_tables_common:
+            database_to_tables_common[extra_db] = []
+
+    database_names = (
+        set(database_to_tables_individual.keys())
+        | set(database_to_tables_email_domain.keys())
+        | set(database_to_tables_common.keys())
+    )
 
     creds = [
-        get_new_credentials(database_memorable_name, tables)
-        for database_memorable_name, tables in database_to_tables.items()
+        get_new_credentials(
+            database_memorable_name,
+            database_to_tables_individual.get(database_memorable_name, ()),
+            database_to_tables_email_domain.get(database_memorable_name, ()),
+            database_to_tables_common.get(database_memorable_name, ()),
+        )
+        for database_memorable_name in database_names
     ]
 
     if dw_user is not None:
@@ -444,7 +550,7 @@ def source_tables_for_user(user):
     # The `dataset__reference_code` field is not used in many cases, but is accessed
     # in the DataSet's __init__ function, and so results in a database query for
     # each Dataset if it isn't select_related or prefetch_related up-front
-    req_authentication_tables = SourceTable.objects.filter(
+    req_authentication_tables_published = SourceTable.objects.filter(
         Q(
             dataset__user_access_type__in=[
                 UserAccessType.REQUIRES_AUTHENTICATION,
@@ -453,7 +559,7 @@ def source_tables_for_user(user):
         ),
         dataset__deleted=False,
         published=True,
-        **{"dataset__published": True} if not user.is_superuser else {},
+        dataset__published=True,
     ).values(
         "database__memorable_name",
         "schema",
@@ -462,6 +568,26 @@ def source_tables_for_user(user):
         "dataset__name",
         "dataset__user_access_type",
     )
+    req_authentication_tables_unpublished_if_superuser = SourceTable.objects.filter(
+        Q() if user.is_superuser else Q(pk__in=[]),
+        Q(
+            dataset__user_access_type__in=[
+                UserAccessType.REQUIRES_AUTHENTICATION,
+                UserAccessType.OPEN,
+            ]
+        ),
+        dataset__deleted=False,
+        published=True,
+        dataset__published=False,
+    ).values(
+        "database__memorable_name",
+        "schema",
+        "table",
+        "dataset__id",
+        "dataset__name",
+        "dataset__user_access_type",
+    )
+
     req_authorization_tables = SourceTable.objects.filter(
         dataset__user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
         dataset__deleted=False,
@@ -476,11 +602,12 @@ def source_tables_for_user(user):
         "dataset__name",
         "dataset__user_access_type",
     )
-    automatically_authorized_tables = SourceTable.objects.filter(
+
+    automatically_authorized_tables_published = SourceTable.objects.filter(
         dataset__deleted=False,
         dataset__authorized_email_domains__contains=[user_email_domain],
         published=True,
-        **{"dataset__published": True} if not user.is_superuser else {},
+        dataset__published=True,
     ).values(
         "database__memorable_name",
         "schema",
@@ -489,7 +616,35 @@ def source_tables_for_user(user):
         "dataset__name",
         "dataset__user_access_type",
     )
-    source_tables = [
+    automatically_authorized_tables_unpublished_if_superuser = SourceTable.objects.filter(
+        Q() if user.is_superuser else Q(pk__in=[]),
+        dataset__deleted=False,
+        dataset__authorized_email_domains__contains=[user_email_domain],
+        published=True,
+        dataset__published=False,
+    ).values(
+        "database__memorable_name",
+        "schema",
+        "table",
+        "dataset__id",
+        "dataset__name",
+        "dataset__user_access_type",
+    )
+
+    reference_tables_published = (
+        ReferenceDataset.objects.live()
+        .filter(deleted=False, published=True)
+        .exclude(external_database=None)
+        .values("external_database__memorable_name", "table_name", "uuid", "name")
+    )
+    reference_tables_unpublished_if_superuser = (
+        ReferenceDataset.objects.live()
+        .filter(Q() if user.is_superuser else Q(pk__in=[]), deleted=False)
+        .exclude(external_database=None)
+        .values("external_database__memorable_name", "table_name", "uuid", "name")
+    )
+
+    source_tables_individual = [
         {
             "database": x["database__memorable_name"],
             "schema": x["schema"],
@@ -500,11 +655,11 @@ def source_tables_for_user(user):
                 "user_access_type": x["dataset__user_access_type"],
             },
         }
-        for x in req_authentication_tables.union(
-            req_authorization_tables, automatically_authorized_tables
+        for x in req_authorization_tables.union(
+            automatically_authorized_tables_unpublished_if_superuser,
+            req_authentication_tables_unpublished_if_superuser,
         )
-    ]
-    reference_dataset_tables = [
+    ] + [
         {
             "database": x["external_database__memorable_name"],
             "schema": "public",
@@ -515,12 +670,54 @@ def source_tables_for_user(user):
                 "user_access_type": UserAccessType.REQUIRES_AUTHENTICATION,
             },
         }
-        for x in ReferenceDataset.objects.live()
-        .filter(deleted=False, **{"published": True} if not user.is_superuser else {})
-        .exclude(external_database=None)
-        .values("external_database__memorable_name", "table_name", "uuid", "name")
+        for x in reference_tables_unpublished_if_superuser
     ]
-    return source_tables + reference_dataset_tables
+
+    source_tables_email_domain = [
+        {
+            "database": x["database__memorable_name"],
+            "schema": x["schema"],
+            "table": x["table"],
+            "dataset": {
+                "id": x["dataset__id"],
+                "name": x["dataset__name"],
+                "user_access_type": x["dataset__user_access_type"],
+            },
+        }
+        for x in automatically_authorized_tables_published
+    ]
+
+    source_tables_common = [
+        {
+            "database": x["external_database__memorable_name"],
+            "schema": "public",
+            "table": x["table_name"],
+            "dataset": {
+                "id": x["uuid"],
+                "name": x["name"],
+                "user_access_type": UserAccessType.REQUIRES_AUTHENTICATION,
+            },
+        }
+        for x in reference_tables_published
+    ] + [
+        {
+            "database": x["database__memorable_name"],
+            "schema": x["schema"],
+            "table": x["table"],
+            "dataset": {
+                "id": x["dataset__id"],
+                "name": x["dataset__name"],
+                "user_access_type": x["dataset__user_access_type"],
+            },
+        }
+        for x in req_authentication_tables_published
+    ]
+
+    return (
+        source_tables_individual,
+        (user_email_domain, source_tables_email_domain),
+        source_tables_common,
+    )
 
 
 def source_tables_for_app(application_template):
@@ -542,6 +739,7 @@ def source_tables_for_app(application_template):
         "dataset__name",
         "dataset__user_access_type",
     )
+
     req_authorization_tables = SourceTable.objects.filter(
         published=True,
         dataset__published=True,
@@ -556,7 +754,15 @@ def source_tables_for_app(application_template):
         "dataset__name",
         "dataset__user_access_type",
     )
-    source_tables = [
+
+    reference_tables = (
+        ReferenceDataset.objects.live()
+        .filter(published=True, deleted=False)
+        .exclude(external_database=None)
+        .values("external_database__memorable_name", "table_name", "uuid", "name")
+    )
+
+    source_tables_non_common = [
         {
             "database": x["database__memorable_name"],
             "schema": x["schema"],
@@ -567,9 +773,10 @@ def source_tables_for_app(application_template):
                 "user_access_type": x["dataset__user_access_type"],
             },
         }
-        for x in req_authentication_tables.union(req_authorization_tables)
+        for x in req_authorization_tables
     ]
-    reference_dataset_tables = [
+
+    source_tables_common = [
         {
             "database": x["external_database__memorable_name"],
             "schema": "public",
@@ -580,12 +787,22 @@ def source_tables_for_app(application_template):
                 "user_access_type": UserAccessType.REQUIRES_AUTHENTICATION,
             },
         }
-        for x in ReferenceDataset.objects.live()
-        .filter(published=True, deleted=False)
-        .exclude(external_database=None)
-        .values("external_database__memorable_name", "table_name", "uuid", "name")
+        for x in reference_tables
+    ] + [
+        {
+            "database": x["database__memorable_name"],
+            "schema": x["schema"],
+            "table": x["table"],
+            "dataset": {
+                "id": x["dataset__id"],
+                "name": x["dataset__name"],
+                "user_access_type": x["dataset__user_access_type"],
+            },
+        }
+        for x in req_authentication_tables
     ]
-    return source_tables + reference_dataset_tables
+
+    return (source_tables_non_common, (None, []), source_tables_common)
 
 
 def view_exists(database, schema, view):

@@ -62,7 +62,15 @@ def spawn(
     user = get_user_model().objects.get(pk=user_id)
     application_instance = ApplicationInstance.objects.get(id=application_instance_id)
 
-    (source_tables, db_role_schema_suffix, db_user) = (
+    (
+        (
+            source_tables_individual,
+            (user_email_domain, source_tables_email_domain),
+            source_tables_common,
+        ),
+        db_role_schema_suffix,
+        db_user,
+    ) = (
         (
             source_tables_for_user(user),
             db_role_schema_suffix_for_user(user),
@@ -78,7 +86,10 @@ def spawn(
 
     credentials = new_private_database_credentials(
         db_role_schema_suffix,
-        source_tables,
+        source_tables_individual,
+        user_email_domain,
+        source_tables_email_domain,
+        source_tables_common,
         db_user,
         user if application_instance.application_template.application_type == "TOOL" else None,
         valid_for=datetime.timedelta(days=31),

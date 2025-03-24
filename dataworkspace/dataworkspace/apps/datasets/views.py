@@ -48,8 +48,8 @@ from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
     database_dsn,
-    is_last_days_remaining_notification_banner,
     get_notification_banner,
+    is_last_days_remaining_notification_banner,
     streaming_query_response,
     table_data,
     view_exists,

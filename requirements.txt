@@ -16,7 +16,7 @@ amqp==5.1.1
     # via kombu
 asgiref==3.7.2
     # via django
-async-timeout==4.0.2
+async-timeout==5.0.1
     # via
     #   aiohttp
     #   redis
@@ -82,9 +82,10 @@ cryptography==44.0.1
     # via -r requirements.in
 dj-database-url==0.5.0
     # via -r requirements.in
-django==4.2.18
+django==4.2.20
     # via
     #   -r requirements.in
+    #   django-admin-inline-paginator
     #   django-admin-sortable2
     #   django-appconf
     #   django-celery-results
@@ -98,6 +99,8 @@ django==4.2.18
     #   django-redis
     #   django-staff-sso-client
     #   djangorestframework
+django-admin-inline-paginator==0.4.0
+    # via -r requirements.in
 django-admin-sortable2==2.1.10
     # via -r requirements.in
 django-appconf==1.0.4
@@ -157,7 +160,9 @@ geoalchemy2==0.8.4
 gevent==23.9.1
     # via -r requirements.in
 greenlet==3.0.1
-    # via gevent
+    # via
+    #   gevent
+    #   sqlalchemy
 hawk-server-asyncio==0.0.13
     # via -r requirements.in
 idna==3.7
@@ -204,7 +209,7 @@ packaging==22.0
     # via bleach
 paste==3.4.3
     # via -r requirements.in
-pg-sync-roles==0.0.41
+pg-sync-roles==0.0.43
     # via -r requirements.in
 pglast==3.18
     # via -r requirements.in
@@ -293,7 +298,9 @@ six==1.15.0
     #   tenacity
     #   zenpy
 smart-open[s3]==6.4.0
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   smart-open
 soupsieve==2.3.2.post1
     # via beautifulsoup4
 sqlalchemy==2.0.12

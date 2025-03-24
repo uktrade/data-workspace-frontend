@@ -9,6 +9,6 @@
     </span>
     <h3 class="govuk-heading-m">{{ dataset.name }}</h3>
     <p>{{ dataset.short_description | truncatechars:225 }}</p>
-    <a class="govuk-link" href="{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}#{{ dataset.slug }}">Visit page</a>
+    <a class="govuk-link" href="{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}">Visit page</a>
   </div>
 </div>
