@@ -23,7 +23,7 @@ A feature request can be submitted using the [Ideas category in Data Workspace d
 
 ## Documentation
 
-The source of the documentation is in the [`docs/`](https://github.com/uktrade/data-workspace/tree/master/docs) directory of the source code, and is written using [Material for mkdocs](https://squidfunk.github.io/mkdocs-material/).
+The source of the documentation is in the [`docs/`](https://github.com/uktrade/data-workspace/tree/main/docs) directory of the source code, and is written using [Material for mkdocs](https://squidfunk.github.io/mkdocs-material/).
 
 Changes are then submitted via a Pull Request (PR). To do this:
 
@@ -53,7 +53,7 @@ Changes are then submitted via a Pull Request (PR). To do this:
     git push origin docs/add-example
     ```
 
-6. Raise a PR at [https://github.com/uktrade/data-workspace/pulls](https://github.com/uktrade/data-workspace/pulls) against the master branch in data-workspace.
+6. Raise a PR at [https://github.com/uktrade/data-workspace/pulls](https://github.com/uktrade/data-workspace/pulls) against the main branch in data-workspace.
 
 7. Wait for the PR to be approved and merged, and respond to any questions or suggested changes.
 
@@ -80,7 +80,7 @@ Changes are submitted via a Pull Request (PR). To do this:
 
     See [Running tests](https://data-workspace.docs.trade.gov.uk/development/running-tests/) for more details on running tests.
 
-4. Make your changes in a text editor. In the cases of changing behaviour, this would usually include changing or adding tests within [dataworkspace/dataworkspace/tests](https://github.com/uktrade/data-workspace/tree/master/dataworkspace/dataworkspace/tests), and running them.
+4. Make your changes in a text editor. In the cases of changing behaviour, this would usually include changing or adding tests within [dataworkspace/dataworkspace/tests](https://github.com/uktrade/data-workspace/tree/main/dataworkspace/dataworkspace/tests), and running them.
 
 
 5. Commit your changes and push to your fork. Ideally the commit message will follow the [Conventional Commit specification](https://www.conventionalcommits.org/):
@@ -91,6 +91,6 @@ Changes are submitted via a Pull Request (PR). To do this:
     git push origin fix/the-bug-description
     ```
 
-6. Raise a PR at [https://github.com/uktrade/data-workspace/pulls](https://github.com/uktrade/data-workspace/pulls) against the master branch of data-workspace.
+6. Raise a PR at [https://github.com/uktrade/data-workspace/pulls](https://github.com/uktrade/data-workspace/pulls) against the main branch of data-workspace.
 
 7. Wait for the PR to be approved and merged, and respond to any questions or suggested changes.

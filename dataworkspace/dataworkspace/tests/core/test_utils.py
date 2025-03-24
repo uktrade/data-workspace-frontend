@@ -108,11 +108,12 @@ class TestPostgresUser:
         user_count = DatabaseUser.objects.count()
 
         user = factories.UserFactory()
-        source_tables = source_tables_for_user(user)
+        source_tables_user_non_common, source_tables_user_common = source_tables_for_user(user)
         db_role_schema_suffix = db_role_schema_suffix_for_user(user)
         new_private_database_credentials(
             db_role_schema_suffix,
-            source_tables,
+            source_tables_user_non_common,
+            source_tables_user_common,
             user.email,
             user,
             valid_for=datetime.timedelta(days=31),
@@ -133,11 +134,12 @@ class TestNewPrivateDatabaseCredentials:
             )
         )
 
-        source_tables = source_tables_for_user(user)
+        source_tables_user_non_common, source_tables_user_common = source_tables_for_user(user)
         db_role_schema_suffix = db_role_schema_suffix_for_user(user)
         user_creds_to_drop = new_private_database_credentials(
             db_role_schema_suffix,
-            source_tables,
+            source_tables_user_non_common,
+            source_tables_user_common,
             postgres_user(user.email),
             user,
             valid_for=datetime.timedelta(days=1),
@@ -165,25 +167,28 @@ class TestDeleteUnusedDatasetsUsers:
             dataset=MasterDataSetFactory.create(user_access_type="REQUIRES_AUTHENTICATION")
         )
 
-        source_tables = source_tables_for_user(user)
+        source_tables_user_non_common, source_tables_user_common = source_tables_for_user(user)
         db_role_schema_suffix = db_role_schema_suffix_for_user(user)
         user_creds_to_drop = new_private_database_credentials(
             db_role_schema_suffix,
-            source_tables,
+            source_tables_user_non_common,
+            source_tables_user_common,
             postgres_user(user.email),
             user,
             valid_for=datetime.timedelta(days=31),
         )
         qs_creds_to_drop = new_private_database_credentials(
             db_role_schema_suffix,
-            source_tables,
+            source_tables_user_non_common,
+            source_tables_user_common,
             postgres_user(user.email, suffix="qs"),
             user,
             valid_for=datetime.timedelta(seconds=0),
         )
         qs_creds_to_keep = new_private_database_credentials(
             db_role_schema_suffix,
-            source_tables,
+            source_tables_user_non_common,
+            source_tables_user_common,
             postgres_user(user.email, suffix="qs"),
             user,
             valid_for=datetime.timedelta(minutes=1),

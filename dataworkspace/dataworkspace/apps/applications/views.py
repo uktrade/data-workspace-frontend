@@ -1434,8 +1434,13 @@ def _datasets(user, application_template):
     # to reverse the change, which may need urgent contact with support to
     # restore access
 
-    source_tables_user = source_tables_for_user(user)
-    source_tables_app = source_tables_for_app(application_template)
+    source_tables_user_non_common, source_tables_user_common = source_tables_for_user(user)
+    source_tables_user = source_tables_user_non_common + source_tables_user_common
+
+    source_tables_app_non_common, source_tables_app_common = source_tables_for_app(
+        application_template
+    )
+    source_tables_app = source_tables_app_non_common + source_tables_app_common
 
     selectable_dataset_ids = set(
         source_table["dataset"]["id"]

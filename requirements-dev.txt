@@ -377,8 +377,8 @@ pep517==0.10.0
     # via pip-tools
 pexpect==4.8.0
     # via ipython
-pg-sync-roles==0.0.38
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+pg-sync-roles==0.0.41
+    # via -r requirements.txt
 pglast==3.18
     # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
 pickleshare==0.7.5
@@ -550,7 +550,7 @@ sentry-sdk==2.8.0
     # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
 six==1.15.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   asttokens
     #   bleach
     #   click-repl

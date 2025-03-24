@@ -36,6 +36,8 @@ class TestGetSupersetCredentialsAPIView:
         ]
         mock_new_credentials.return_value = credentials
 
+        mock_source_tables.return_value = ([], [])
+
         user = factories.UserFactory()
         tools_permission = Permission.objects.get(
             codename="start_all_applications",
