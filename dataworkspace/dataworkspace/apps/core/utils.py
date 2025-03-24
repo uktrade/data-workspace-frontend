@@ -201,16 +201,33 @@ def new_private_database_credentials(
         database_data = settings.DATABASES_DATA[database_memorable_name]
         valid_until = datetime.datetime.now() + valid_for
 
-        schema_names_individual = without_duplicates_preserve_order(
-            schema_name for schema_name, table_name in tables_individual
-        )
-
-        schema_names_email_domain = without_duplicates_preserve_order(
-            schema_name for schema_name, table_name in tables_email_domain
-        )
+        tables_individual_by_dataset_id = [
+            (dataset_id, tuple(tables_for_dataset_id))
+            for dataset_id, tables_for_dataset_id in itertools.groupby(
+                sorted(tables_individual), lambda t: t[0]
+            )
+        ]
 
         schema_names_common = without_duplicates_preserve_order(
-            schema_name for schema_name, table_name in tables_common
+            schema_name for dataset_id, schema_name, table_name in tables_common
+        )
+
+        schema_names_common_set = set(schema_names_common)
+        schema_names_email_domain = tuple(
+            schema_name
+            for schema_name in without_duplicates_preserve_order(
+                _schema_name for dataset_id, _schema_name, table_name in tables_email_domain
+            )
+            if schema_name not in schema_names_common_set
+        )
+
+        schema_names_email_domain_set = set(schema_names_email_domain)
+        schema_names_individual = tuple(
+            schema_name
+            for schema_name in without_duplicates_preserve_order(
+                _schema_name for dataset_id, _schema_name, table_name in tables_individual
+            )
+            if schema_name not in schema_names_email_domain_set
         )
 
         with database_engine(database_data).connect() as sync_roles_conn:
@@ -232,8 +249,8 @@ def new_private_database_credentials(
                 db_role,
                 grants=tuple(SchemaUsage(schema_name) for schema_name in schema_names_individual)
                 + tuple(
-                    TableSelect(schema_name, table_name)
-                    for schema_name, table_name in tables_individual
+                    RoleMembership("dataset-" + str(dataset_id))
+                    for dataset_id, _ in tables_individual_by_dataset_id
                 )
                 + tuple(RoleMembership(role_name) for role_name in db_shared_roles)
                 + (
@@ -255,12 +272,18 @@ def new_private_database_credentials(
                     sync_roles_conn,
                     "@" + user_email_domain,
                     grants=tuple(
-                        SchemaUsage(schema_name, direct=True)
-                        for schema_name in schema_names_email_domain
-                    )
-                    + tuple(
                         TableSelect(schema_name, table_name, direct=True)
-                        for schema_name, table_name in tables_email_domain
+                        for dataset_id, schema_name, table_name in tables_email_domain
+                    ),
+                    lock_key=GLOBAL_LOCK_ID,
+                )
+            for dataset_id, tables_for_dataset_id in tables_individual_by_dataset_id:
+                sync_roles(
+                    sync_roles_conn,
+                    "dataset-" + str(dataset_id),
+                    grants=tuple(
+                        TableSelect(schema_name, table_name, direct=True)
+                        for _, schema_name, table_name in tables_for_dataset_id
                     ),
                     lock_key=GLOBAL_LOCK_ID,
                 )
@@ -272,7 +295,7 @@ def new_private_database_credentials(
                 )
                 + tuple(
                     TableSelect(schema_name, table_name, direct=True)
-                    for schema_name, table_name in tables_common
+                    for dataset_id, schema_name, table_name in tables_common
                 ),
                 lock_key=GLOBAL_LOCK_ID,
             )
@@ -360,7 +383,7 @@ def new_private_database_credentials(
 
     database_to_tables_individual = {
         database_memorable_name: [
-            (source_table["schema"], source_table["table"])
+            (source_table["dataset"]["id"], source_table["schema"], source_table["table"])
             for source_table in source_tables_for_database
         ]
         for database_memorable_name, source_tables_for_database in itertools.groupby(
@@ -370,7 +393,7 @@ def new_private_database_credentials(
 
     database_to_tables_email_domain = {
         database_memorable_name: [
-            (source_table["schema"], source_table["table"])
+            (source_table["dataset"]["id"], source_table["schema"], source_table["table"])
             for source_table in source_tables_for_database
         ]
         for database_memorable_name, source_tables_for_database in itertools.groupby(
@@ -380,7 +403,7 @@ def new_private_database_credentials(
 
     database_to_tables_common = {
         database_memorable_name: [
-            (source_table["schema"], source_table["table"])
+            (source_table["dataset"]["id"], source_table["schema"], source_table["table"])
             for source_table in source_tables_for_database
         ]
         for database_memorable_name, source_tables_for_database in itertools.groupby(
