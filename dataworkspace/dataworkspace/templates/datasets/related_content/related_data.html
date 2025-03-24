@@ -4,7 +4,7 @@
 {% block page_title %}Related data for {{ dataset.name }} - Data Workspace{% endblock %}
 
 {% block go_back %}
-  <a class="govuk-back-link" href="{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}#{{ dataset.slug }}">
+  <a class="govuk-back-link" href="{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}">
     Back
   </a>
 {% endblock %}

@@ -530,7 +530,7 @@ class DataSet(DeletableTimestampedUserModel):
         return reverse("admin:datasets_datacutdataset_change", args=(self.id,))
 
     def get_absolute_url(self):
-        return "{}#{}".format(reverse("datasets:dataset_detail", args=(self.id,)), self.slug)
+        return "{}".format(reverse("datasets:dataset_detail", args=(self.id,)))
 
     def get_usage_history_url(self):
         return reverse("datasets:usage_history", args=(self.id,))
@@ -1911,7 +1911,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         return ["default"]
 
     def get_absolute_url(self):
-        return "{}#{}".format(reverse("datasets:dataset_detail", args=(self.uuid,)), self.slug)
+        return "{}".format(reverse("datasets:dataset_detail", args=(self.uuid,)))
 
     def get_admin_edit_url(self):
         return reverse("admin:datasets_referencedataset_change", args=(self.id,))
@@ -2640,7 +2640,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         return reverse("admin:datasets_visualisationcatalogueitem_change", args=(self.id,))
 
     def get_absolute_url(self):
-        return "{}#{}".format(reverse("datasets:dataset_detail", args=(self.id,)), self.slug)
+        return "{}".format(reverse("datasets:dataset_detail", args=(self.id,)))
 
     def get_stats_url(self):
         return reverse("api-v2:datasets:visualisation-stats", args=(self.id,))
