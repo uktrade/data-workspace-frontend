@@ -17,8 +17,8 @@ describe("Dataset list page searching", () => {
         .each(($el) => {
           cy.wrap($el)
             .should("have.attr", "href")
-            .should("contain", "datasets/");
-          cy.wrap($el).should("contain.text", "dataset");
+            .should("contain", "datasets/")
+            .should("contain.text", "dataset");
         });
     });
   });
