@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.forms import ValidationError
+from django.views.generic import FormView
 
 
 from dataworkspace.apps.datasets.models import RequestingDataset, SensitivityType
@@ -155,7 +156,7 @@ class DatasetOwnersForm(GOVUKDesignSystemForm):
             iao_user = User.objects.get(first_name=iao_first_name, last_name=iao_last_name)
             cleaned_data["information_asset_owner"] = iao_user
         except Exception:
-            raise ValidationError("This is not a real user")
+            raise ValidationError(f"{iao_user} is not a real user")
 
         iam_first_name = cleaned_data.get("information_asset_manager").split(" ")[0].capitalize()
         iam_last_name = cleaned_data.get("information_asset_manager").split(" ")[1].capitalize()
@@ -164,7 +165,7 @@ class DatasetOwnersForm(GOVUKDesignSystemForm):
             cleaned_data["information_asset_manager"] = iam_user
 
         except Exception:
-            raise ValidationError("This is not a real user")
+            raise ValidationError(f"{iam_user} is not a real user")
 
         enquiries_contact_first_name = (
             cleaned_data.get("enquiries_contact").split(" ")[0].capitalize()
@@ -179,7 +180,7 @@ class DatasetOwnersForm(GOVUKDesignSystemForm):
             cleaned_data["enquiries_contact"] = enquiries_contact_user
 
         except Exception:
-            raise ValidationError("This is not a real user")
+            raise ValidationError(f"{enquiries_contact_user} is not a real user")
 
         return cleaned_data
 
@@ -323,8 +324,8 @@ class DatasetSecurityClassificationForm(GOVUKDesignSystemModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        if cleaned_data['government_security_classification'] == None :
-            raise ValidationError('Please select a classification.')
+        if cleaned_data["government_security_classification"] is None:
+            raise ValidationError("Please select a classification.")
 
 
 class DatasetPersonalDataForm(GOVUKDesignSystemForm):
@@ -384,7 +385,7 @@ class DatasetRetentionPeriodForm(GOVUKDesignSystemForm):
             label_is_heading=True,
             label_size="m",
         ),
-        error_messages={"required": "Enter a table name"},
+        error_messages={"required": "Enter a retention period."},
     )
 
 
@@ -403,9 +404,29 @@ class DatasetUpdateFrequencyForm(GOVUKDesignSystemForm):
     )
     message = GOVUKDesignSystemTextareaField(
         required=False,
-        label="Tell us how we can help you",
+        label="Tell us how often the source data is update.",
         widget=GOVUKDesignSystemTextareaWidget(
             label_is_heading=False,
             attrs={"rows": 5},
+        ),
+    )
+
+
+class SummaryPageForm(GOVUKDesignSystemForm):
+
+    summary = GOVUKDesignSystemCharField(
+        required=False,
+        label="SUMMARY",
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False,
+        ),
+    )
+
+class TrackerPageForm(GOVUKDesignSystemForm):
+    summary = GOVUKDesignSystemCharField(
+        required=False,
+        label="SUMMARY",
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False,
         ),
     )
