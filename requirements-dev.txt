@@ -24,8 +24,6 @@ amqp==5.1.1
     #   kombu
 appdirs==1.4.4
     # via pyppeteer
-appnope==0.1.4
-    # via ipython
 asgiref==3.7.2
     # via
     #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
@@ -146,8 +144,8 @@ debugpy==1.2.1
 decorator==4.4.2
     # via ipython
 dj-database-url==0.5.0
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
-django==4.2.18
+    # via -r requirements.txt
+django==4.2.20
     # via
     #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
     #   django-admin-inline-paginator
@@ -260,6 +258,7 @@ greenlet==3.0.1
     # via
     #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
     #   gevent
+    #   sqlalchemy
 h11==0.13.0
     # via wsproto
 hawk-server-asyncio==0.0.13
@@ -377,7 +376,7 @@ pep517==0.10.0
     # via pip-tools
 pexpect==4.8.0
     # via ipython
-pg-sync-roles==0.0.41
+pg-sync-roles==0.0.43
     # via -r requirements.txt
 pglast==3.18
     # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt

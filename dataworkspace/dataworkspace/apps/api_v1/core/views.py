@@ -97,17 +97,21 @@ def get_superset_credentials(request):
         else:
             dashboards_user_can_access = []
 
-            source_tables_user_non_common, source_tables_user_common = source_tables_for_user(
-                dw_user
-            )
+            (
+                source_tables_individual,
+                (user_email_domain, source_tables_email_domain),
+                source_tables_common,
+            ) = source_tables_for_user(dw_user)
 
             db_role_schema_suffix = stable_identification_suffix(
                 str(dw_user.profile.sso_id), short=True
             )
             credentials = new_private_database_credentials(
                 db_role_schema_suffix,
-                source_tables_user_non_common,
-                source_tables_user_common,
+                source_tables_individual,
+                user_email_domain,
+                source_tables_email_domain,
+                source_tables_common,
                 postgres_user(dw_user.email, suffix="superset"),
                 dw_user,
                 valid_for=duration,
