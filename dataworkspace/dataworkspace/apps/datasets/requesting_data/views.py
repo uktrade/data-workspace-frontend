@@ -75,9 +75,12 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         User = get_user_model()
         search_query = search_query.strip()
         email_filter = Q(email__icontains=search_query)
-        name_filter = Q(first_name__icontains=search_query) | Q(
-            last_name__icontains=search_query
-        )
+        if len(search_query.split(" ")) > 1:
+            name_filter = Q(first_name__icontains=search_query.split()[0]) | Q(
+            last_name__icontains=search_query.split(" ")[1])
+        else:
+            name_filter = Q(first_name__icontains=search_query) | Q(
+            last_name__icontains=search_query)
         users = User.objects.filter(Q(email_filter | name_filter))
 
         search_results = []
