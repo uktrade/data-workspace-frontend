@@ -55,7 +55,7 @@
                               <tr class="govuk-table__row">
                                   <td class="govuk-table__cell">{{ result.first_name }} {{ result.last_name }}</td>
                                   <td class="govuk-table__cell">{{ result.email }}</td>
-                                  <input id="information_asset_owner" name="iao-information_asset_owner" value="{{result.id}}">
+                                  <input type="hidden" id="information_asset_owner" name="iao-information_asset_owner" value="{{result.id}}">
                                   <td class="govuk-table__cell"><button type="submit" class="govuk-button">Add</button></td>
                                 </tr>
                               {% endfor %}
