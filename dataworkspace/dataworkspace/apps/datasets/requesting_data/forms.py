@@ -71,7 +71,7 @@ class DatasetDataOriginForm(GOVUKDesignSystemForm):
         ),
     )
 
-class DatasetIAOForm(forms.Form):
+class DatasetInformationAssetOwnerForm(forms.Form):
 
     information_asset_owner = forms.CharField(
         required=True,
@@ -85,64 +85,31 @@ class DatasetIAOForm(forms.Form):
         return cleaned_data
 
 
-class DatasetOwnersForm(GOVUKDesignSystemForm):
+class DatasetInformationAssetManagerForm(forms.Form):
 
-    information_asset_manager = GOVUKDesignSystemCharField(
-        label="Name of Information Asset Manager",
-        help_text="IAM's have knowledge and duties associated with an asset, and so often support the IAO",
+    information_asset_manager = forms.CharField(
         required=True,
-        widget=GOVUKDesignSystemTextWidget(
-            label_is_heading=True,
-            label_size="m",
-        ),
-    )
-
-    enquiries_contact = GOVUKDesignSystemCharField(
-        label="Contact person",
-        help_text="Description of contact person",
-        required=True,
-        widget=GOVUKDesignSystemTextWidget(
-            label_is_heading=True,
-            label_size="m",
-        ),
     )
 
     def clean(self):
-        cleaned_data = super().clean()
         User = get_user_model()
+        cleaned_data = super().clean()
+        user_id = cleaned_data["information_asset_manager"]
+        cleaned_data["information_asset_manager"] = User.objects.get(id=user_id)
+        return cleaned_data
 
-        iao_first_name = cleaned_data.get("information_asset_owner").split(" ")[0].capitalize()
-        iao_last_name = cleaned_data.get("information_asset_owner").split(" ")[1].capitalize()
-        try:
-            iao_user = User.objects.get(first_name=iao_first_name, last_name=iao_last_name)
-            cleaned_data["information_asset_owner"] = iao_user
-        except Exception:
-            raise ValidationError(f"{iao_user} is not a real user")
 
-        iam_first_name = cleaned_data.get("information_asset_manager").split(" ")[0].capitalize()
-        iam_last_name = cleaned_data.get("information_asset_manager").split(" ")[1].capitalize()
-        try:
-            iam_user = User.objects.get(first_name=iam_first_name, last_name=iam_last_name)
-            cleaned_data["information_asset_manager"] = iam_user
+class DatasetEnquiriesContactForm(forms.Form):
 
-        except Exception:
-            raise ValidationError(f"{iam_user} is not a real user")
+    enquiries_contact = forms.CharField(
+        required=True,
+    )
 
-        enquiries_contact_first_name = (
-            cleaned_data.get("enquiries_contact").split(" ")[0].capitalize()
-        )
-        enquiries_contact_last_name = (
-            cleaned_data.get("enquiries_contact").split(" ")[1].capitalize()
-        )
-        try:
-            enquiries_contact_user = User.objects.get(
-                first_name=enquiries_contact_first_name, last_name=enquiries_contact_last_name
-            )
-            cleaned_data["enquiries_contact"] = enquiries_contact_user
-
-        except Exception:
-            raise ValidationError(f"{enquiries_contact_user} is not a real user")
-
+    def clean(self):
+        User = get_user_model()
+        cleaned_data = super().clean()
+        user_id = cleaned_data["enquiries_contact"]
+        cleaned_data["enquiries_contact"] = User.objects.get(id=user_id)
         return cleaned_data
 
 

@@ -14,7 +14,9 @@ from dataworkspace.apps.datasets.models import DataSet, RequestingDataset
 from django.db.models import Q
 
 from dataworkspace.apps.datasets.requesting_data.forms import (
-    DatasetOwnersForm,
+    DatasetEnquiriesContactForm,
+    DatasetInformationAssetManagerForm,
+    DatasetInformationAssetOwnerForm,
     DatasetNameForm,
     DatasetDescriptionsForm,
     DatasetDataOriginForm,
@@ -32,7 +34,6 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetCommercialSensitiveForm,
     DatasetRetentionPeriodForm,
     DatasetUpdateFrequencyForm,
-    DatasetIAOForm,
     SummaryPageForm,
     TrackerPageForm
 )
@@ -43,22 +44,24 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         ("name", DatasetNameForm),
         ("descriptions", DatasetDescriptionsForm),
         ("origin", DatasetDataOriginForm),
-        ("iao", DatasetIAOForm),
-        ("owners", DatasetOwnersForm),
-        ("existing-system", DatasetExistingSystemForm),
-        ("licence", DatasetLicenceForm),
-        ("restrictions", DatasetRestrictionsForm),
-        ("usage", DatasetUsageForm),
-        ("security-classification", DatasetSecurityClassificationForm),
-        ("personal-data", DatasetPersonalDataForm),
-        ("special-personal-data", DatasetSpecialPersonalDataForm),
-        ("commercial-sensitive", DatasetCommercialSensitiveForm),
-        ("retention-period", DatasetRetentionPeriodForm),
-        ("update-frequency", DatasetUpdateFrequencyForm),
-        ("intended-access", DatasetIntendedAccessForm),
-        ("location-restrictions", DatasetLocationRestrictionsForm),
-        ("network-restrictions", DatasetNetworkRestrictionsForm),
-        ("user-restrictions", DatasetUserRestrictionsForm),
+        ("information-asset-owner", DatasetInformationAssetOwnerForm),
+        ("information-asset-manager", DatasetInformationAssetManagerForm),
+        ("enquiries-contact", DatasetEnquiriesContactForm),
+        # ("owners", DatasetOwnersForm),
+        # ("existing-system", DatasetExistingSystemForm),
+        # ("licence", DatasetLicenceForm),
+        # ("restrictions", DatasetRestrictionsForm),
+        # ("usage", DatasetUsageForm),
+        # ("security-classification", DatasetSecurityClassificationForm),
+        # ("personal-data", DatasetPersonalDataForm),
+        # ("special-personal-data", DatasetSpecialPersonalDataForm),
+        # ("commercial-sensitive", DatasetCommercialSensitiveForm),
+        # ("retention-period", DatasetRetentionPeriodForm),
+        # ("update-frequency", DatasetUpdateFrequencyForm),
+        # ("intended-access", DatasetIntendedAccessForm),
+        # ("location-restrictions", DatasetLocationRestrictionsForm),
+        # ("network-restrictions", DatasetNetworkRestrictionsForm),
+        # ("user-restrictions", DatasetUserRestrictionsForm),
     ]
 
     def get_template_names(self):
@@ -66,7 +69,7 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
             return "datasets/requesting_data/security.html"
         if self.steps.current == "update-frequency":
             return "datasets/requesting_data/update_frequency_options.html"
-        if self.steps.current == "iao":
+        if self.steps.current == "information-asset-owner":
             return "datasets/requesting_data/user_search.html"
         else:
             return "datasets/requesting_data/summary_information.html"
@@ -99,11 +102,35 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form=form, **kwargs)
-        if self.steps.current == "iao":
-            context["form_page"] = "iao"
+        if self.steps.current == "information-asset-owner":
+            context["form_page"] = "information-asset-owner"
             context["field"] = "information_asset_owner"
             context["label"]= "Name of Information Asset Owner"
             context["help_text"]= "IAO's are responsible for ensuring information assets are handled and managed appropriately"
+            try: 
+                search_query = self.request.GET.dict()["search"]
+                context["search_query"] = search_query
+                if search_query:
+                    context["search_results"] = self.get_users(search_query=search_query)
+            except:
+                return context
+        elif self.steps.current == "information-asset-manager":
+            context["form_page"] = "information-asset-manager"
+            context["field"] = "information_asset_manager"
+            context["label"]= "Name of Information Asset Manager"
+            context["help_text"]= "IAM's ahve knowledge and duties associated with an asset, and so often support the IAO"
+            try: 
+                search_query = self.request.GET.dict()["search"]
+                context["search_query"] = search_query
+                if search_query:
+                    context["search_results"] = self.get_users(search_query=search_query)
+            except:
+                return context
+        elif self.steps.current == "enquiries-contact":
+            context["form_page"] = "enquiries-contact"
+            context["field"] = "enquiries_contact"
+            context["label"]= "Contact person"
+            context["help_text"]= "Description of contact person"
             try: 
                 search_query = self.request.GET.dict()["search"]
                 context["search_query"] = search_query
@@ -127,13 +154,18 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         ]
 
     def get_template_names(self):
+        user_search_pages = [
+            "information-asset-owner",
+            "information-asset-manager",
+            "enquiries-contact",
+        ]
         if self.steps.current == "security-classification":
             return "datasets/requesting_data/security.html"
         if self.steps.current == "update-frequency":
             return "datasets/requesting_data/update_frequency_options.html"
         if self.steps.current == "summary":
             return "datasets/requesting_data/summary.html"
-        if self.steps.current == "iao":
+        if self.steps.current in user_search_pages:
             return "datasets/requesting_data/user_search.html"
         else:
             return "datasets/requesting_data/summary_information.html"
