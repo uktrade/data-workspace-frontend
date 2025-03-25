@@ -272,6 +272,10 @@ def new_private_database_credentials(
                     sync_roles_conn,
                     "@" + user_email_domain,
                     grants=tuple(
+                        SchemaUsage(schema_name, direct=True)
+                        for schema_name in schema_names_email_domain
+                    )
+                    + tuple(
                         TableSelect(schema_name, table_name, direct=True)
                         for dataset_id, schema_name, table_name in tables_email_domain
                     ),
