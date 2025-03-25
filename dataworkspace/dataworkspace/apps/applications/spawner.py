@@ -298,6 +298,8 @@ class FargateSpawner:
             s3_host = options["S3_HOST"]
             s3_bucket = options["S3_BUCKET"]
 
+            matchbox_client_api_root = options.get("MATCHBOX_CLIENT_API_ROOT", "")
+
             platform_version = options.get("PLATFORM_VERSION", "1.3.0")
 
             # The database users are stored so when the database users are cleaned up,
@@ -322,7 +324,10 @@ class FargateSpawner:
 
             arangodb_env = arangodb_credentials
 
-            matchbox_env = {"MB__CLIENT__DEFAULT_WAREHOUSE": "postgresql://"}
+            matchbox_env = {
+                "MB__CLIENT__DEFAULT_WAREHOUSE": "postgresql://",
+                "MB__CLIENT__API_ROOT": matchbox_client_api_root,
+            }
 
             user_efs_access_point_id = (
                 user.profile.home_directory_efs_access_point_id
