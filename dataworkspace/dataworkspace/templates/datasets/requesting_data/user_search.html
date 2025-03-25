@@ -11,18 +11,14 @@
 {{ wizard.form.media }}
 {% endblock %}
 {% block content %}
-
-    <div class="govuk-grid-row">
-      <div class="govuk-grid-column-two-thirds">
-          <h1 class="govuk-heading-l">Summary information</h1>
-            <label class="govuk-label govuk-label--m ">Name of information asset owners</label>
-              {% if information_asset_owner %}
-                <div class="govuk-table__cell">{{ information_asset_owner.first_name }} {{ information_asset_owner.last_name }}</div>
-                <div class="govuk-table__cell">{{ information_asset_owner.email }}</div>
-              {% else %}
-              <div class="govuk-grid-row">
-                <div class="govuk-grid-column-two-thirds">
-                  {% include 'design_system/error_summary.html' with form=form %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">Summary information</h1>
+        <label class="govuk-label govuk-label--m ">{{label}}</label>
+          <div id="id_descriptions-short_description-hint" class="govuk-hint">{{help_text}}</div>
+            <div class="govuk-grid-row">
+              <div class="govuk-grid-column-two-thirds">
+                {% include 'design_system/error_summary.html' with form=form %}
                   <form action="" method="get" enctype="multipart/form-data" novalidate>
                     <fieldset class="govuk-fieldset">
                       <div class="govuk-form-group">
@@ -35,52 +31,40 @@
                     </fieldset>
                   </form>
                   {% if non_matches %}
-                  <h1 class="govuk-heading-l">Unable to match {{non_matches|length}}{% if non_matches|length == 1 %} email address to a user{% else %} email addresses to users{% endif %}</h1>
-                  <ul class="govuk-list govuk-!-margin-bottom-6">
-                    {% for non_match in non_matches %}
-                    <li class="govuk-body">
-                        {{ non_match }}
-                    </li>
-                    {% endfor %}
-                  </ul>
+                    <h1 class="govuk-heading-l">Unable to match {{non_matches|length}}{% if non_matches|length == 1 %} email address to a user{% else %} email addresses to users{% endif %}</h1>
+                    <ul class="govuk-list govuk-!-margin-bottom-6">
+                      {% for non_match in non_matches %}
+                        <li class="govuk-body">
+                          {{ non_match }}
+                        </li>
+                      {% endfor %}
+                    </ul>
                   {% endif %}
                   {% if search_results %}
-                  <form action="" method="post" novalidate>
-                    {% csrf_token %}
-                      {{ wizard.management_form }}
-                        <table class="govuk-table">
-                          <caption class="govuk-table__caption govuk-table__caption--m">Found {{ search_results.count }} matching user{% if search_results.count > 1 %}s{% else %} for {{ search_query }}{% endif %}</caption>
-                          <tbody class="govuk-table__body">
+                    <form action="" method="post" novalidate>
+                      {% csrf_token %}
+                        {{ wizard.management_form }}
+                          <table class="govuk-table">
+                            <caption class="govuk-table__caption govuk-table__caption--m">Found {{ search_results.count }} matching user{% if search_results.count > 1 %}s{% else %} for {{ search_query }}{% endif %}</caption>
+                            <tbody class="govuk-table__body">
                               {% for result in search_results %}
-                              <tr class="govuk-table__row">
-                                  <td class="govuk-table__cell">{{ result.first_name }} {{ result.last_name }}</td>
-                                  <td class="govuk-table__cell">{{ result.email }}</td>
-                                  <input type="hidden" id="information_asset_owner" name="iao-information_asset_owner" value="{{result.id}}">
-                                  <td class="govuk-table__cell"><button type="submit" class="govuk-button">Add</button></td>
-                                </tr>
+                                <tr class="govuk-table__row">
+                                    <td class="govuk-table__cell">{{ result.first_name }} {{ result.last_name }}</td>
+                                    <td class="govuk-table__cell">{{ result.email }}</td>
+                                    <input type="hidden" id="{{form_page}}" name="{{form_page}}-{{field}}" value="{{result.id}}">
+                                    <td class="govuk-table__cell"><button type="submit" class="govuk-button">Add</button></td>
+                                  </tr>
                               {% endfor %}
-                          </tbody>
-                        </table>
-                  </form>
+                            </tbody>
+                          </table>
+                    </form>
                   {% else %}
-                      {% if search_query and not non_matches %}
-                        <h2 class="govuk-heading-m">Found 0 results</h2>
-                      {% endif %}
+                    {% if search_query and not non_matches %}
+                      <h2 class="govuk-heading-m">Found 0 results</h2>
+                    {% endif %}
                   {% endif %}
-                </div>
               </div>
-              {% endif %}
-      </div>
+            </div>
+    </div>
   </div>
-
-  <!-- <form action="" method="post">
-    {% csrf_token %}
-      {{ wizard.management_form }}
-      {% for result in search_results %}
-      <input id="information_asset_owner" name="iao-information_asset_owner" value="{{result.id}}">
-        <button type="submit" class="govuk-button">Continue</button>
-      {% endfor %}
-  </form> -->
-
-
 {% endblock %}

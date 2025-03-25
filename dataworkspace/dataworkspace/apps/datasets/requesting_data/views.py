@@ -71,34 +71,41 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         else:
             return "datasets/requesting_data/summary_information.html"
         
+    def get_users(self, search_query):
+        User = get_user_model()
+        search_query = search_query.strip()
+        email_filter = Q(email__icontains=search_query)
+        name_filter = Q(first_name__icontains=search_query) | Q(
+            last_name__icontains=search_query
+        )
+        users = User.objects.filter(Q(email_filter | name_filter))
+
+        search_results = []
+
+        for user in users:
+            search_results.append(
+                {
+                    "id": user.id,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "email": user.email,
+                }
+            )
+        
+        return search_results
+        
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form=form, **kwargs)
         if self.steps.current == "iao":
+            context["form_page"] = "iao"
+            context["field"] = "information_asset_owner"
+            context["label"]= "Name of Information Asset Owner"
+            context["help_text"]= "IAO's are responsible for ensuring information assets are handled and managed appropriately"
             try: 
                 search_query = self.request.GET.dict()["search"]
                 context["search_query"] = search_query
                 if search_query:
-                        User = get_user_model()
-                        search_query = search_query.strip()
-                        email_filter = Q(email__icontains=search_query)
-                        name_filter = Q(first_name__icontains=search_query) | Q(
-                            last_name__icontains=search_query
-                        )
-                        users = User.objects.filter(Q(email_filter | name_filter))
-
-                        search_results = []
-
-                        for user in users:
-                            search_results.append(
-                                {
-                                    "id": user.id,
-                                    "first_name": user.first_name,
-                                    "last_name": user.last_name,
-                                    "email": user.email,
-                                }
-                            )
-
-                        context["search_results"] = search_results
+                    context["search_results"] = self.get_users(search_query=search_query)
             except:
                 return context
         return context

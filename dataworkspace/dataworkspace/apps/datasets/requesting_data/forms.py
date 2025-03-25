@@ -77,16 +77,9 @@ class DatasetDataOriginForm(GOVUKDesignSystemForm):
     )
 
 class DatasetIAOForm(forms.Form):
-    
 
-    information_asset_owner = GOVUKDesignSystemCharField(
-        label="Name of Information Asset Owner",
-        help_text="IAO's are responsible for ensuring information assets are handled and managed appropriately",
+    information_asset_owner = forms.CharField(
         required=True,
-        widget=GOVUKDesignSystemTextWidget(
-            label_is_heading=True,
-            label_size="m",
-        ),
     )
 
     def clean(self):
@@ -107,7 +100,7 @@ class DatasetOwnersForm(GOVUKDesignSystemForm):
     #         label_is_heading=True,
     #         label_size="m",
     #     ),
-    # )
+
 
     information_asset_manager = GOVUKDesignSystemCharField(
         label="Name of Information Asset Manager",
