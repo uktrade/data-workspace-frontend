@@ -59,11 +59,6 @@ class DatasetDescriptionsForm(GOVUKDesignSystemForm):
         ),
     )
 
-    # def clean(self):
-    #     cleaned_data = super().clean()
-    #     if len(cleaned_data['description']) < 30:
-    #         raise ValidationError('Description must have at minimum 30 words.')
-
 
 class DatasetDataOriginForm(GOVUKDesignSystemForm):
 
@@ -92,16 +87,6 @@ class DatasetIAOForm(forms.Form):
 
 class DatasetOwnersForm(GOVUKDesignSystemForm):
 
-    # information_asset_owner = GOVUKDesignSystemCharField(
-    #     label="Name of Information Asset Owner",
-    #     help_text="IAO's are responsible for ensuring information assets are handled and managed appropriately",
-    #     required=True,
-    #     widget=GOVUKDesignSystemTextWidget(
-    #         label_is_heading=True,
-    #         label_size="m",
-    #     ),
-
-
     information_asset_manager = GOVUKDesignSystemCharField(
         label="Name of Information Asset Manager",
         help_text="IAM's have knowledge and duties associated with an asset, and so often support the IAO",
@@ -121,14 +106,6 @@ class DatasetOwnersForm(GOVUKDesignSystemForm):
             label_size="m",
         ),
     )
-
-    # iao2 = GOVUKDesignSystemTextareaField(
-    #     label="Enter one or more email addresses on separate lines or search for a single user by name.",
-    #     widget=GOVUKDesignSystemTextareaWidget(
-    #         label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
-    #     ),
-    #     error_messages={"required": "You must provide a search term."},
-    # )
 
     def clean(self):
         cleaned_data = super().clean()
