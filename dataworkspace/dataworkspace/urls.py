@@ -38,7 +38,7 @@ from dataworkspace.apps.core.views import (
     table_data_view,
     welcome_page_view,
 )
-from dataworkspace.apps.datasets.requesting_data.views import RequestingDataWizardView
+from dataworkspace.apps.datasets.requesting_data.views import RequestingDataAboutThisDataWizardView, RequestingDataAccessRestrictionsWizardView, RequestingDataSummaryInformationWizardView
 from dataworkspace.apps.datasets.views import home_view
 
 logger = logging.getLogger("app")
@@ -135,9 +135,19 @@ urlpatterns = [
         name="add-dataset-request",
     ),
     path(
-        "requesting-data/<str:step>",
-        RequestingDataWizardView.as_view(url_name="requesting-data-step"),
-        name="requesting-data-step",
+        "requesting-data/summary-information/<str:step>",
+        RequestingDataSummaryInformationWizardView.as_view(url_name="requesting-data-summary-information-step"),
+        name="requesting-data-summary-information-step",
+    ),
+    path(
+        "requesting-data/about-this-data/<str:step>",
+        RequestingDataAboutThisDataWizardView.as_view(url_name="requesting-data-about-this-data-step"),
+        name="requesting-data-about-this-data-step",
+    ),
+    path(
+        "requesting-data/access-restrictions/<str:step>",
+        RequestingDataAccessRestrictionsWizardView.as_view(url_name="requesting-data-access-restrictions-step"),
+        name="requesting-data-access-restrictions-step",
     ),
     path(
         "support/custom-visualisation-review/",
