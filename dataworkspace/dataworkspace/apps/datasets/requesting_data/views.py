@@ -1,5 +1,6 @@
 import re
 from django.forms import model_to_dict
+from dataworkspace.tests.conftest import user
 from formtools.preview import FormPreview
 from formtools.wizard.views import NamedUrlSessionWizardView
 from django.contrib.auth import get_user_model
@@ -10,8 +11,12 @@ from django.views.generic import FormView
 
 from dataworkspace.apps.datasets.models import DataSet, RequestingDataset
 
+from django.db.models import Q
+
 from dataworkspace.apps.datasets.requesting_data.forms import (
-    DatasetOwnersForm,
+    DatasetEnquiriesContactForm,
+    DatasetInformationAssetManagerForm,
+    DatasetInformationAssetOwnerForm,
     DatasetNameForm,
     DatasetDescriptionsForm,
     DatasetDataOriginForm,
@@ -39,12 +44,14 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         ("name", DatasetNameForm),
         ("descriptions", DatasetDescriptionsForm),
         ("origin", DatasetDataOriginForm),
+        ("information-asset-owner", DatasetInformationAssetOwnerForm),
+        ("information-asset-manager", DatasetInformationAssetManagerForm),
+        ("enquiries-contact", DatasetEnquiriesContactForm),
         # ("owners", DatasetOwnersForm),
         # ("existing-system", DatasetExistingSystemForm),
         # ("licence", DatasetLicenceForm),
         # ("restrictions", DatasetRestrictionsForm),
         # ("usage", DatasetUsageForm),
-        ("summary", SummaryPageForm),
         # ("security-classification", DatasetSecurityClassificationForm),
         # ("personal-data", DatasetPersonalDataForm),
         # ("special-personal-data", DatasetSpecialPersonalDataForm),
@@ -55,9 +62,83 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         # ("location-restrictions", DatasetLocationRestrictionsForm),
         # ("network-restrictions", DatasetNetworkRestrictionsForm),
         # ("user-restrictions", DatasetUserRestrictionsForm),
-        ("summary", SummaryPageForm),
-
     ]
+
+    def get_template_names(self):
+        if self.steps.current == "security-classification":
+            return "datasets/requesting_data/security.html"
+        if self.steps.current == "update-frequency":
+            return "datasets/requesting_data/update_frequency_options.html"
+        if self.steps.current == "information-asset-owner":
+            return "datasets/requesting_data/user_search.html"
+        else:
+            return "datasets/requesting_data/summary_information.html"
+        
+    def get_users(self, search_query):
+        User = get_user_model()
+        search_query = search_query.strip()
+        email_filter = Q(email__icontains=search_query)
+        if len(search_query.split(" ")) > 1:
+            name_filter = Q(first_name__icontains=search_query.split()[0]) | Q(
+            last_name__icontains=search_query.split(" ")[1])
+        else:
+            name_filter = Q(first_name__icontains=search_query) | Q(
+            last_name__icontains=search_query)
+        users = User.objects.filter(Q(email_filter | name_filter))
+
+        search_results = []
+
+        for user in users:
+            search_results.append(
+                {
+                    "id": user.id,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "email": user.email,
+                }
+            )
+        
+        return search_results
+        
+    def get_context_data(self, form, **kwargs):
+        context = super().get_context_data(form=form, **kwargs)
+        if self.steps.current == "information-asset-owner":
+            context["form_page"] = "information-asset-owner"
+            context["field"] = "information_asset_owner"
+            context["label"]= "Name of Information Asset Owner"
+            context["help_text"]= "IAO's are responsible for ensuring information assets are handled and managed appropriately"
+            try: 
+                search_query = self.request.GET.dict()["search"]
+                context["search_query"] = search_query
+                if search_query:
+                    context["search_results"] = self.get_users(search_query=search_query)
+            except:
+                return context
+        elif self.steps.current == "information-asset-manager":
+            context["form_page"] = "information-asset-manager"
+            context["field"] = "information_asset_manager"
+            context["label"]= "Name of Information Asset Manager"
+            context["help_text"]= "IAM's ahve knowledge and duties associated with an asset, and so often support the IAO"
+            try: 
+                search_query = self.request.GET.dict()["search"]
+                context["search_query"] = search_query
+                if search_query:
+                    context["search_results"] = self.get_users(search_query=search_query)
+            except:
+                return context
+        elif self.steps.current == "enquiries-contact":
+            context["form_page"] = "enquiries-contact"
+            context["field"] = "enquiries_contact"
+            context["label"]= "Contact person"
+            context["help_text"]= "Description of contact person"
+            try: 
+                search_query = self.request.GET.dict()["search"]
+                context["search_query"] = search_query
+                if search_query:
+                    context["search_results"] = self.get_users(search_query=search_query)
+            except:
+                return context
+        return context
 
     notes_fields = [
             "origin",
@@ -73,110 +154,92 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         ]
 
     def get_template_names(self):
+        user_search_pages = [
+            "information-asset-owner",
+            "information-asset-manager",
+            "enquiries-contact",
+        ]
         if self.steps.current == "security-classification":
             return "datasets/requesting_data/security.html"
         if self.steps.current == "update-frequency":
             return "datasets/requesting_data/update_frequency_options.html"
         if self.steps.current == "summary":
             return "datasets/requesting_data/summary.html"
+        if self.steps.current in user_search_pages:
+            return "datasets/requesting_data/user_search.html"
         else:
             return "datasets/requesting_data/summary_information.html"
 
-    # def done(self, form_list, **kwargs):
-    #     # these fields need to added to notes as they no do have fields themselves but are useful to analysts.
-    #     User = get_user_model()
-
-    #     data_dict = model_to_dict(
-    #         requesting_dataset,
-    #         exclude=["id", "tags", "user", "sensitivity", "data_catalogue_editors"],
-    #     )
-    #     data_dict["enquiries_contact"] = requesting_dataset.enquiries_contact
-    #     data_dict["information_asset_manager"] = requesting_dataset.information_asset_manager
-    #     data_dict["information_asset_owner"] = requesting_dataset.information_asset_owner
-    #     data_dict["slug"] = requesting_dataset.name.lower().replace(" ", "-")
-
-    #     dataset = DataSet.objects.create(**data_dict)
-    #     dataset.data_catalogue_editors.set(requesting_dataset.data_catalogue_editors.all())
-    #     dataset.sensitivity.set(requesting_dataset.sensitivity.all())
-
-    #     # TODO delete the requesting_dataset object, leaving ofr now as useful in developement
-
-    #     return HttpResponseRedirect(
-    #         reverse(
-    #             "datasets:find_datasets",
-    #         )
-    #     )
-
-    def process_step(self, form):
+    def done(self, form_list, **kwargs):
+        notes_fields = [
+            "origin",
+            "existing_system",
+            "previously_published",
+            "usage",
+            "purpose",
+            "special-personal-data",
+            "commercial-sensitive",
+            "update-frequency",
+            "current_access",
+            "intended_access",
+            "operational_impact" "location_restrictions",
+            "network_restrictions",
+            "security_clearance",
+            "user_restrictions",
+        ]
+        # these fields need to added to notes as they no do have fields themselves but are useful to analysts.
         User = get_user_model()
 
-        if self.steps.current == "summary":
-            requesting_dataset = RequestingDataset.objects.create(
-                name=self.form_list[0].cleaned_data.get("name")
-            )
+        requesting_dataset = RequestingDataset.objects.create(
+            name=form_list[0].cleaned_data.get("name")
+        )
+        requesting_dataset.save()
 
-        # TODO DatasetUsageForm to be sent to restrictions on usage.
+        # DatasetUsageForm to be sent to restrictions on usage.
 
-            for form in self.form_list:
-                for field in form.cleaned_data:
-                    if field in self.notes_fields and form.cleaned_data.get(field):
-                        if requesting_dataset.notes:
-                            requesting_dataset.notes += (
-                                f"{form[field].label}\n{form.cleaned_data.get(field)}\n"
-                            )
-                            requesting_dataset.save()
-                        else:
-                            requesting_dataset.notes = (
-                                f"{form[field].label}\n{form.cleaned_data.get(field)}\n"
-                            )
-                            requesting_dataset.save()
-                    if field == "enquiries_contact":
-                        requesting_dataset.enquiries_contact = User.objects.get(
-                            id=form.cleaned_data.get(field).id
+        for form in form_list:
+            for field in form.cleaned_data:
+                if field in notes_fields and form.cleaned_data.get(field):
+                    if requesting_dataset.notes:
+                        requesting_dataset.notes += (
+                            f"{form[field].label}\n{form.cleaned_data.get(field)}\n"
                         )
-                    if field == "sensitivity":
-                        requesting_dataset.sensitivity.set(form.cleaned_data.get("sensitivity"))
+                        requesting_dataset.save()
                     else:
-                        setattr(requesting_dataset, field, form.cleaned_data.get(field))
-                    requesting_dataset.save()
-
+                        requesting_dataset.notes = (
+                            f"{form[field].label}\n{form.cleaned_data.get(field)}\n"
+                        )
+                        requesting_dataset.save()
+                if field == "enquiries_contact":
+                    requesting_dataset.enquiries_contact = User.objects.get(
+                        id=form.cleaned_data.get(field).id
+                    )
+                if field == "sensitivity":
+                    requesting_dataset.sensitivity.set(form.cleaned_data.get("sensitivity"))
+                else:
+                    setattr(requesting_dataset, field, form.cleaned_data.get(field))
                 requesting_dataset.save()
-        return self.get_form_step_data(form)
-        
-        # TODO wipe session
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        
-        if self.steps.current == "summary":
+        data_dict = model_to_dict(
+            requesting_dataset,
+            exclude=["id", "tags", "user", "sensitivity", "data_catalogue_editors", "stage_one_complete", "stage_two_complete"],
+        )
+        data_dict["enquiries_contact"] = requesting_dataset.enquiries_contact
+        data_dict["information_asset_manager"] = requesting_dataset.information_asset_manager
+        data_dict["information_asset_owner"] = requesting_dataset.information_asset_owner
+        data_dict["slug"] = requesting_dataset.name.lower().replace(" ", "-")
 
-            section_one_fields = ["name", "short_description", "description", "origin"]
+        dataset = DataSet.objects.create(**data_dict)
+        dataset.data_catalogue_editors.set(requesting_dataset.data_catalogue_editors.all())
+        dataset.sensitivity.set(requesting_dataset.sensitivity.all())
 
-            section = []
-            questions = {}
+        return HttpResponseRedirect(
+            reverse(
+                "datasets:find_datasets",
+            )
+        )
 
-            print(self.storage.data["step_data"])
 
-
-            for name, form in self.form_list.items():
-                for name, field in form.base_fields.items():
-                    question = re.sub(r"[,\(\)']", "", field.label)
-                    questions[name] = question
-            for step in self.storage.data["step_data"]:
-                print('HELLOOOOOOOOOOOOOOOOOO')
-                print(step)
-                print(type(step))
-                for key, value in self.get_cleaned_data_for_step(step).items():
-                    if key in section_one_fields:
-                        section.append(
-                            {step:
-                                {
-                                    "question": questions[key],
-                                    "answer": value},
-                            },)
-
-            context["summary"] = section
-        return context
 
 
 
