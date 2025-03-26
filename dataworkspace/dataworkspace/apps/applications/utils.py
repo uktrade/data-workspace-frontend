@@ -300,10 +300,10 @@ def application_api_is_allowed(request, public_host):
         )
 
         user_authorised_datasets = set(
-            (source_table["dataset"]["id"] for source_table in user_source_tables)
+            (source_table["dataset__id"] for source_table in user_source_tables)
         )
         app_authorised_datasets = set(
-            (source_table["dataset"]["id"] for source_table in app_source_tables)
+            (source_table["dataset__id"] for source_table in app_source_tables)
         )
         if app_authorised_datasets - user_authorised_datasets:
             raise ManageVisualisationsPermissionDeniedError()

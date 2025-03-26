@@ -1452,44 +1452,44 @@ def _datasets(user, application_template):
     )
 
     selectable_dataset_ids = set(
-        source_table["dataset"]["id"]
+        source_table["dataset__id"]
         for source_table in source_tables_user
-        if source_table["dataset"]["user_access_type"]
+        if source_table["dataset__user_access_type"]
         in (UserAccessType.REQUIRES_AUTHORIZATION, UserAccessType.OPEN)
     )
 
-    selected_dataset_ids = set(source_table["dataset"]["id"] for source_table in source_tables_app)
+    selected_dataset_ids = set(source_table["dataset__id"] for source_table in source_tables_app)
 
-    source_tables_without_select_info = _without_duplicates_preserve_order(
+    source_tables = _without_duplicates_preserve_order(
         source_tables_user + source_tables_app,
-        key=lambda x: (x["dataset"]["id"], x["schema"], x["table"]),
+        key=lambda x: (x["dataset__id"], x["schema"], x["table"]),
     )
-
-    source_tables = [
-        {
-            "dataset": {
-                "selectable": source_table["dataset"]["id"] in selectable_dataset_ids,
-                "selected": source_table["dataset"]["id"] in selected_dataset_ids,
-                **source_table["dataset"],
-            },
-            **{key: value for key, value in source_table.items() if key != "dataset"},
-        }
-        for source_table in source_tables_without_select_info
-    ]
 
     tables_sorted_by_dataset = sorted(
         source_tables,
         key=lambda x: (
-            x["dataset"]["name"],
-            x["dataset"]["id"],
+            x["dataset__name"],
+            x["dataset__id"],
             x["schema"],
             x["table"],
         ),
     )
 
     return [
-        (dataset, list(tables))
-        for dataset, tables in itertools.groupby(tables_sorted_by_dataset, lambda x: x["dataset"])
+        (
+            {
+                "id": dataset[1],
+                "name": dataset[0],
+                "user_access_type": dataset[2],
+                "selectable": dataset[1] in selectable_dataset_ids,
+                "selected": dataset[1] in selected_dataset_ids,
+            },
+            list(tables),
+        )
+        for dataset, tables in itertools.groupby(
+            tables_sorted_by_dataset,
+            lambda x: (x["dataset__name"], x["dataset__id"], x["dataset__user_access_type"]),
+        )
     ]
 
 
