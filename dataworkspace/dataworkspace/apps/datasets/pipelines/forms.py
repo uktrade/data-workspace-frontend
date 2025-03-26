@@ -89,12 +89,17 @@ class BasePipelineCreateForm(GOVUKDesignSystemModelForm):
 
     class Meta:
         model = Pipeline
-        fields = ["table_name", "notes", "schedule"]
+        fields = ["table_name", "notes", "schedule", "custom_schedule"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.initial["type"] = self.pipeline_type.value
 
+    def clean(self):
+        if self.cleaned_data["schedule"] == '@custom' and not self.cleaned_data["custom_schedule"]: # is null or empty
+            raise ValidationError("'Custom schedule' selected in schedule field but custom schedule field was left empty.")
+        elif self.cleaned_data["schedule"] != '@custom' and self["custom_schedule"]:
+            raise ValidationError("Custom CRON expressions can only be entered with 'Custom Schedule' selected.")
 
 class SQLPipelineCreateForm(BasePipelineCreateForm):
     pipeline_type = PipelineType.SQL
