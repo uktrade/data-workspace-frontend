@@ -30,6 +30,11 @@ class DatasetNameForm(GOVUKDesignSystemForm):
         ),
     )
 
+    def clean(self):
+        cleaned = super().clean()
+        print('CLEANED', cleaned)
+        return cleaned
+
 
 class DatasetDescriptionsForm(GOVUKDesignSystemForm):
 
@@ -377,13 +382,13 @@ class DatasetUpdateFrequencyForm(GOVUKDesignSystemForm):
 
 class SummaryPageForm(GOVUKDesignSystemForm):
 
-    summary = GOVUKDesignSystemCharField(
-        required=False,
-        label="SUMMARY",
-        widget=GOVUKDesignSystemTextWidget(
-            label_is_heading=False,
-        ),
-    )
+    summary = forms.CharField(required=False, label='summary')
+
+    def clean(self):
+        cleaned_data = super().clean()
+        print("CLEANED DATA", cleaned_data)
+        return cleaned_data
+
 
 class TrackerPageForm(GOVUKDesignSystemForm):
     summary = GOVUKDesignSystemCharField(
