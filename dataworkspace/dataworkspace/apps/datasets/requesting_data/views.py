@@ -39,7 +39,7 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
 )
 
 
-class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
+class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, FormPreview):
     form_list = [
         ("name", DatasetNameForm),
         ("descriptions", DatasetDescriptionsForm),
@@ -47,21 +47,11 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         ("information-asset-owner", DatasetInformationAssetOwnerForm),
         ("information-asset-manager", DatasetInformationAssetManagerForm),
         ("enquiries-contact", DatasetEnquiriesContactForm),
-        # ("owners", DatasetOwnersForm),
-        # ("existing-system", DatasetExistingSystemForm),
-        # ("licence", DatasetLicenceForm),
-        # ("restrictions", DatasetRestrictionsForm),
-        # ("usage", DatasetUsageForm),
-        # ("security-classification", DatasetSecurityClassificationForm),
-        # ("personal-data", DatasetPersonalDataForm),
-        # ("special-personal-data", DatasetSpecialPersonalDataForm),
-        # ("commercial-sensitive", DatasetCommercialSensitiveForm),
-        # ("retention-period", DatasetRetentionPeriodForm),
-        # ("update-frequency", DatasetUpdateFrequencyForm),
-        # ("intended-access", DatasetIntendedAccessForm),
-        # ("location-restrictions", DatasetLocationRestrictionsForm),
-        # ("network-restrictions", DatasetNetworkRestrictionsForm),
-        # ("user-restrictions", DatasetUserRestrictionsForm),
+        ("existing-system", DatasetExistingSystemForm),
+        ("licence", DatasetLicenceForm),
+        ("restrictions", DatasetRestrictionsForm),
+        ("usage", DatasetUsageForm),
+        ("summary", SummaryPageForm),
     ]
 
     def get_template_names(self):
@@ -73,17 +63,17 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
             return "datasets/requesting_data/user_search.html"
         else:
             return "datasets/requesting_data/summary_information.html"
-        
+
     def get_users(self, search_query):
         User = get_user_model()
         search_query = search_query.strip()
         email_filter = Q(email__icontains=search_query)
         if len(search_query.split(" ")) > 1:
             name_filter = Q(first_name__icontains=search_query.split()[0]) | Q(
-            last_name__icontains=search_query.split(" ")[1])
+                last_name__icontains=search_query.split(" ")[1])
         else:
             name_filter = Q(first_name__icontains=search_query) | Q(
-            last_name__icontains=search_query)
+                last_name__icontains=search_query)
         users = User.objects.filter(Q(email_filter | name_filter))
 
         search_results = []
@@ -97,17 +87,17 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
                     "email": user.email,
                 }
             )
-        
+
         return search_results
-        
+
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form=form, **kwargs)
         if self.steps.current == "information-asset-owner":
             context["form_page"] = "information-asset-owner"
             context["field"] = "information_asset_owner"
-            context["label"]= "Name of Information Asset Owner"
-            context["help_text"]= "IAO's are responsible for ensuring information assets are handled and managed appropriately"
-            try: 
+            context["label"] = "Name of Information Asset Owner"
+            context["help_text"] = "IAO's are responsible for ensuring information assets are handled and managed appropriately"
+            try:
                 search_query = self.request.GET.dict()["search"]
                 context["search_query"] = search_query
                 if search_query:
@@ -117,9 +107,9 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         elif self.steps.current == "information-asset-manager":
             context["form_page"] = "information-asset-manager"
             context["field"] = "information_asset_manager"
-            context["label"]= "Name of Information Asset Manager"
-            context["help_text"]= "IAM's ahve knowledge and duties associated with an asset, and so often support the IAO"
-            try: 
+            context["label"] = "Name of Information Asset Manager"
+            context["help_text"] = "IAM's ahve knowledge and duties associated with an asset, and so often support the IAO"
+            try:
                 search_query = self.request.GET.dict()["search"]
                 context["search_query"] = search_query
                 if search_query:
@@ -129,9 +119,9 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         elif self.steps.current == "enquiries-contact":
             context["form_page"] = "enquiries-contact"
             context["field"] = "enquiries_contact"
-            context["label"]= "Contact person"
-            context["help_text"]= "Description of contact person"
-            try: 
+            context["label"] = "Contact person"
+            context["help_text"] = "Description of contact person"
+            try:
                 search_query = self.request.GET.dict()["search"]
                 context["search_query"] = search_query
                 if search_query:
@@ -141,17 +131,17 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         return context
 
     notes_fields = [
-            "origin",
-            "existing_system",
-            "special_personal_data",
-            "commercial_sensitive",
-            "update_frequency",
-            "user_restrictions",
-            "operational_impact",
-            "location_restrictions",
-            "network_restrictions",
-            "user_restrictions",
-        ]
+        "origin",
+        "existing_system",
+        "special_personal_data",
+        "commercial_sensitive",
+        "update_frequency",
+        "user_restrictions",
+        "operational_impact",
+        "location_restrictions",
+        "network_restrictions",
+        "user_restrictions",
+    ]
 
     def get_template_names(self):
         user_search_pages = [
@@ -240,6 +230,19 @@ class RequestingDataWizardView(NamedUrlSessionWizardView, FormPreview):
         )
 
 
+class RequestingDataAboutThisDataWizardView(NamedUrlSessionWizardView, FormPreview):
+    form_list = [  # ("security-classification", DatasetSecurityClassificationForm),
+        # ("personal-data", DatasetPersonalDataForm),
+        # ("special-personal-data", DatasetSpecialPersonalDataForm),
+        # ("commercial-sensitive", DatasetCommercialSensitiveForm),
+        # ("retention-period", DatasetRetentionPeriodForm),
+        # ("update-frequency", DatasetUpdateFrequencyForm),
+        ("summary", SummaryPageForm),]
 
 
-
+class RequestingDataAccessRestrictionsWizardView(NamedUrlSessionWizardView, FormPreview):
+    form_list = [  # ("intended-access", DatasetIntendedAccessForm),
+        # ("location-restrictions", DatasetLocationRestrictionsForm),
+        # ("network-restrictions", DatasetNetworkRestrictionsForm),
+        # ("user-restrictions", DatasetUserRestrictionsForm),
+        ("summary", SummaryPageForm),]
