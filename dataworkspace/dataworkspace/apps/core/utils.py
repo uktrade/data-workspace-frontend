@@ -31,7 +31,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db import connection, connections
-from django.db.models import Q
+from django.db.models import Value, F, Q
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.http import StreamingHttpResponse
@@ -387,31 +387,32 @@ def new_private_database_credentials(
 
     database_to_tables_individual = {
         database_memorable_name: [
-            (source_table["dataset"]["id"], source_table["schema"], source_table["table"])
+            (source_table["dataset__id"], source_table["schema"], source_table["table"])
             for source_table in source_tables_for_database
         ]
         for database_memorable_name, source_tables_for_database in itertools.groupby(
-            source_tables_individual, lambda source_table: source_table["database"]
+            source_tables_individual, lambda source_table: source_table["database__memorable_name"]
         )
     }
 
     database_to_tables_email_domain = {
         database_memorable_name: [
-            (source_table["dataset"]["id"], source_table["schema"], source_table["table"])
+            (source_table["dataset__id"], source_table["schema"], source_table["table"])
             for source_table in source_tables_for_database
         ]
         for database_memorable_name, source_tables_for_database in itertools.groupby(
-            source_tables_email_domain, lambda source_table: source_table["database"]
+            source_tables_email_domain,
+            lambda source_table: source_table["database__memorable_name"],
         )
     }
 
     database_to_tables_common = {
         database_memorable_name: [
-            (source_table["dataset"]["id"], source_table["schema"], source_table["table"])
+            (source_table["dataset__id"], source_table["schema"], source_table["table"])
             for source_table in source_tables_for_database
         ]
         for database_memorable_name, source_tables_for_database in itertools.groupby(
-            source_tables_common, lambda source_table: source_table["database"]
+            source_tables_common, lambda source_table: source_table["database__memorable_name"]
         )
     }
 
@@ -639,83 +640,43 @@ def source_tables_for_user(user):
         ReferenceDataset.objects.live()
         .filter(deleted=False, published=True)
         .exclude(external_database=None)
-        .values("external_database__memorable_name", "table_name", "uuid", "name")
+        .values(
+            database__memorable_name=F("external_database__memorable_name"),
+            schema=Value("public"),
+            table=F("table_name"),
+            dataset__id=F("uuid"),
+            dataset__name=F("name"),
+            dataset__user_access_type=Value(UserAccessType.REQUIRES_AUTHENTICATION),
+        )
     )
     reference_tables_unpublished_if_superuser = (
         ReferenceDataset.objects.live()
         .filter(Q() if user.is_superuser else Q(pk__in=[]), deleted=False)
         .exclude(external_database=None)
-        .values("external_database__memorable_name", "table_name", "uuid", "name")
+        .values(
+            database__memorable_name=F("external_database__memorable_name"),
+            schema=Value("public"),
+            table=F("table_name"),
+            dataset__id=F("uuid"),
+            dataset__name=F("name"),
+            dataset__user_access_type=Value(UserAccessType.REQUIRES_AUTHENTICATION),
+        )
     )
 
-    source_tables_individual = [
-        {
-            "database": x["database__memorable_name"],
-            "schema": x["schema"],
-            "table": x["table"],
-            "dataset": {
-                "id": x["dataset__id"],
-                "name": x["dataset__name"],
-                "user_access_type": x["dataset__user_access_type"],
-            },
-        }
-        for x in req_authorization_tables.union(
+    source_tables_individual = list(
+        req_authorization_tables.union(
             automatically_authorized_tables_unpublished_if_superuser,
             req_authentication_tables_unpublished_if_superuser,
+            reference_tables_unpublished_if_superuser,
         )
-    ] + [
-        {
-            "database": x["external_database__memorable_name"],
-            "schema": "public",
-            "table": x["table_name"],
-            "dataset": {
-                "id": x["uuid"],
-                "name": x["name"],
-                "user_access_type": UserAccessType.REQUIRES_AUTHENTICATION,
-            },
-        }
-        for x in reference_tables_unpublished_if_superuser
-    ]
+    )
+    source_tables_email_domain = list(automatically_authorized_tables_published)
 
-    source_tables_email_domain = [
-        {
-            "database": x["database__memorable_name"],
-            "schema": x["schema"],
-            "table": x["table"],
-            "dataset": {
-                "id": x["dataset__id"],
-                "name": x["dataset__name"],
-                "user_access_type": x["dataset__user_access_type"],
-            },
-        }
-        for x in automatically_authorized_tables_published
-    ]
-
-    source_tables_common = [
-        {
-            "database": x["external_database__memorable_name"],
-            "schema": "public",
-            "table": x["table_name"],
-            "dataset": {
-                "id": x["uuid"],
-                "name": x["name"],
-                "user_access_type": UserAccessType.REQUIRES_AUTHENTICATION,
-            },
-        }
-        for x in reference_tables_published
-    ] + [
-        {
-            "database": x["database__memorable_name"],
-            "schema": x["schema"],
-            "table": x["table"],
-            "dataset": {
-                "id": x["dataset__id"],
-                "name": x["dataset__name"],
-                "user_access_type": x["dataset__user_access_type"],
-            },
-        }
-        for x in req_authentication_tables_published
-    ]
+    source_tables_common = list(
+        reference_tables_published.union(
+            req_authentication_tables_published,
+        )
+    )
 
     return (
         source_tables_individual,
@@ -763,48 +724,22 @@ def source_tables_for_app(application_template):
         ReferenceDataset.objects.live()
         .filter(published=True, deleted=False)
         .exclude(external_database=None)
-        .values("external_database__memorable_name", "table_name", "uuid", "name")
+        .values(
+            database__memorable_name=F("external_database__memorable_name"),
+            schema=Value("public"),
+            table=F("table_name"),
+            dataset__id=F("uuid"),
+            dataset__name=F("name"),
+            dataset__user_access_type=Value(UserAccessType.REQUIRES_AUTHENTICATION),
+        )
     )
 
-    source_tables_non_common = [
-        {
-            "database": x["database__memorable_name"],
-            "schema": x["schema"],
-            "table": x["table"],
-            "dataset": {
-                "id": x["dataset__id"],
-                "name": x["dataset__name"],
-                "user_access_type": x["dataset__user_access_type"],
-            },
-        }
-        for x in req_authorization_tables
-    ]
-
-    source_tables_common = [
-        {
-            "database": x["external_database__memorable_name"],
-            "schema": "public",
-            "table": x["table_name"],
-            "dataset": {
-                "id": x["uuid"],
-                "name": x["name"],
-                "user_access_type": UserAccessType.REQUIRES_AUTHENTICATION,
-            },
-        }
-        for x in reference_tables
-    ] + [
-        {
-            "database": x["database__memorable_name"],
-            "schema": x["schema"],
-            "table": x["table"],
-            "dataset": {
-                "id": x["dataset__id"],
-                "name": x["dataset__name"],
-                "user_access_type": x["dataset__user_access_type"],
-            },
-        }
-        for x in req_authentication_tables
-    ]
+    source_tables_non_common = list(req_authorization_tables)
+    source_tables_common = list(
+        reference_tables.union(
+            req_authentication_tables,
+        )
+    )
 
     return (source_tables_non_common, (None, []), source_tables_common)
 
