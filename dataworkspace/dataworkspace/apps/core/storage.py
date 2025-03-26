@@ -33,8 +33,17 @@ def _upload_to_clamav(file: File) -> ClamAVResponse:
     clamav_password = settings.CLAMAV_PASSWORD
 
     logger.debug("post to clamav %s", clamav_url)
-    response = requests.post(clamav_url, auth=(clamav_user, clamav_password), files={"file": file})
-    response.raise_for_status()
+    try:
+        response = requests.post(
+            clamav_url, auth=(clamav_user, clamav_password), files={"file": file}
+        )
+        response.raise_for_status()
+    except TimeoutError:
+        logger.exception("ClamAV timeout exception for %s", file.name)
+        raise ValidationError("Timeout error on uploading ClamAV %s", file.name)
+    except MemoryError:
+        logger.exception("ClamAV memory exception for %s", file.name)
+        raise ValidationError("Memory error on uploading ClamAV %s", file.name)
 
     clamav_response = ClamAVResponse(response.json())
 
@@ -97,6 +106,7 @@ class S3FileStorage(FileSystemStorage):
 
 
 def malware_file_validator(file: FieldFile):
+    raise ValidationError("error")
     if not settings.LOCAL:
         clamav_response = _upload_to_clamav(file)
 
