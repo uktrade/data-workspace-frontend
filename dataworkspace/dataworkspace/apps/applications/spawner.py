@@ -1,5 +1,4 @@
-""" Spawners control and report on application instances
-"""
+"""Spawners control and report on application instances"""
 
 import datetime
 import json
