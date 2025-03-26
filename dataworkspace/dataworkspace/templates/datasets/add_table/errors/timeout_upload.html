@@ -1,11 +1,7 @@
 {% extends '_main.html' %}
 
 {% block content %}
-<div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-        <h1 class="govuk-heading-xl">Your CSV upload has failed</h1>
-        <p class="govuk-body">This is because the upload has timed out. Try again later.</p>
-        <p class="govuk-body">If it continues to fail, upload the CSV to Your Files and then <a class="govuk-header__link" href="{% url 'support' %}">contact us</a>. Ask us to move the file to the relevant catalogue page.</p>
-    </div>
-</div>
+<h1 class="govuk-heading-xl">Your CSV upload has failed</h1>
+<p class="govuk-body">This is because the upload has timed out. Try again later.</p>
+<p class="govuk-body">If it continues to fail, upload the CSV to Your Files and then <a class="govuk-header__link" href="{% url 'support' %}">contact us</a>. Ask us to move the file to the relevant catalogue page.</p>
 {% endblock %}

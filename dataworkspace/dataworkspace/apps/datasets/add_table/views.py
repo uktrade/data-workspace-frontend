@@ -227,7 +227,7 @@ class UploadCSVView(FormView):
         return ctx
 
     def form_invalid(self, form):
-        return redirect(self.request, "datasets/add_table/errors/timeout_upload.html")
+        return self.render_to_response({"timeout_error": True})
 
     def form_valid(self, form):
         csv_file = form.cleaned_data["csv_file"]
