@@ -5,7 +5,6 @@ from django.contrib.auth import get_user_model
 
 from django.test import Client
 
-from dataworkspace.apps.datasets.models import SensitivityType
 from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetDataOriginForm,
     DatasetDescriptionsForm,
@@ -19,7 +18,6 @@ import pytest
 
 from django.urls import reverse
 
-from dataworkspace.apps.datasets.requesting_data.views import RequestingDataSummaryInformationWizardView
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
 
