@@ -350,11 +350,7 @@ class SummaryPageForm(GOVUKDesignSystemForm):
         ),
     )
 
-class TrackerPageForm(GOVUKDesignSystemForm):
-    summary = GOVUKDesignSystemCharField(
-        required=False,
-        label="SUMMARY",
-        widget=GOVUKDesignSystemTextWidget(
-            label_is_heading=False,
-        ),
+class TrackerPageForm(forms.Form):
+    requesting_dataset = forms.CharField(
+        required=True,
     )

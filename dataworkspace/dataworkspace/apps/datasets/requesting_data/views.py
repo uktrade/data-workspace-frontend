@@ -251,3 +251,8 @@ class RequestingDataAccessRestrictionsWizardView(NamedUrlSessionWizardView, Form
         # ("network-restrictions", DatasetNetworkRestrictionsForm),
         # ("user-restrictions", DatasetUserRestrictionsForm),
         ("summary", SummaryPageForm),]
+
+
+class RequestingDataTrackerView(FormView):
+    form_class = TrackerPageForm
+    template_name = "datasets/requesting_data/tracker.html"
