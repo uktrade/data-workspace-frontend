@@ -284,33 +284,35 @@ class RequestingDataViewsTestCase(TestCase):
     def test_origin_view(self):
         self.check_view_response(stage="summary_information", step="origin", field="origin")
 
-    @patch("requests.post")
-    def test_owners_view(self, mock_post):
-        pass
-        # user = get_user_model().objects.create(
-        #     username="test.test@test.com",
-        #     is_staff=False,
-        #     is_superuser=False,
-        #     email="test.test@test.com",
-        # )
+    def test_information_asset_owner_view(self):
+        user = get_user_model().objects.create(
+            username="test.test@test.com",
+            is_staff=False,
+            is_superuser=False,
+            email="test.test@test.com",
+        )
 
-        # data = {
-        #     "requesting_data_wizard_view-current_step": ["owners"],
-        #     "owners-information_asset_owner": user,
-        #     "owners-information_asset_manager": user,
-        #     "owners-enquiries_contact": user,
-        # }
+        self.check_view_response(stage="summary_information", step="information-asset-owner", field="information_asset_owner", test=user)
 
-        # response = self.client.post(
-        #     reverse(
-        #         "requesting-data-step",
-        #         args=["owners"],
-        #     ),
-        #     data=data,
-        # )
+    def test_information_asset_manager_view(self):
+        user = get_user_model().objects.create(
+            username="test.test@test.com",
+            is_staff=False,
+            is_superuser=False,
+            email="test.test@test.com",
+        )
 
-        # assert response.status_code == HTTPStatus.OK
-        # assert mock_post.called is False
+        self.check_view_response(stage="summary_information", step="information-asset-manager", field="information_asset_manager", test=user)
+
+    def test_enquiries_contact_view(self):
+        user = get_user_model().objects.create(
+            username="test.test@test.com",
+            is_staff=False,
+            is_superuser=False,
+            email="test.test@test.com",
+        )
+
+        self.check_view_response(stage="summary_information", step="enquiries-contact", field="enquiries_contact", test=user)
 
     def test_existing_system_view(self):
         self.check_view_response(stage="summary_information", step="existing-system", field="existing_system")
