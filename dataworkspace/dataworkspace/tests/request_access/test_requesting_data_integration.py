@@ -6,9 +6,6 @@ from django.test import Client
 from django.urls import reverse
 
 
-from dataworkspace.apps.datasets.constants import (
-    SecurityClassificationAndHandlingInstructionType,
-)
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
 
@@ -86,11 +83,11 @@ class TestRequestingData(TestCase):
     def test_information_asset_owner_page(self):
         self.assert_common_content_user_search_page(
             stage="summary-information", url_name="information-asset-owner", label="Name of Information Asset Owner", hint="IAO's are responsible for ensuring information assets are handled and managed appropriately")
-        
+
     def test_information_asset_manager_page(self):
         self.assert_common_content_user_search_page(
             stage="summary-information", url_name="information-asset-manager", label="Name of Information Asset Manager", hint="IAM's have knowledge and duties associated with an asset, and so often support the IAO")
-        
+
     def test_enquiries_contact_page(self):
         self.assert_common_content_user_search_page(
             stage="summary-information", url_name="enquiries-contact", label="Contact person", hint="Description of contact person")
@@ -117,7 +114,7 @@ class TestRequestingData(TestCase):
 
     # def test_security_classification_page(self):
     #     self.assert_common_content_radio_buttons_page(
-    #         stage="about-this-data", 
+    #         stage="about-this-data",
     #         url_name="security-classification",
     #         label="What is the security classification for this data?",
     #         radio_options=[
@@ -133,7 +130,7 @@ class TestRequestingData(TestCase):
 
     # def test_special_personal_data_page(self):
     #     self.assert_common_content_one_label_page(
-    #         stage="about-this-data", 
+    #         stage="about-this-data",
     #         url_name="special-personal-data",
     #         label="Does it contain special category personal data?",
     #     )
@@ -150,7 +147,7 @@ class TestRequestingData(TestCase):
 
     # def test_update_frequency_page(self):
     #     self.assert_common_content_radio_buttons_page(
-    #         stage="about-this-data", 
+    #         stage="about-this-data",
     #         url_name="update-frequency",
     #         label="How often is the source data updated",
     #         radio_options=["Constant", "Daily", "Weekly", "Other"],
@@ -175,21 +172,21 @@ class TestRequestingData(TestCase):
 
     # def test_location_restrictions(self):
     #     self.assert_common_content_one_label_page(
-    #         stage="access-restrictions", 
+    #         stage="access-restrictions",
     #         url_name="location-restrictions",
     #         label="Should there be any location restrictions for access to this data set?",
     #     )
 
     # def test_network_restrictions(self):
     #     self.assert_common_content_one_label_page(
-    #         stage="access-restrictions", 
+    #         stage="access-restrictions",
     #         url_name="network-restrictions",
     #         label="Should access be limited based on device types and networks?",
     #     )
 
     # def test_user_restrictions_page(self):
     #     self.assert_common_content_one_label_page(
-    #         stage="access-restrictions", 
+    #         stage="access-restrictions",
     #         url_name="user-restrictions",
     #         label="Should access be restricted to certain users types?",
     #     )
