@@ -19,7 +19,6 @@ from dataworkspace.apps.core.forms import ConditionalSupportTypeRadioWidget
 
 
 class DatasetNameForm(GOVUKDesignSystemForm):
-
     name = GOVUKDesignSystemCharField(
         label="What is the name of the dataset?",
         required=True,
@@ -31,7 +30,6 @@ class DatasetNameForm(GOVUKDesignSystemForm):
 
 
 class DatasetDescriptionsForm(GOVUKDesignSystemForm):
-
     short_description = GOVUKDesignSystemTextareaField(
         label="Summarise this dataset",
         help_text="Please provide a brief description of what it contains.",
@@ -60,7 +58,6 @@ class DatasetDescriptionsForm(GOVUKDesignSystemForm):
 
 
 class DatasetDataOriginForm(GOVUKDesignSystemForm):
-
     origin = GOVUKDesignSystemCharField(
         label="Where does the data come from?",
         required=True,
@@ -71,7 +68,7 @@ class DatasetDataOriginForm(GOVUKDesignSystemForm):
     )
 
 
-class DatasetInformationAssetOwnerForm(forms.Form):
+class DatasetInformationAssetOwnerForm(GOVUKDesignSystemForm):
     information_asset_owner = forms.CharField(
         required=True,
     )
