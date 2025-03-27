@@ -76,7 +76,7 @@ class DatasetInformationAssetOwnerForm(forms.Form):
 
     information_asset_owner = forms.CharField(
         required=True,
-        label="Information Asset Owner",
+        label="Name of information Asset Owner(IAO)",
     )
 
     def clean(self):
@@ -91,7 +91,7 @@ class DatasetInformationAssetManagerForm(forms.Form):
 
     information_asset_manager = forms.CharField(
         required=True,
-        label="Information Asset Manager",
+        label="Name of information Asset Manager(IAO)",
 
     )
 
@@ -107,7 +107,7 @@ class DatasetEnquiriesContactForm(forms.Form):
 
     enquiries_contact = forms.CharField(
         required=True,
-        label="Enquiries Contact",
+        label="Contact person",
     )
 
     def clean(self):
