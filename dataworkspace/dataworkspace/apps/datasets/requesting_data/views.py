@@ -95,7 +95,7 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
                 context["search_query"] = search_query
                 if search_query:
                     context["search_results"] = self.get_users(search_query=search_query)
-            except:
+            except Exception:
                 return context
         elif self.steps.current == "information-asset-manager":
             context["form_page"] = "information-asset-manager"
@@ -107,7 +107,7 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
                 context["search_query"] = search_query
                 if search_query:
                     context["search_results"] = self.get_users(search_query=search_query)
-            except:
+            except Exception:
                 return context
         elif self.steps.current == "enquiries-contact":
             context["form_page"] = "enquiries-contact"
@@ -119,7 +119,7 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
                 context["search_query"] = search_query
                 if search_query:
                     context["search_results"] = self.get_users(search_query=search_query)
-            except:
+            except Exception:
                 return context
         return context
 
