@@ -35,30 +35,30 @@
 
 <h2 class="govuk-heading-m">Your answers</h2>
 
-
-{% for answers in summary %} 
-  {% for key, qa  in answers.items %}
-
-<dl class="govuk-summary-list">
-  <div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">
-      {{ qa.question }}
-    </dt>
-    <dd class="govuk-summary-list__value">
-      {{ qa.answer }}
-    </dd>
-    <dd class="govuk-summary-list__actions">
-      <a class="govuk-link" href="{% url 'requesting-data-step' key %}">Change<span class="govuk-visually-hidden"></span></a>
-    </dd>
-  
-  </div>
-</dl>
-
-{% endfor%}
-
-{% endfor%}
-      <button type="submit" class="govuk-button">Continue</button>
-
+<form method="post" nonvalidate>
+    {%csrf_token%}
+        {{ wizard.management_form }}
+        {{ wizard.form.management_form }}
+    {% for answers in summary %} 
+    {% for key, qa  in answers.items %}
+        <dl class="govuk-summary-list">
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    {{ qa.question }}
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ qa.answer }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    <a class="govuk-link" href="{% url 'requesting-data-summary-information-step' key %}">Change<span class="govuk-visually-hidden"></span></a>
+                </dd>
+            </div>
+        </dl>
+        {% endfor%}
+    {% endfor%}
+    
+    <button type="submit" class="govuk-button">Continue</button>
+</form>
 
 
 
