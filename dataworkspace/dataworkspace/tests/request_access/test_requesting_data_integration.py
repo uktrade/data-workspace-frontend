@@ -64,7 +64,9 @@ class TestRequestingData(TestCase):
         )
 
     def test_descriptions_page(self):
-        response = self.client.get(reverse("requesting-data-summary-information-step", args={("descriptions")}))
+        response = self.client.get(
+            reverse("requesting-data-summary-information-step", args={("descriptions")})
+        )
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         header = soup.find("h1").contents[0]
@@ -82,34 +84,54 @@ class TestRequestingData(TestCase):
 
     def test_information_asset_owner_page(self):
         self.assert_common_content_user_search_page(
-            stage="summary-information", url_name="information-asset-owner", label="Name of Information Asset Owner", hint="IAO's are responsible for ensuring information assets are handled and managed appropriately")
+            stage="summary-information",
+            url_name="information-asset-owner",
+            label="Name of Information Asset Owner",
+            hint="IAO's are responsible for ensuring information assets are handled and managed appropriately",
+        )
 
     def test_information_asset_manager_page(self):
         self.assert_common_content_user_search_page(
-            stage="summary-information", url_name="information-asset-manager", label="Name of Information Asset Manager", hint="IAM's have knowledge and duties associated with an asset, and so often support the IAO")
+            stage="summary-information",
+            url_name="information-asset-manager",
+            label="Name of Information Asset Manager",
+            hint="IAM's have knowledge and duties associated with an asset, and so often support the IAO",
+        )
 
     def test_enquiries_contact_page(self):
         self.assert_common_content_user_search_page(
-            stage="summary-information", url_name="enquiries-contact", label="Contact person", hint="Description of contact person")
+            stage="summary-information",
+            url_name="enquiries-contact",
+            label="Contact person",
+            hint="Description of contact person",
+        )
 
     def test_existing_system_page(self):
         self.assert_common_content_one_label_page(
-            stage="summary-information", url_name="existing-system", label="Which system is the data set currently stored on?"
+            stage="summary-information",
+            url_name="existing-system",
+            label="Which system is the data set currently stored on?",
         )
 
     def test_licence_page(self):
         self.assert_common_content_one_label_page(
-            stage="summary-information", url_name="licence", label="What licence do you have for this data?"
+            stage="summary-information",
+            url_name="licence",
+            label="What licence do you have for this data?",
         )
 
     def test_restrictions_page(self):
         self.assert_common_content_one_label_page(
-            stage="summary-information", url_name="restrictions", label="What are the usage restrictions?"
+            stage="summary-information",
+            url_name="restrictions",
+            label="What are the usage restrictions?",
         )
 
     def test_usage_page(self):
         self.assert_common_content_one_label_page(
-            stage="summary-information", url_name="usage", label="How can this data be used on Data Workspace?"
+            stage="summary-information",
+            url_name="usage",
+            label="How can this data be used on Data Workspace?",
         )
 
     # def test_security_classification_page(self):

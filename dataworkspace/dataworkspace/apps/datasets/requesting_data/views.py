@@ -64,10 +64,12 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
         email_filter = Q(email__icontains=search_query)
         if len(search_query.split(" ")) > 1:
             name_filter = Q(first_name__icontains=search_query.split()[0]) | Q(
-                last_name__icontains=search_query.split(" ")[1])
+                last_name__icontains=search_query.split(" ")[1]
+            )
         else:
             name_filter = Q(first_name__icontains=search_query) | Q(
-                last_name__icontains=search_query)
+                last_name__icontains=search_query
+            )
         users = User.objects.filter(Q(email_filter | name_filter))
 
         search_results = []
@@ -90,10 +92,14 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
 
         if step == "information-asset-owner":
             context["label"] = "Name of Information Asset Owner"
-            context["help_text"] = "IAO's are responsible for ensuring information assets are handled and managed appropriately"
+            context["help_text"] = (
+                "IAO's are responsible for ensuring information assets are handled and managed appropriately"
+            )
         elif step == "information-asset-manager":
             context["label"] = "Name of Information Asset Manager"
-            context["help_text"] = "IAM's have knowledge and duties associated with an asset, and so often support the IAO"
+            context["help_text"] = (
+                "IAM's have knowledge and duties associated with an asset, and so often support the IAO"
+            )
         elif step == "enquiries-contact":
             context["label"] = "Contact person"
             context["help_text"] = "Description of contact person"
@@ -175,7 +181,15 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
 
         data_dict = model_to_dict(
             requesting_dataset,
-            exclude=["id", "tags", "user", "sensitivity", "data_catalogue_editors", "stage_one_complete", "stage_two_complete"],
+            exclude=[
+                "id",
+                "tags",
+                "user",
+                "sensitivity",
+                "data_catalogue_editors",
+                "stage_one_complete",
+                "stage_two_complete",
+            ],
         )
         data_dict["enquiries_contact"] = requesting_dataset.enquiries_contact
         data_dict["information_asset_manager"] = requesting_dataset.information_asset_manager

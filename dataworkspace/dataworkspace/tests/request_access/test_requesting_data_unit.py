@@ -280,7 +280,12 @@ class RequestingDataViewsTestCase(TestCase):
             email="test.test@test.com",
         )
 
-        self.check_view_response(stage="summary_information", step="information-asset-owner", field="information_asset_owner", test=user)
+        self.check_view_response(
+            stage="summary_information",
+            step="information-asset-owner",
+            field="information_asset_owner",
+            test=user,
+        )
 
     def test_information_asset_manager_view(self):
         user = get_user_model().objects.create(
@@ -290,7 +295,12 @@ class RequestingDataViewsTestCase(TestCase):
             email="test.test@test.com",
         )
 
-        self.check_view_response(stage="summary_information", step="information-asset-manager", field="information_asset_manager", test=user)
+        self.check_view_response(
+            stage="summary_information",
+            step="information-asset-manager",
+            field="information_asset_manager",
+            test=user,
+        )
 
     def test_enquiries_contact_view(self):
         user = get_user_model().objects.create(
@@ -300,16 +310,25 @@ class RequestingDataViewsTestCase(TestCase):
             email="test.test@test.com",
         )
 
-        self.check_view_response(stage="summary_information", step="enquiries-contact", field="enquiries_contact", test=user)
+        self.check_view_response(
+            stage="summary_information",
+            step="enquiries-contact",
+            field="enquiries_contact",
+            test=user,
+        )
 
     def test_existing_system_view(self):
-        self.check_view_response(stage="summary_information", step="existing-system", field="existing_system")
+        self.check_view_response(
+            stage="summary_information", step="existing-system", field="existing_system"
+        )
 
     def test_licence_view(self):
         self.check_view_response(stage="summary_information", step="licence", field="licence")
 
     def test_restrictions_view(self):
-        self.check_view_response(stage="summary_information", step="restrictions", field="restrictions")
+        self.check_view_response(
+            stage="summary_information", step="restrictions", field="restrictions"
+        )
 
     def test_usage_view(self):
         self.check_view_response(stage="summary_information", step="usage", field="usage")
