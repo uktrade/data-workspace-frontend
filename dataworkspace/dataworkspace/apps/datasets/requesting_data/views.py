@@ -169,9 +169,7 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
         notes_fields = [
             "origin",
             "existing_system",
-            "previously_published",
             "usage",
-            "purpose",
             "special-personal-data",
             "commercial-sensitive",
             "update-frequency",
@@ -236,18 +234,22 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
 
 
 class RequestingDataAboutThisDataWizardView(NamedUrlSessionWizardView, FormPreview):
-    form_list = [  # ("security-classification", DatasetSecurityClassificationForm),
+    form_list = [  
+        # ("security-classification", DatasetSecurityClassificationForm),
         # ("personal-data", DatasetPersonalDataForm),
         # ("special-personal-data", DatasetSpecialPersonalDataForm),
         # ("commercial-sensitive", DatasetCommercialSensitiveForm),
         # ("retention-period", DatasetRetentionPeriodForm),
         # ("update-frequency", DatasetUpdateFrequencyForm),
-        ("summary", SummaryPageForm),]
+        ("summary", SummaryPageForm),
+    ]
 
 
 class RequestingDataAccessRestrictionsWizardView(NamedUrlSessionWizardView, FormPreview):
-    form_list = [  # ("intended-access", DatasetIntendedAccessForm),
+    form_list = [  
+        # ("intended-access", DatasetIntendedAccessForm),
         # ("location-restrictions", DatasetLocationRestrictionsForm),
         # ("network-restrictions", DatasetNetworkRestrictionsForm),
         # ("user-restrictions", DatasetUserRestrictionsForm),
-        ("summary", SummaryPageForm),]
+        ("summary", SummaryPageForm),
+    ]
