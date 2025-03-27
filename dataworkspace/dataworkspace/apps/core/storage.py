@@ -38,12 +38,12 @@ def _upload_to_clamav(file: File) -> ClamAVResponse:
             clamav_url, auth=(clamav_user, clamav_password), files={"file": file}
         )
         response.raise_for_status()
-    except TimeoutError:
+    except TimeoutError as te:
         logger.exception("ClamAV timeout exception for %s", file.name)
-        raise ValidationError("Timeout error on uploading ClamAV %s", file.name)
-    except MemoryError:
+        raise ValidationError("Timeout error on uploading ClamAV %s" % file.name) from te
+    except MemoryError as me:
         logger.exception("ClamAV memory exception for %s", file.name)
-        raise ValidationError("Memory error on uploading ClamAV %s", file.name)
+        raise ValidationError("Memory error on uploading ClamAV %s" % file.name) from me
 
     clamav_response = ClamAVResponse(response.json())
 
