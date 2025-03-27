@@ -39,7 +39,7 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
         ("usage", DatasetUsageForm),
         ("summary", SummaryPageForm),
     ]
-    
+
     user_search_pages = [
         "information-asset-owner",
         "information-asset-manager",
@@ -94,7 +94,7 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
         elif step == "information-asset-manager":
             context["label"] = "Name of Information Asset Manager"
             context["help_text"] = "IAM's have knowledge and duties associated with an asset, and so often support the IAO"
-        elif step =="enquiries-contact":
+        elif step == "enquiries-contact":
             context["label"] = "Contact person"
             context["help_text"] = "Description of contact person"
 
