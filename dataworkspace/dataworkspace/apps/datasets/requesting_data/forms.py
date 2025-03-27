@@ -92,7 +92,6 @@ class DatasetInformationAssetManagerForm(forms.Form):
     information_asset_manager = forms.CharField(
         required=True,
         label="Name of information Asset Manager(IAO)",
-
     )
 
     def clean(self):
@@ -347,10 +346,15 @@ class DatasetUpdateFrequencyForm(GOVUKDesignSystemForm):
 
 class SummaryPageForm(GOVUKDesignSystemForm):
 
-    summary = forms.CharField(widget=forms.HiddenInput(), label='summary', required=False)
+    summary = forms.CharField(widget=forms.HiddenInput(), label="summary", required=False)
 
 
+<<<<<<< HEAD
 class TrackerPageForm(forms.Form):
     requesting_dataset = forms.CharField(
         required=True,
     )
+=======
+class TrackerPageForm(GOVUKDesignSystemForm):
+    tracker = forms.CharField(widget=forms.HiddenInput(), label="summary", required=False)
+>>>>>>> e70501068 (WIP: refactoring add_fields method)
