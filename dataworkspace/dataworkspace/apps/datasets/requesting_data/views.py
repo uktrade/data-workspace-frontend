@@ -113,7 +113,7 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
             context["form_page"] = "information-asset-manager"
             context["field"] = "information_asset_manager"
             context["label"] = "Name of Information Asset Manager"
-            context["help_text"] = "IAM's ahve knowledge and duties associated with an asset, and so often support the IAO"
+            context["help_text"] = "IAM's have knowledge and duties associated with an asset, and so often support the IAO"
             try:
                 search_query = self.request.GET.dict()["search"]
                 context["search_query"] = search_query
