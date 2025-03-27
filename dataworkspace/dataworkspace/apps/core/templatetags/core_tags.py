@@ -21,7 +21,7 @@ def get_key(dictionary, field):
 
 @register.filter
 def zero_width_space_after(string, sub):
-    zero_width_space = "\u200B"
+    zero_width_space = "\u200b"
     return string.replace(sub, f"{sub}{zero_width_space}")
 
 
