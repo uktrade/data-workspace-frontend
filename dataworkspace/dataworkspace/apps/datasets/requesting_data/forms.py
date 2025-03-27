@@ -1,7 +1,6 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.forms import ValidationError
-from django.views.generic import FormView
 
 
 from dataworkspace.apps.datasets.models import RequestingDataset, SensitivityType
@@ -72,7 +71,6 @@ class DatasetDataOriginForm(GOVUKDesignSystemForm):
     )
 
 class DatasetInformationAssetOwnerForm(forms.Form):
-
     information_asset_owner = forms.CharField(
         required=True,
     )
@@ -86,7 +84,6 @@ class DatasetInformationAssetOwnerForm(forms.Form):
 
 
 class DatasetInformationAssetManagerForm(forms.Form):
-
     information_asset_manager = forms.CharField(
         required=True,
     )

@@ -1,13 +1,10 @@
-import re
 from django.forms import model_to_dict
-from dataworkspace.tests.conftest import user
 from formtools.preview import FormPreview
 from formtools.wizard.views import NamedUrlSessionWizardView
 from django.contrib.auth import get_user_model
 
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from django.views.generic import FormView
 
 from dataworkspace.apps.datasets.models import DataSet, RequestingDataset
 
@@ -24,18 +21,7 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetLicenceForm,
     DatasetRestrictionsForm,
     DatasetUsageForm,
-    DatasetLocationRestrictionsForm,
-    DatasetNetworkRestrictionsForm,
-    DatasetUserRestrictionsForm,
-    DatasetIntendedAccessForm,
-    DatasetSecurityClassificationForm,
-    DatasetSpecialPersonalDataForm,
-    DatasetPersonalDataForm,
-    DatasetCommercialSensitiveForm,
-    DatasetRetentionPeriodForm,
-    DatasetUpdateFrequencyForm,
     SummaryPageForm,
-    TrackerPageForm
 )
 
 

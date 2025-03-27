@@ -7,23 +7,13 @@ from django.test import Client
 
 from dataworkspace.apps.datasets.models import SensitivityType
 from dataworkspace.apps.datasets.requesting_data.forms import (
-    DatasetCommercialSensitiveForm,
     DatasetDataOriginForm,
     DatasetDescriptionsForm,
     DatasetExistingSystemForm,
-    DatasetIntendedAccessForm,
     DatasetLicenceForm,
-    DatasetLocationRestrictionsForm,
     DatasetNameForm,
-    DatasetNetworkRestrictionsForm,
-    DatasetPersonalDataForm,
     DatasetRestrictionsForm,
-    DatasetRetentionPeriodForm,
-    DatasetSecurityClassificationForm,
-    DatasetSpecialPersonalDataForm,
-    DatasetUpdateFrequencyForm,
     DatasetUsageForm,
-    DatasetUserRestrictionsForm,
 )
 import pytest
 
