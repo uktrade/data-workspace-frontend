@@ -38,7 +38,7 @@ from dataworkspace.apps.core.views import (
     table_data_view,
     welcome_page_view,
 )
-from dataworkspace.apps.datasets.requesting_data.views import RequestingDataAboutThisDataWizardView, RequestingDataAccessRestrictionsWizardView, RequestingDataSummaryInformationWizardView
+from dataworkspace.apps.datasets.requesting_data.views import RequestingDataAboutThisDataWizardView, RequestingDataAccessRestrictionsWizardView, RequestingDataSummaryInformationWizardView, RequestingDataTrackerView
 from dataworkspace.apps.datasets.views import home_view
 
 logger = logging.getLogger("app")
@@ -148,6 +148,11 @@ urlpatterns = [
         "requesting-data/access-restrictions/<str:step>",
         RequestingDataAccessRestrictionsWizardView.as_view(url_name="requesting-data-access-restrictions-step"),
         name="requesting-data-access-restrictions-step",
+    ),
+    path(
+        "requesting-data/tracker",
+        RequestingDataTrackerView.as_view(),
+        name="requesting-data-tracker",
     ),
     path(
         "support/custom-visualisation-review/",
