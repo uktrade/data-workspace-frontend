@@ -54,6 +54,7 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
         ("summary", SummaryPageForm),
     ]
 
+<<<<<<< HEAD
     def get_template_names(self):
         user_search_pages = [
             "information-asset-owner",
@@ -69,6 +70,8 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
         else:
             return "datasets/requesting_data/summary_information.html"
 
+=======
+>>>>>>> 1224b22bb (section one working and creating dataset)
     def get_users(self, search_query):
         User = get_user_model()
         search_query = search_query.strip()
@@ -133,6 +136,44 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
                     context["search_results"] = self.get_users(search_query=search_query)
             except:
                 return context
+
+        if self.steps.current == "summary":
+
+            # the feild label in the forms
+            section_one_fields = [
+                "name", "short_description", "description", "origin",
+                "information_asset_owner", "information_asset_manager", "enquiries_contact",
+                "existing_system", "licence", "restrictions", "usage"
+            ]
+
+            section = []
+            questions = {}
+
+            print("HERE", self.storage.data["step_data"])
+
+            for name, form in self.form_list.items():
+                print("name in form list", name)
+                print("form in form list", form)
+                for name, field in form.base_fields.items():
+                    print("name in base feild", name)
+                    print("field in base feild", field)
+                    # question = re.sub(r"[,\(\)']", "", field.label)
+                    question = field.label
+                    questions[name] = question
+            for step in self.storage.data["step_data"]:
+                for key, value in self.get_cleaned_data_for_step(step).items():
+                    print("key in cleaned data", key)
+                    print("value in cleaned data", value)
+
+                    if key in section_one_fields:
+                        section.append(
+                            {step:
+                                {
+                                    "question": questions[key],
+                                    "answer": value},
+                             },)
+
+            context["summary"] = section
         return context
 
     notes_fields = [
@@ -166,6 +207,9 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
             return "datasets/requesting_data/summary_information.html"
 
     def done(self, form_list, **kwargs):
+
+        print("in the done!!!!")
+
         notes_fields = [
             "origin",
             "existing_system",
@@ -182,9 +226,11 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
             "security_clearance",
             "user_restrictions",
         ]
+
         # these fields need to added to notes as they no do have fields themselves but are useful to analysts.
         User = get_user_model()
 
+        print("NAME BEING CREATED HERE!!!!", form_list[0].cleaned_data.get("name"))
         requesting_dataset = RequestingDataset.objects.create(
             name=form_list[0].cleaned_data.get("name")
         )

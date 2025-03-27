@@ -71,10 +71,12 @@ class DatasetDataOriginForm(GOVUKDesignSystemForm):
         ),
     )
 
+
 class DatasetInformationAssetOwnerForm(forms.Form):
 
     information_asset_owner = forms.CharField(
         required=True,
+        label="Information Asset Owner",
     )
 
     def clean(self):
@@ -89,6 +91,8 @@ class DatasetInformationAssetManagerForm(forms.Form):
 
     information_asset_manager = forms.CharField(
         required=True,
+        label="Information Asset Manager",
+
     )
 
     def clean(self):
@@ -103,6 +107,7 @@ class DatasetEnquiriesContactForm(forms.Form):
 
     enquiries_contact = forms.CharField(
         required=True,
+        label="Enquiries Contact",
     )
 
     def clean(self):
@@ -342,13 +347,8 @@ class DatasetUpdateFrequencyForm(GOVUKDesignSystemForm):
 
 class SummaryPageForm(GOVUKDesignSystemForm):
 
-    summary = GOVUKDesignSystemCharField(
-        required=False,
-        label="SUMMARY",
-        widget=GOVUKDesignSystemTextWidget(
-            label_is_heading=False,
-        ),
-    )
+    summary = forms.CharField(widget=forms.HiddenInput(), label='summary', required=False)
+
 
 class TrackerPageForm(forms.Form):
     requesting_dataset = forms.CharField(
