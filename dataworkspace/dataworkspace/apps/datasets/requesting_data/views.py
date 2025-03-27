@@ -50,6 +50,8 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
             return "datasets/requesting_data/security.html"
         if self.steps.current == "update-frequency":
             return "datasets/requesting_data/update_frequency_options.html"
+        if self.steps.current == "summary":
+            return "datasets/requesting_data/summary.html"
         if self.steps.current in user_search_pages:
             return "datasets/requesting_data/user_search.html"
         else:
@@ -134,23 +136,6 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
         "user_restrictions",
     ]
 
-    def get_template_names(self):
-        user_search_pages = [
-            "information-asset-owner",
-            "information-asset-manager",
-            "enquiries-contact",
-        ]
-        if self.steps.current == "security-classification":
-            return "datasets/requesting_data/security.html"
-        if self.steps.current == "update-frequency":
-            return "datasets/requesting_data/update_frequency_options.html"
-        if self.steps.current == "summary":
-            return "datasets/requesting_data/summary.html"
-        if self.steps.current in user_search_pages:
-            return "datasets/requesting_data/user_search.html"
-        else:
-            return "datasets/requesting_data/summary_information.html"
-
     def done(self, form_list, **kwargs):
         notes_fields = [
             "origin",
@@ -220,7 +205,7 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
 
 
 class RequestingDataAboutThisDataWizardView(NamedUrlSessionWizardView, FormPreview):
-    form_list = [  
+    form_list = [
         # ("security-classification", DatasetSecurityClassificationForm),
         # ("personal-data", DatasetPersonalDataForm),
         # ("special-personal-data", DatasetSpecialPersonalDataForm),
@@ -232,7 +217,7 @@ class RequestingDataAboutThisDataWizardView(NamedUrlSessionWizardView, FormPrevi
 
 
 class RequestingDataAccessRestrictionsWizardView(NamedUrlSessionWizardView, FormPreview):
-    form_list = [  
+    form_list = [
         # ("intended-access", DatasetIntendedAccessForm),
         # ("location-restrictions", DatasetLocationRestrictionsForm),
         # ("network-restrictions", DatasetNetworkRestrictionsForm),
