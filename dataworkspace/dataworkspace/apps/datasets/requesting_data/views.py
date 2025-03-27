@@ -55,11 +55,16 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
     ]
 
     def get_template_names(self):
+        user_search_pages = [
+            "information-asset-owner",
+            "information-asset-manager",
+            "enquiries-contact",
+        ]
         if self.steps.current == "security-classification":
             return "datasets/requesting_data/security.html"
         if self.steps.current == "update-frequency":
             return "datasets/requesting_data/update_frequency_options.html"
-        if self.steps.current == "information-asset-owner":
+        if self.steps.current in user_search_pages:
             return "datasets/requesting_data/user_search.html"
         else:
             return "datasets/requesting_data/summary_information.html"
