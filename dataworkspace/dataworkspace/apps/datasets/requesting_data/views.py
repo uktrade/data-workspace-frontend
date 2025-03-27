@@ -1,5 +1,7 @@
 import re
+from django import forms
 from django.forms import model_to_dict
+from django.shortcuts import get_object_or_404
 from dataworkspace.tests.conftest import user
 from formtools.preview import FormPreview
 from formtools.wizard.views import NamedUrlSessionWizardView
@@ -205,19 +207,25 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
                     requesting_dataset.enquiries_contact = User.objects.get(
                         id=form.cleaned_data.get(field).id
                     )
-
                 else:
                     setattr(requesting_dataset, field, form.cleaned_data.get(field))
                 requesting_dataset.save()
 
-        return HttpResponseRedirect(
-            reverse(
-                "datasets:find_datasets",
-            )
-        )
+        requesting_dataset.stage_one_complete = True
+        requesting_dataset.save()
+        self.request.session["requesting_dataset"] = requesting_dataset.id
+        return HttpResponseRedirect(reverse("requesting-data-about-this-data-step", args={("security-classification")}))
 
 
 class RequestingDataAboutThisDataWizardView(NamedUrlSessionWizardView, FormPreview):
+    def get_template_names(self):
+
+        if self.steps.current == "summary":
+            return "datasets/requesting_data/summary.html"
+        if self.steps.current == "security-classification":
+            return "datasets/requesting_data/security.html"
+        else:
+            return "datasets/requesting_data/about_the_data.html"
 
     form_list = [
         ("security-classification", DatasetSecurityClassificationForm),
@@ -228,11 +236,24 @@ class RequestingDataAboutThisDataWizardView(NamedUrlSessionWizardView, FormPrevi
         ("update-frequency", DatasetUpdateFrequencyForm),
         ("summary", SummaryPageForm),]
 
+    # def get_form_kwargs(self, step=None):
+    #     kwargs = super().get_form_kwargs(step)
+    #     requesting_dataset_id = self.request.session.get("requesting_dataset")
+    #     requesting_dataset = get_object_or_404(RequestingDataset, id=requesting_dataset_id)
+
+    #     if requesting_dataset_id:
+    #         form_class = self.form_list[step]
+    #         if issubclass(form_class, forms.ModelForm):
+    #             kwargs["instance"] = requesting_dataset
+    #         else:
+    #             kwargs["initial"] = {'requesting_dataset_id': requesting_dataset.id}
+    #     print("KWARGS IN GET KWARGS: ", kwargs)
+    #     return kwargs
+
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form=form, **kwargs)
-        print("KWARGS in CONTEXT DATA", kwargs)
-        if self.steps.current == "summary":
 
+        if self.steps.current == "summary":
             # the feild label in the forms
             section_two_fields = [
                 "government_security_classification", "personal_data", "special_personal_data",
@@ -248,7 +269,6 @@ class RequestingDataAboutThisDataWizardView(NamedUrlSessionWizardView, FormPrevi
                     questions[name] = question
             for step in self.storage.data["step_data"]:
                 for key, value in self.get_cleaned_data_for_step(step).items():
-
                     if key in section_two_fields:
                         section.append(
                             {step:
@@ -261,7 +281,9 @@ class RequestingDataAboutThisDataWizardView(NamedUrlSessionWizardView, FormPrevi
         return context
 
     def done(self, form_list, **kwargs):
-        print("KWARGS IN DONE: ", **kwargs)
+        requesting_dataset = RequestingDataset.objects.get(id=self.request.session["requesting_dataset"])
+        requesting_dataset.save()
+
         notes_fields = [
             "purpose",
             "special-personal-data",
@@ -271,11 +293,6 @@ class RequestingDataAboutThisDataWizardView(NamedUrlSessionWizardView, FormPrevi
 
         # these fields need to added to notes as they no do have fields themselves but are useful to analysts.
         User = get_user_model()
-
-        requesting_dataset = RequestingDataset.objects.get(
-            name=form_list[0].cleaned_data.get("name")
-        )
-        requesting_dataset.save()
 
         # DatasetUsageForm to be sent to restrictions on usage.
 
@@ -296,7 +313,8 @@ class RequestingDataAboutThisDataWizardView(NamedUrlSessionWizardView, FormPrevi
                     requesting_dataset.enquiries_contact = User.objects.get(
                         id=form.cleaned_data.get(field).id
                     )
-
+                if field == "sensitivity":
+                    requesting_dataset.sensitivity.set(form.cleaned_data.get("sensitivity"))
                 else:
                     setattr(requesting_dataset, field, form.cleaned_data.get(field))
                 requesting_dataset.save()
@@ -370,7 +388,6 @@ class RequestingDataAccessRestrictionsWizardView(NamedUrlSessionWizardView, Form
     #     dataset = DataSet.objects.create(**data_dict)
     #     dataset.data_catalogue_editors.set(requesting_dataset.data_catalogue_editors.all())
     #     dataset.sensitivity.set(requesting_dataset.sensitivity.all())
-
     #     return HttpResponseRedirect(
     #         reverse(
     #             "datasets:find_datasets",

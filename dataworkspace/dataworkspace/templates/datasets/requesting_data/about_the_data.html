@@ -29,6 +29,8 @@
 <h1 class="govuk-heading-l">Summary information</h2>
   <form method="post" novalidate>
     {% csrf_token %}
+            {{ wizard.management_form }}
+        {{ wizard.form.management_form }}
     {% for field in form %}
       {{ field }}
     {% endfor %}
