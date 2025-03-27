@@ -98,7 +98,6 @@ class DatasetInformationAssetManagerForm(forms.Form):
 
 
 class DatasetEnquiriesContactForm(forms.Form):
-
     enquiries_contact = forms.CharField(
         required=True,
     )
@@ -112,7 +111,6 @@ class DatasetEnquiriesContactForm(forms.Form):
 
 
 class DatasetExistingSystemForm(GOVUKDesignSystemForm):
-
     existing_system = GOVUKDesignSystemTextareaField(
         label="Which system is the data set currently stored on?",
         required=True,
@@ -127,7 +125,6 @@ class DatasetExistingSystemForm(GOVUKDesignSystemForm):
 
 
 class DatasetLicenceForm(GOVUKDesignSystemForm):
-
     licence = GOVUKDesignSystemCharField(
         label="What licence do you have for this data?",
         required=False,
@@ -139,7 +136,6 @@ class DatasetLicenceForm(GOVUKDesignSystemForm):
 
 
 class DatasetRestrictionsForm(GOVUKDesignSystemForm):
-
     restrictions = GOVUKDesignSystemTextareaField(
         label="What are the usage restrictions?",
         required=False,
@@ -154,7 +150,6 @@ class DatasetRestrictionsForm(GOVUKDesignSystemForm):
 
 
 class DatasetUsageForm(GOVUKDesignSystemForm):
-
     usage = GOVUKDesignSystemTextareaField(
         label="How can this data be used on Data Workspace?",
         required=True,
@@ -169,7 +164,6 @@ class DatasetUsageForm(GOVUKDesignSystemForm):
 
 
 class DatasetIntendedAccessForm(GOVUKDesignSystemForm):
-
     intended_access = GOVUKDesignSystemRadioField(
         required=True,
         choices=[("yes", "Yes"), ("no", "No")],
@@ -191,7 +185,6 @@ class DatasetIntendedAccessForm(GOVUKDesignSystemForm):
 
 
 class DatasetLocationRestrictionsForm(GOVUKDesignSystemForm):
-
     location_restrictions = GOVUKDesignSystemTextareaField(
         label="Should there be any location restrictions for access to this data set?",
         required=False,
@@ -236,7 +229,6 @@ class DatasetUserRestrictionsForm(GOVUKDesignSystemForm):
 
 
 class DatasetSecurityClassificationForm(GOVUKDesignSystemModelForm):
-
     sensitivity = forms.ModelMultipleChoiceField(
         queryset=SensitivityType.objects.all(), widget=forms.CheckboxSelectMultiple, required=False
     )
@@ -255,7 +247,6 @@ class DatasetSecurityClassificationForm(GOVUKDesignSystemModelForm):
 
 
 class DatasetPersonalDataForm(GOVUKDesignSystemForm):
-
     personal_data = GOVUKDesignSystemTextareaField(
         required=False,
         label="Does it contain personal data?",
@@ -271,7 +262,6 @@ class DatasetPersonalDataForm(GOVUKDesignSystemForm):
 
 
 class DatasetSpecialPersonalDataForm(GOVUKDesignSystemForm):
-
     special_personal_data = GOVUKDesignSystemTextareaField(
         required=False,
         label="Does it contain special category personal data?",
@@ -287,7 +277,6 @@ class DatasetSpecialPersonalDataForm(GOVUKDesignSystemForm):
 
 
 class DatasetCommercialSensitiveForm(GOVUKDesignSystemForm):
-
     commercial_sensitive = GOVUKDesignSystemTextareaField(
         required=False,
         label="Does it contain commercially sensitive data?",
@@ -303,7 +292,6 @@ class DatasetCommercialSensitiveForm(GOVUKDesignSystemForm):
 
 
 class DatasetRetentionPeriodForm(GOVUKDesignSystemForm):
-
     retention_policy = GOVUKDesignSystemCharField(
         label="What is the retention period?",
         required=True,
@@ -316,7 +304,6 @@ class DatasetRetentionPeriodForm(GOVUKDesignSystemForm):
 
 
 class DatasetUpdateFrequencyForm(GOVUKDesignSystemForm):
-
     update_frequency = GOVUKDesignSystemRadioField(
         label="How often is the source data updated?",
         choices=[
@@ -339,7 +326,6 @@ class DatasetUpdateFrequencyForm(GOVUKDesignSystemForm):
 
 
 class SummaryPageForm(GOVUKDesignSystemForm):
-
     summary = GOVUKDesignSystemCharField(
         required=False,
         label="SUMMARY",
