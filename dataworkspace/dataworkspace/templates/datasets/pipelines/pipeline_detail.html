@@ -22,7 +22,7 @@
 {% block content %}
   {{ schema_tables|json_script:"schema_tables" }}
   <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
+    <div>
       <h1 class="govuk-heading-xl">
         {% if form.instance.id %}Edit{% else %}New{% endif %} pipeline
       </h1>
@@ -60,6 +60,7 @@
         {% endif %}
 
         {{ form.schedule }}
+        {{ form.custom_schedule }}
         {{ form.notes }}
         {{ form.site_name }}
         {{ form.list_name }}
