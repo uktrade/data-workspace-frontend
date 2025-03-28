@@ -67,6 +67,7 @@ class DatasetDataOriginForm(GOVUKDesignSystemForm):
         ),
     )
 
+
 class DatasetInformationAssetOwnerForm(forms.Form):
 
     information_asset_owner = forms.CharField(
@@ -329,12 +330,7 @@ class SummaryPageForm(GOVUKDesignSystemForm):
     summary = forms.CharField(widget=forms.HiddenInput(), label="summary", required=False)
 
 
-<<<<<<< HEAD
 class TrackerPageForm(forms.Form):
     requesting_dataset = forms.CharField(
         required=True,
     )
-=======
-class TrackerPageForm(GOVUKDesignSystemForm):
-    tracker = forms.CharField(widget=forms.HiddenInput(), label="summary", required=False)
->>>>>>> e70501068 (WIP: refactoring add_fields method)
