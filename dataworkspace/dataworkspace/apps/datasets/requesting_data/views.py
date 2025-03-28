@@ -2,6 +2,7 @@ from django.forms import model_to_dict
 from http.client import HTTPResponse
 import re
 from django import forms
+from django.views.generic import FormView
 from django.forms import model_to_dict
 from django.shortcuts import get_object_or_404
 from dataworkspace.tests.conftest import user
@@ -17,16 +18,26 @@ from dataworkspace.apps.datasets.models import DataSet, RequestingDataset
 from django.db.models import Q
 
 from dataworkspace.apps.datasets.requesting_data.forms import (
+    DatasetCommercialSensitiveForm,
     DatasetEnquiriesContactForm,
     DatasetInformationAssetManagerForm,
     DatasetInformationAssetOwnerForm,
+    DatasetIntendedAccessForm,
+    DatasetLocationRestrictionsForm,
     DatasetNameForm,
     DatasetDescriptionsForm,
     DatasetDataOriginForm,
     DatasetExistingSystemForm,
     DatasetLicenceForm,
+    DatasetNetworkRestrictionsForm,
+    DatasetPersonalDataForm,
     DatasetRestrictionsForm,
+    DatasetRetentionPeriodForm,
+    DatasetSecurityClassificationForm,
+    DatasetSpecialPersonalDataForm,
+    DatasetUpdateFrequencyForm,
     DatasetUsageForm,
+    DatasetUserRestrictionsForm,
     SummaryPageForm,
     TrackerPageForm,
 )
@@ -247,7 +258,7 @@ class RequestingDataAboutThisDataWizardView(NamedUrlSessionWizardView, FormPrevi
         context = super().get_context_data(form=form, **kwargs)
 
         if self.steps.current == "summary":
-            # the feild label in the forms
+            # the field label in the forms
             section_two_fields = [
                 "government_security_classification",
                 "personal_data",
@@ -321,7 +332,6 @@ class RequestingDataAccessRestrictionsWizardView(NamedUrlSessionWizardView, Form
     def done(self, form_list, **kwargs):
 
         notes_fields = [
-            "current_access",
             "intended_access",
             "operational_impact" "location_restrictions",
             "network_restrictions",

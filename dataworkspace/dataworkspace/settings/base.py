@@ -96,6 +96,7 @@ INSTALLED_APPS = [
     "django.contrib.redirects",
     "django.forms",
     "django_better_admin_arrayfield.apps.DjangoBetterAdminArrayfieldConfig",
+    "django_admin_inline_paginator",
     "adminsortable2",
     "waffle",
     "rest_framework",
@@ -121,7 +122,6 @@ INSTALLED_APPS = [
     "dataworkspace.apps.data_collections",
     "django_celery_results",
     "dataworkspace.apps.arangodb",
-    "django_admin_inline_paginator",
     "formtools",
 ]
 
