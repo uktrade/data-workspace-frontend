@@ -31,7 +31,7 @@ from django.http import (
     HttpResponseServerError,
     JsonResponse,
 )
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
@@ -1514,6 +1514,8 @@ class DatasetEditView(EditBaseView, UpdateView):
         context["unpublish_data"] = json.dumps(
             {"unpublish_url": reverse("datasets:unpublish_dataset", args=[self.obj.pk])}
         )
+        # print(f' context >>> {context["unpublish_data"] }')
+        # context >>> {"unpublish_url": "/datasets/ebeb0902-5a9b-4d7a-aada-94a52b226f66/edit-dataset/unpublish"}
         return context
 
     def form_valid(self, form):
@@ -1547,13 +1549,26 @@ class DatasetEditView(EditBaseView, UpdateView):
         return super().form_valid(form)
 
 
-class DatasetEditUnpublishView(EditBaseView, UpdateView):
+class DatasetEditUnpublishView(EditBaseView, UpdateView, View):
 
     def post(self, request, *arg, **kwargs):
-        id = kwargs["datasetid"]
-        dataset = find_dataset(id, request.user)
+        print(f'arg >>>>>> {arg}')
+        print(f'kwargs >>>>>>>>>>> {kwargs}')
+        print(f'kwargs pk >>>>>>>>>>> {kwargs["pk"]}') 
+        id = kwargs["pk"] # ebeb0902-5a9b-4d7a-aada-94a52b226f66 
+        dataset = find_dataset(id, request.user) # Test 
+        print(type(dataset)) #<class 'dataworkspace.apps.datasets.models.DataSet'>
+        print(f'print dataset before published {dataset.published}')
         dataset.published = False
+        print(f'print dataset published field status after {dataset.published}')
         # Send to zendesk to notify analyst about the page status
+        # redirect_url = (
+        #         reverse("datasets:data_dictionary", args=[source_uuid])
+        #         + "?dataset_uuid="
+        #         + str(dataset_uuid)
+        #     )
+        return redirect('/datasets')
+
 
 
 class VisualisationCatalogueItemEditView(EditBaseView, UpdateView):
