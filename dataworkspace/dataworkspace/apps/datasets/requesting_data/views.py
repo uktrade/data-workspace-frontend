@@ -1,3 +1,4 @@
+from django.forms import model_to_dict
 from http.client import HTTPResponse
 import re
 from django import forms
@@ -10,7 +11,6 @@ from django.contrib.auth import get_user_model
 
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from django.views.generic import FormView
 
 from dataworkspace.apps.datasets.models import DataSet, RequestingDataset
 
@@ -27,16 +27,6 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetLicenceForm,
     DatasetRestrictionsForm,
     DatasetUsageForm,
-    DatasetLocationRestrictionsForm,
-    DatasetNetworkRestrictionsForm,
-    DatasetUserRestrictionsForm,
-    DatasetIntendedAccessForm,
-    DatasetSecurityClassificationForm,
-    DatasetSpecialPersonalDataForm,
-    DatasetPersonalDataForm,
-    DatasetCommercialSensitiveForm,
-    DatasetRetentionPeriodForm,
-    DatasetUpdateFrequencyForm,
     SummaryPageForm,
     TrackerPageForm,
 )
@@ -85,20 +75,11 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
         ("summary", SummaryPageForm),
     ]
 
-    def get_template_names(self):
-        user_search_pages = [
-            "information-asset-owner",
-            "information-asset-manager",
-            "enquiries-contact",
-        ]
-        if self.steps.current == "security-classification":
-            return "datasets/requesting_data/security.html"
-        if self.steps.current == "update-frequency":
-            return "datasets/requesting_data/update_frequency_options.html"
-        if self.steps.current in user_search_pages:
-            return "datasets/requesting_data/user_search.html"
-        else:
-            return "datasets/requesting_data/summary_information.html"
+    user_search_pages = [
+        "information-asset-owner",
+        "information-asset-manager",
+        "enquiries-contact",
+    ]
 
     def get_users(self, search_query):
         User = get_user_model()
@@ -130,45 +111,32 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
 
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form=form, **kwargs)
-        if self.steps.current == "information-asset-owner":
-            context["form_page"] = "information-asset-owner"
-            context["field"] = "information_asset_owner"
+        step = self.steps.current
+
+        if step == "information-asset-owner":
             context["label"] = "Name of Information Asset Owner"
             context["help_text"] = (
                 "IAO's are responsible for ensuring information assets are handled and managed appropriately"
             )
-            try:
-                search_query = self.request.GET.dict()["search"]
-                context["search_query"] = search_query
-                if search_query:
-                    context["search_results"] = self.get_users(search_query=search_query)
-            except:
-                return context
-        elif self.steps.current == "information-asset-manager":
-            context["form_page"] = "information-asset-manager"
-            context["field"] = "information_asset_manager"
+        elif step == "information-asset-manager":
             context["label"] = "Name of Information Asset Manager"
             context["help_text"] = (
-                "IAM's ahve knowledge and duties associated with an asset, and so often support the IAO"
+                "IAM's have knowledge and duties associated with an asset, and so often support the IAO"
             )
-            try:
-                search_query = self.request.GET.dict()["search"]
-                context["search_query"] = search_query
-                if search_query:
-                    context["search_results"] = self.get_users(search_query=search_query)
-            except:
-                return context
-        elif self.steps.current == "enquiries-contact":
-            context["form_page"] = "enquiries-contact"
-            context["field"] = "enquiries_contact"
+        elif step == "enquiries-contact":
             context["label"] = "Contact person"
             context["help_text"] = "Description of contact person"
+
+        if step in self.user_search_pages:
+            step = self.steps.current
+            context["form_page"] = step
+            context["field"] = step.replace("-", "_")
             try:
                 search_query = self.request.GET.dict()["search"]
                 context["search_query"] = search_query
                 if search_query:
                     context["search_results"] = self.get_users(search_query=search_query)
-            except:
+            except Exception:
                 return context
 
         # could be abstracted
@@ -234,8 +202,8 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
         notes_fields = [
             "origin",
             "existing_system",
-            "previously_published",
             "usage",
+
         ]
 
         # these fields need to added to notes as they no do have fields themselves but are useful to analysts.
