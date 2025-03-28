@@ -8,10 +8,11 @@ type unpublishDataType = {
   unpublish_url: string; // or visualisation
 };
 
-const UnpublishCataloguePage = ({ data }: {
+const UnpublishCataloguePage = ({
+  data
+}: {
   data: unpublishDataType;
 }): React.ReactNode => {
-  console.log(data)
   const csrf_token = document.cookie
     .split(';')
     .find((c) => c.trim().includes('data_workspace_csrf='))
