@@ -1,4 +1,5 @@
 {% extends '_main.html' %}
+{% load render_bundle from webpack_loader %}
 
 {% load humanize static datasets_tags core_tags waffle_tags %}
 
@@ -175,9 +176,7 @@
                           <li>remove the data from any dashboards or data cuts</li>
                           <li>revoke access for any users</li>
                         </ul>
-                      <a class="govuk-button govuk-button--secondary">
-                        Unpublish catalogue page
-                      </a>
+                      {% include "partials/react-slot-data.html" with mount_id="unpublish-catalogue-page" data=unpublish_data test_id="unpublish-catalogue-page" %}
                     </aside>
                     </div>
                 </fieldset>
@@ -197,4 +196,5 @@
   </script>
   {{ form.media }}
     {% include 'partials/ckeditor.html' %}
+{% render_bundle 'unpublish-catalogue-page' 'js' %}
 {% endblock footer_scripts %}

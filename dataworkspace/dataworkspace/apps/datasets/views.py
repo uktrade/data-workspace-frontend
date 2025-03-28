@@ -1509,6 +1509,13 @@ class DatasetEditView(EditBaseView, UpdateView):
             "authorized_email_domains": ",".join(self.object.authorized_email_domains),
         }
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["unpublish_data"] = json.dumps(
+            {"unpublish_url": reverse("datasets:unpublish_dataset", args=[self.obj.pk])}
+        )
+        return context
+
     def form_valid(self, form):
 
         if "description" in form.changed_data:
@@ -1538,6 +1545,15 @@ class DatasetEditView(EditBaseView, UpdateView):
             invalidate_superset_user_cached_credentials()
         messages.success(self.request, "Dataset updated")
         return super().form_valid(form)
+
+
+class DatasetEditUnpublishView(EditBaseView, UpdateView):
+
+    def post(self, request, *arg, **kwargs):
+        id = kwargs["datasetid"]
+        dataset = find_dataset(id, request.user)
+        dataset.published = False
+        # Send to zendesk to notify analyst about the page status
 
 
 class VisualisationCatalogueItemEditView(EditBaseView, UpdateView):
