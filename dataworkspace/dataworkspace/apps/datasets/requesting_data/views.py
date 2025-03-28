@@ -61,11 +61,12 @@ def add_fields(form_list, requesting_dataset, notes_fields):
                     requesting_dataset.enquiries_contact = User.objects.get(
                         id=form.cleaned_data.get(field).id
                     )
-                if field == "sensitivity":
-                    requesting_dataset.sensitivity.set(form.cleaned_data.get("sensitivity"))
-                else:
-                    setattr(requesting_dataset, field, form.cleaned_data.get(field))
-                requesting_dataset.save()
+            if field == "sensitivity":
+                requesting_dataset.sensitivity.set(form.cleaned_data.get("sensitivity"))
+            else:
+                setattr(requesting_dataset, field, form.cleaned_data.get(field))
+            requesting_dataset.save()
+    return requesting_dataset
 
 
 class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, FormPreview):
@@ -190,6 +191,7 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
                         )
 
             context["summary"] = section
+        context["stage"] = "Summary Information"
         return context
 
     notes_fields = [
@@ -209,7 +211,7 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
         if self.steps.current in user_search_pages:
             return "datasets/requesting_data/user_search.html"
         else:
-            return "datasets/requesting_data/summary_information.html"
+            return "datasets/requesting_data/form_template.html"
 
     def done(self, form_list, **kwargs):
 
@@ -228,7 +230,7 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
         requesting_dataset.save()
 
         # DatasetUsageForm to be sent to restrictions on usage.
-        add_fields(form_list, requesting_dataset, notes_fields)
+        requesting_dataset = add_fields(form_list, requesting_dataset, notes_fields)
         requesting_dataset.stage_one_complete = True
         requesting_dataset.save()
         self.request.session["requesting_dataset"] = requesting_dataset.id
@@ -245,7 +247,7 @@ class RequestingDataAboutThisDataWizardView(NamedUrlSessionWizardView, FormPrevi
         if self.steps.current == "security-classification":
             return "datasets/requesting_data/security.html"
         else:
-            return "datasets/requesting_data/about_the_data.html"
+            return "datasets/requesting_data/form_template.html"
 
     form_list = [
         ("security-classification", DatasetSecurityClassificationForm),
@@ -302,6 +304,7 @@ class RequestingDataAboutThisDataWizardView(NamedUrlSessionWizardView, FormPrevi
                         )
 
             context["summary"] = section
+        context["stage"] = "About This Data"
         return context
 
     def done(self, form_list, **kwargs):
@@ -317,42 +320,24 @@ class RequestingDataAboutThisDataWizardView(NamedUrlSessionWizardView, FormPrevi
             "update-frequency",
         ]
 
-        # these fields need to added to notes as they no do have fields themselves but are useful to analysts.
-        User = get_user_model()
-
         # DatasetUsageForm to be sent to restrictions on usage.
 
-        for form in form_list:
-            for field in form.cleaned_data:
-                if field in notes_fields and form.cleaned_data.get(field):
-                    if requesting_dataset.notes:
-                        requesting_dataset.notes += (
-                            f"{form[field].label}\n{form.cleaned_data.get(field)}\n"
-                        )
-                        requesting_dataset.save()
-                    else:
-                        requesting_dataset.notes = (
-                            f"{form[field].label}\n{form.cleaned_data.get(field)}\n"
-                        )
-                        requesting_dataset.save()
-                if field == "enquiries_contact":
-                    requesting_dataset.enquiries_contact = User.objects.get(
-                        id=form.cleaned_data.get(field).id
-                    )
-                if field == "sensitivity":
-                    requesting_dataset.sensitivity.set(form.cleaned_data.get("sensitivity"))
-                else:
-                    setattr(requesting_dataset, field, form.cleaned_data.get(field))
-                requesting_dataset.save()
-
+        requesting_dataset = add_fields(form_list, requesting_dataset, notes_fields)
+        requesting_dataset.stage_two_complete = True
         return HttpResponseRedirect(
-            reverse(
-                "datasets:find_datasets",
-            )
+            reverse("requesting-data-access-restrictions-step", args={("intended-access")})
         )
 
 
 class RequestingDataAccessRestrictionsWizardView(NamedUrlSessionWizardView, FormPreview):
+
+    def get_template_names(self):
+        if self.steps.current == "summary":
+            return "datasets/requesting_data/summary.html"
+        if self.steps.current == "security-classification":
+            return "datasets/requesting_data/security.html"
+        else:
+            return "datasets/requesting_data/form_template.html"
 
     form_list = [
         ("intended-access", DatasetIntendedAccessForm),
@@ -372,52 +357,53 @@ class RequestingDataAccessRestrictionsWizardView(NamedUrlSessionWizardView, Form
             "security_clearance",
             "user_restrictions",
         ]
-        User = get_user_model()
 
-        requesting_dataset = RequestingDataset.objects.create(
-            name=form_list[0].cleaned_data.get("name")
+        requesting_dataset = RequestingDataset.objects.get(
+            id=self.request.session["requesting_dataset"]
         )
         requesting_dataset.save()
 
         # DatasetUsageForm to be sent to restrictions on usage.
 
-        for form in form_list:
-            for field in form.cleaned_data:
-                if field in notes_fields and form.cleaned_data.get(field):
-                    if requesting_dataset.notes:
-                        requesting_dataset.notes += (
-                            f"{form[field].label}\n{form.cleaned_data.get(field)}\n"
-                        )
-                        requesting_dataset.save()
-                    else:
-                        requesting_dataset.notes = (
-                            f"{form[field].label}\n{form.cleaned_data.get(field)}\n"
-                        )
-                        requesting_dataset.save()
-                if field == "enquiries_contact":
-                    requesting_dataset.enquiries_contact = User.objects.get(
-                        id=form.cleaned_data.get(field).id
-                    )
-                if field == "sensitivity":
-                    requesting_dataset.sensitivity.set(form.cleaned_data.get("sensitivity"))
-                else:
-                    setattr(requesting_dataset, field, form.cleaned_data.get(field))
-                requesting_dataset.save()
-
-        data_dict = model_to_dict(
-            requesting_dataset,
-            exclude=["id", "tags", "user", "sensitivity", "data_catalogue_editors", "stage_one_complete", "stage_two_complete"],
-        )
-        data_dict["enquiries_contact"] = requesting_dataset.enquiries_contact
-        data_dict["information_asset_manager"] = requesting_dataset.information_asset_manager
-        data_dict["information_asset_owner"] = requesting_dataset.information_asset_owner
-        data_dict["slug"] = requesting_dataset.name.lower().replace(" ", "-")
-
-        dataset = DataSet.objects.create(**data_dict)
-        dataset.data_catalogue_editors.set(requesting_dataset.data_catalogue_editors.all())
-        dataset.sensitivity.set(requesting_dataset.sensitivity.all())
+        requesting_dataset = add_fields(form_list, requesting_dataset, notes_fields)
+        # requesting_dataset.stage_three_complete = True
         return HttpResponseRedirect(
             reverse(
                 "datasets:find_datasets",
             )
         )
+
+    def get_context_data(self, form, **kwargs):
+        context = super().get_context_data(form=form, **kwargs)
+
+        if self.steps.current == "summary":
+            # the feild label in the forms
+            section_two_fields = [
+                "current_access",
+                "intended_access",
+                "operational_impact",
+                "location_restrictions",
+                "network_restrictions",
+                "security_clearance",
+                "user_restrictions",
+            ]
+
+            section = []
+            questions = {}
+
+            for name, form in self.form_list.items():
+                for name, field in form.base_fields.items():
+                    question = field.label
+                    questions[name] = question
+            for step in self.storage.data["step_data"]:
+                for key, value in self.get_cleaned_data_for_step(step).items():
+                    if key in section_two_fields:
+                        section.append(
+                            {
+                                step: {"question": questions[key], "answer": value},
+                            },
+                        )
+
+            context["summary"] = section
+        context["stage"] = "Access Restriction"
+        return context
