@@ -38,6 +38,13 @@ from dataworkspace.apps.core.views import (
     table_data_view,
     welcome_page_view,
 )
+
+from dataworkspace.apps.datasets.requesting_data.views import (
+    RequestingDataAboutThisDataWizardView,
+    RequestingDataAccessRestrictionsWizardView,
+    RequestingDataSummaryInformationWizardView,
+    RequestingDataTrackerView,
+)
 from dataworkspace.apps.datasets.views import home_view
 
 logger = logging.getLogger("app")
@@ -132,6 +139,32 @@ urlpatterns = [
         "support/add-dataset-request/",
         login_required(AddDatasetRequestView.as_view()),
         name="add-dataset-request",
+    ),
+    path(
+        "requesting-data/summary-information/<str:step>",
+        RequestingDataSummaryInformationWizardView.as_view(
+            url_name="requesting-data-summary-information-step"
+        ),
+        name="requesting-data-summary-information-step",
+    ),
+    path(
+        "requesting-data/about-this-data/<str:step>",
+        RequestingDataAboutThisDataWizardView.as_view(
+            url_name="requesting-data-about-this-data-step"
+        ),
+        name="requesting-data-about-this-data-step",
+    ),
+    path(
+        "requesting-data/access-restrictions/<str:step>",
+        RequestingDataAccessRestrictionsWizardView.as_view(
+            url_name="requesting-data-access-restrictions-step"
+        ),
+        name="requesting-data-access-restrictions-step",
+    ),
+    path(
+        "requesting-data/tracker/<uuid:requesting_dataset_id>",
+        RequestingDataTrackerView.as_view(),
+        name="requesting-data-tracker",
     ),
     path(
         "support/custom-visualisation-review/",
