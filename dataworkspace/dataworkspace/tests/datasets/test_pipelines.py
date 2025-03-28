@@ -134,6 +134,7 @@ def test_create_pipeline_validates_create_statement(mock_sync, staff_client):
     )
     assert b"Only SELECT statements are supported" in resp.content
 
+
 @mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
 def test_create_pipeline_validates_custom_schedule_statement(mock_sync, staff_client):
     staff_client.post(reverse("admin:index"), follow=True)
@@ -148,7 +149,7 @@ def test_create_pipeline_validates_custom_schedule_statement(mock_sync, staff_cl
         },
         follow=True,
     )
-    assert b"'Custom schedule' selected in schedule field but custom schedule field was empty or invalid." in resp.content
+    assert b"selected in schedule field but custom schedule field was empty or invalid" in resp.content
 
 
 @mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")

@@ -6,8 +6,6 @@ from django.conf import settings
 from mohawk import Sender
 
 
-from dataworkspace.apps.datasets.constants import PipelineScheduleType
-
 API_URL_DATA_WORKSPACE_AWS_INTERNAL = f"{settings.DATAFLOW_API_CONFIG['DATAFLOW_BASE_URL_DATA_WORKSPACE_AWS_INTERNAL']}/api/experimental/derived-dags"
 HAWK_CREDS = {
     "id": settings.DATAFLOW_API_CONFIG["DATAFLOW_HAWK_ID"],
