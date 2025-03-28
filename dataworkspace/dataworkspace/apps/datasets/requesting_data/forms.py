@@ -349,5 +349,7 @@ class SummaryPageForm(GOVUKDesignSystemForm):
     summary = forms.CharField(widget=forms.HiddenInput(), label="summary", required=False)
 
 
-class TrackerPageForm(GOVUKDesignSystemForm):
-    tracker = forms.CharField(widget=forms.HiddenInput(), label="summary", required=False)
+class TrackerPageForm(forms.Form):
+    requesting_dataset = forms.CharField(
+        required=True,
+    )

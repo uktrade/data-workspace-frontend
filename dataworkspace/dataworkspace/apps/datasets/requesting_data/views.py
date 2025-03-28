@@ -407,3 +407,8 @@ class RequestingDataAccessRestrictionsWizardView(NamedUrlSessionWizardView, Form
             context["summary"] = section
         context["stage"] = "Access Restriction"
         return context
+
+
+class RequestingDataTrackerView(FormView):
+    form_class = TrackerPageForm
+    template_name = "datasets/requesting_data/tracker.html"
