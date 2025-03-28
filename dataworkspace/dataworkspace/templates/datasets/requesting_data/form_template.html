@@ -6,12 +6,6 @@
 {% block breadcrumbs %}
 <a href="{% url 'support' %}" class="govuk-back-link">Back</a>
 {% endblock %}
-
-{% load i18n %}
-
-{% block head %}
-{{ wizard.form.media }}
-{% endblock %}
 {% block content %}
 {% if form.errors %}
   <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
@@ -32,19 +26,42 @@
   </div>
 {% endif %}
 
-<h1 class="govuk-heading-l">Summary information</h2>
-
-
- <form action="" method="post" novalidate>
-  {% csrf_token %}
-    {{ wizard.management_form }}
+<h1 class="govuk-heading-l">{{ stage }}</h1>
+  <form method="post" novalidate>
+    {% csrf_token %}
+            {{ wizard.management_form }}
         {{ wizard.form.management_form }}
-          {% for form in wizard.form %}
-              {{ form }}
-          {% endfor %}       
-      <button type="submit" class="govuk-button">Continue</button>
-    </form>
+    {% for field in form %}
+      {{ field }}
+    {% endfor %}
+    <button type="submit" class="govuk-button" data-module="govuk-button">
+      Continue
+    </button>
+  </form>
+
 <p class="govuk-body">
   <a href="{{ link }}" class="govuk-link">{{ link_text }}</a>
 </p>
+
+  <script nonce="{{ request.csp_nonce }}">
+
+  document.addEventListener("DOMConentLoaded", function(){
+    let governmentSecurityClassification = document.querySelectorAll('input[data-type="security_classification"]');
+    let sensitivity = document.querySelectorAll('input[data-type="sensitivity"]');
+
+    sensitivity.style.display = 'none';
+
+    governmentSecurityClassification.forEach(radio => {
+      radio.addEventListener('change', function() {
+        if(this.value === 'OFFICIAL_SENSITIVE') {
+          sensitivity.style.display = 'block';
+        } else {
+          sensitivity.style.display = 'none';
+        }
+      })
+    })
+    })
+  </script>
+
+
 {% endblock %}
