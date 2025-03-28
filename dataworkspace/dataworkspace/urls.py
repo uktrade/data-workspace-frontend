@@ -38,16 +38,13 @@ from dataworkspace.apps.core.views import (
     table_data_view,
     welcome_page_view,
 )
-<<<<<<< HEAD
-from dataworkspace.apps.datasets.requesting_data.views import RequestingDataAboutThisDataWizardView, RequestingDataAccessRestrictionsWizardView, RequestingDataSummaryInformationWizardView, RequestingDataTrackerView
-=======
+
 from dataworkspace.apps.datasets.requesting_data.views import (
     RequestingDataAboutThisDataWizardView,
     RequestingDataAccessRestrictionsWizardView,
     RequestingDataSummaryInformationWizardView,
     RequestingDataTrackerView,
 )
->>>>>>> e70501068 (WIP: refactoring add_fields method)
 from dataworkspace.apps.datasets.views import home_view
 
 logger = logging.getLogger("app")
