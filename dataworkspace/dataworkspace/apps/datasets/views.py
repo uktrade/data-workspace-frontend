@@ -1548,9 +1548,6 @@ class DatasetEditView(EditBaseView, UpdateView):
 
 
 class DatasetEditUnpublishView(EditBaseView, UpdateView, View):
-
-    # The actual record we're trying to update is: b249e884-9c7f-4543-be5f-d52ca01f98e7
-
     def post(self, request, *arg, **kwargs):
         dataset = find_dataset(kwargs["pk"], request.user)
         dataset.published = False
