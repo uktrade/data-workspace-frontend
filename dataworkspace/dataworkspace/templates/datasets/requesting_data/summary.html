@@ -31,34 +31,40 @@
   </div>
 {% endif %}
 
-<h1 class="govuk-heading-l">Summary information</h1>
+<h1 class="govuk-heading-l">{{ stage }}</h1>
 
 <h2 class="govuk-heading-m">Your answers</h2>
 
-
-{% for answers in summary %} 
-  {% for key, qa  in answers.items %}
-
-<dl class="govuk-summary-list">
-  <div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">
-      {{ qa.question }}
-    </dt>
-    <dd class="govuk-summary-list__value">
-      {{ qa.answer }}
-    </dd>
-    <dd class="govuk-summary-list__actions">
-      <a class="govuk-link" href="{% url 'requesting-data-step' key %}">Change<span class="govuk-visually-hidden"></span></a>
-    </dd>
-  
-  </div>
-</dl>
-
-{% endfor%}
-
-{% endfor%}
-      <button type="submit" class="govuk-button">Continue</button>
-
+<form method="post" nonvalidate>
+    {%csrf_token%}
+        {{ wizard.management_form }}
+        {{ wizard.form.management_form }}
+    {% for answers in summary %} 
+    {% for key, qa  in answers.items %}
+        <dl class="govuk-summary-list">
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    {{ qa.question }}
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ qa.answer }}
+                </dd>
+                <dd class="govuk-summary-list__actions">
+                    {% if stage == "Summary Information" %}
+                        <a class="govuk-link" href="{% url 'requesting-data-summary-information-step' key %}">Change<span class="govuk-visually-hidden"></span></a>
+                    {% elif stage == "About This Data" %}
+                        <a class="govuk-link" href="{% url 'requesting-data-about-this-data-step' key %}">Change<span class="govuk-visually-hidden"></span></a>
+                    {% elif stage == "Access Restriction" %}
+                        <a class="govuk-link" href="{% url 'requesting-data-access-restrictions-step' key %}">Change<span class="govuk-visually-hidden"></span></a>
+                    {% endif %}
+                </dd>
+            </div>
+        </dl>
+        {% endfor%}
+    {% endfor%}
+    
+    <button type="submit" class="govuk-button">Continue</button>
+</form>
 
 
 
