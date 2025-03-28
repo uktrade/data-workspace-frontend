@@ -121,11 +121,8 @@ INSTALLED_APPS = [
     "dataworkspace.apps.data_collections",
     "django_celery_results",
     "dataworkspace.apps.arangodb",
-<<<<<<< HEAD
     "django_admin_inline_paginator",
-=======
     "formtools",
->>>>>>> c55e027b9 (adding formtools)
 ]
 
 MIDDLEWARE = [
