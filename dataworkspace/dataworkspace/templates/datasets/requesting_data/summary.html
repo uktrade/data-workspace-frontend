@@ -31,7 +31,7 @@
   </div>
 {% endif %}
 
-<h1 class="govuk-heading-l">Summary information</h1>
+<h1 class="govuk-heading-l">{{ stage }}</h1>
 
 <h2 class="govuk-heading-m">Your answers</h2>
 
@@ -50,7 +50,13 @@
                     {{ qa.answer }}
                 </dd>
                 <dd class="govuk-summary-list__actions">
-                    <a class="govuk-link" href="{% url 'requesting-data-summary-information-step' key %}">Change<span class="govuk-visually-hidden"></span></a>
+                    {% if stage == "Summary Information" %}
+                        <a class="govuk-link" href="{% url 'requesting-data-summary-information-step' key %}">Change<span class="govuk-visually-hidden"></span></a>
+                    {% elif stage == "About This Data" %}
+                        <a class="govuk-link" href="{% url 'requesting-data-about-this-data-step' key %}">Change<span class="govuk-visually-hidden"></span></a>
+                    {% elif stage == "Access Restriction" %}
+                        <a class="govuk-link" href="{% url 'requesting-data-access-restrictions-step' key %}">Change<span class="govuk-visually-hidden"></span></a>
+                    {% endif %}
                 </dd>
             </div>
         </dl>
