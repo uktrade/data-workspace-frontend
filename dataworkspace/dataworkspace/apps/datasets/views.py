@@ -1514,8 +1514,6 @@ class DatasetEditView(EditBaseView, UpdateView):
         context["unpublish_data"] = json.dumps(
             {"unpublish_url": reverse("datasets:unpublish_dataset", args=[self.obj.pk])}
         )
-        # print(f' context >>> {context["unpublish_data"] }')
-        # context >>> {"unpublish_url": "/datasets/ebeb0902-5a9b-4d7a-aada-94a52b226f66/edit-dataset/unpublish"}
         return context
 
     def form_valid(self, form):
@@ -1551,24 +1549,13 @@ class DatasetEditView(EditBaseView, UpdateView):
 
 class DatasetEditUnpublishView(EditBaseView, UpdateView, View):
 
-    def post(self, request, *arg, **kwargs):
-        print(f'arg >>>>>> {arg}')
-        print(f'kwargs >>>>>>>>>>> {kwargs}')
-        print(f'kwargs pk >>>>>>>>>>> {kwargs["pk"]}') 
-        id = kwargs["pk"] # ebeb0902-5a9b-4d7a-aada-94a52b226f66 
-        dataset = find_dataset(id, request.user) # Test 
-        print(type(dataset)) #<class 'dataworkspace.apps.datasets.models.DataSet'>
-        print(f'print dataset before published {dataset.published}')
-        dataset.published = False
-        print(f'print dataset published field status after {dataset.published}')
-        # Send to zendesk to notify analyst about the page status
-        # redirect_url = (
-        #         reverse("datasets:data_dictionary", args=[source_uuid])
-        #         + "?dataset_uuid="
-        #         + str(dataset_uuid)
-        #     )
-        return redirect('/datasets')
+    # The actual record we're trying to update is: b249e884-9c7f-4543-be5f-d52ca01f98e7
 
+    def post(self, request, *arg, **kwargs):
+        dataset = find_dataset(kwargs["pk"], request.user)
+        dataset.published = False
+        # Send to zendesk to notify analyst about the page status
+        return redirect('/datasets')
 
 
 class VisualisationCatalogueItemEditView(EditBaseView, UpdateView):
