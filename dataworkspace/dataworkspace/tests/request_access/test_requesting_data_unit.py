@@ -5,14 +5,25 @@ from django.contrib.auth import get_user_model
 
 from django.test import Client
 
+from dataworkspace.apps.datasets.models import SensitivityType
 from dataworkspace.apps.datasets.requesting_data.forms import (
+    DatasetCommercialSensitiveForm,
     DatasetDataOriginForm,
     DatasetDescriptionsForm,
     DatasetExistingSystemForm,
+    DatasetIntendedAccessForm,
     DatasetLicenceForm,
+    DatasetLocationRestrictionsForm,
     DatasetNameForm,
+    DatasetNetworkRestrictionsForm,
+    DatasetPersonalDataForm,
     DatasetRestrictionsForm,
+    DatasetRetentionPeriodForm,
+    DatasetSecurityClassificationForm,
+    DatasetSpecialPersonalDataForm,
+    DatasetUpdateFrequencyForm,
     DatasetUsageForm,
+    DatasetUserRestrictionsForm,
 )
 import pytest
 
@@ -114,109 +125,109 @@ class RequestingDataFormsTestCase(TestCase):
             label="usage",
         )
 
-    # def test_valid_form_intended_access(self):
+    def test_valid_form_intended_access(self):
 
-    #     form = DatasetIntendedAccessForm(
-    #         {
-    #             "intended_access": "yes",
-    #             "operational_impact": "Test operational impact",
-    #         }
-    #     )
-    #     assert form.is_valid()
-    #     assert "yes" in form.cleaned_data["intended_access"]
-    #     assert "Test operational impact" in form.cleaned_data["operational_impact"]
+        form = DatasetIntendedAccessForm(
+            {
+                "intended_access": "yes",
+                "operational_impact": "Test operational impact",
+            }
+        )
+        assert form.is_valid()
+        assert "yes" in form.cleaned_data["intended_access"]
+        assert "Test operational impact" in form.cleaned_data["operational_impact"]
 
-    # def test_valid_form_location_restrictions(self):
-    #     self.check_for_valid_form(
-    #         form=DatasetLocationRestrictionsForm,
-    #         input="""["Test location restrictions"]""",
-    #         expected_response="Test location restrictions",
-    #         label="location_restrictions",
-    #     )
+    def test_valid_form_location_restrictions(self):
+        self.check_for_valid_form(
+            form=DatasetLocationRestrictionsForm,
+            input="""["Test location restrictions"]""",
+            expected_response="Test location restrictions",
+            label="location_restrictions",
+        )
 
-    # def test_valid_form_network_restrictions(self):
-    #     self.check_for_valid_form(
-    #         form=DatasetNetworkRestrictionsForm,
-    #         input="""["Test network restrictions"]""",
-    #         expected_response="Test network restrictions",
-    #         label="network_restrictions",
-    #     )
+    def test_valid_form_network_restrictions(self):
+        self.check_for_valid_form(
+            form=DatasetNetworkRestrictionsForm,
+            input="""["Test network restrictions"]""",
+            expected_response="Test network restrictions",
+            label="network_restrictions",
+        )
 
-    # def test_valid_form_user_restrictions(self):
-    #     self.check_for_valid_form(
-    #         form=DatasetUserRestrictionsForm,
-    #         input="""["Test user restrictions"]""",
-    #         expected_response="Test user restrictions",
-    #         label="user_restrictions",
-    #     )
+    def test_valid_form_user_restrictions(self):
+        self.check_for_valid_form(
+            form=DatasetUserRestrictionsForm,
+            input="""["Test user restrictions"]""",
+            expected_response="Test user restrictions",
+            label="user_restrictions",
+        )
 
-    # def test_valid_form_security_classification_official(self):
-    #     form = DatasetSecurityClassificationForm(
-    #         {
-    #             "government_security_classification": 1,
-    #         }
-    #     )
+    def test_valid_form_security_classification_official(self):
+        form = DatasetSecurityClassificationForm(
+            {
+                "government_security_classification": 1,
+            }
+        )
 
-    #     assert form.is_valid()
-    #     assert form.cleaned_data["government_security_classification"] == 1
+        assert form.is_valid()
+        assert form.cleaned_data["government_security_classification"] == 1
 
-    # def test_valid_form_security_classification_official_sensitive(self):
+    def test_valid_form_security_classification_official_sensitive(self):
 
-    #     sensitivity = SensitivityType.objects.all()
-    #     form = DatasetSecurityClassificationForm(
-    #         {
-    #             "government_security_classification": 2,
-    #             "sensitivity": sensitivity,
-    #         }
-    #     )
+        sensitivity = SensitivityType.objects.all()
+        form = DatasetSecurityClassificationForm(
+            {
+                "government_security_classification": 2,
+                "sensitivity": sensitivity,
+            }
+        )
 
-    #     assert form.is_valid()
-    #     assert form.cleaned_data["government_security_classification"] == 2
+        assert form.is_valid()
+        assert form.cleaned_data["government_security_classification"] == 2
 
-    # def test_valid_form_personal_data(self):
-    #     self.check_for_valid_form(
-    #         form=DatasetPersonalDataForm,
-    #         input="""["Test personal data"]""",
-    #         expected_response="Test personal data",
-    #         label="personal_data",
-    #     )
+    def test_valid_form_personal_data(self):
+        self.check_for_valid_form(
+            form=DatasetPersonalDataForm,
+            input="""["Test personal data"]""",
+            expected_response="Test personal data",
+            label="personal_data",
+        )
 
-    # def test_valid_form_special_personal_data(self):
-    #     self.check_for_valid_form(
-    #         form=DatasetSpecialPersonalDataForm,
-    #         input="""["Test special personal data"]""",
-    #         expected_response="Test special personal data",
-    #         label="special_personal_data",
-    #     )
+    def test_valid_form_special_personal_data(self):
+        self.check_for_valid_form(
+            form=DatasetSpecialPersonalDataForm,
+            input="""["Test special personal data"]""",
+            expected_response="Test special personal data",
+            label="special_personal_data",
+        )
 
-    # def test_valid_form_commercial_sensitive_form(self):
-    #     self.check_for_valid_form(
-    #         form=DatasetCommercialSensitiveForm,
-    #         input="""["Test commercial personal data"]""",
-    #         expected_response="Test commercial personal data",
-    #         label="commercial_sensitive",
-    #     )
+    def test_valid_form_commercial_sensitive_form(self):
+        self.check_for_valid_form(
+            form=DatasetCommercialSensitiveForm,
+            input="""["Test commercial personal data"]""",
+            expected_response="Test commercial personal data",
+            label="commercial_sensitive",
+        )
 
-    # def test_valid_form_retention_period(self):
-    #     self.check_for_valid_form(
-    #         form=DatasetRetentionPeriodForm,
-    #         input="""["Test retention period"]""",
-    #         expected_response="Test retention period",
-    #         label="retention_policy",
-    #     )
+    def test_valid_form_retention_period(self):
+        self.check_for_valid_form(
+            form=DatasetRetentionPeriodForm,
+            input="""["Test retention period"]""",
+            expected_response="Test retention period",
+            label="retention_policy",
+        )
 
-    # def test_valid_form_update_frequency(self):
+    def test_valid_form_update_frequency(self):
 
-    #     form = DatasetUpdateFrequencyForm(
-    #         {
-    #             "update_frequency": "daily",
-    #             "message": "Test update frequency message",
-    #         }
-    #     )
+        form = DatasetUpdateFrequencyForm(
+            {
+                "update_frequency": "daily",
+                "message": "Test update frequency message",
+            }
+        )
 
-    #     assert form.is_valid()
-    #     assert "daily" in form.cleaned_data["update_frequency"]
-    #     assert "Test update frequency message" in form.cleaned_data["message"]
+        assert form.is_valid()
+        assert "daily" in form.cleaned_data["update_frequency"]
+        assert "Test update frequency message" in form.cleaned_data["message"]
 
 
 @pytest.mark.django_db
@@ -232,10 +243,11 @@ class RequestingDataViewsTestCase(TestCase):
             f"requesting_data_{stage}_wizard_view-current_step": [step],
             f"{step}-{field}": [test],
         }
+        stage = stage.replace("_", "-")
 
         response = self.client.post(
             reverse(
-                "requesting-data-summary-information-step",
+                f"requesting-data-{stage}-step",
                 args=[step],
             ),
             data=data,
@@ -333,68 +345,68 @@ class RequestingDataViewsTestCase(TestCase):
     def test_usage_view(self):
         self.check_view_response(stage="summary_information", step="usage", field="usage")
 
-    # @patch("requests.post")
-    # def test_security_classification(self, mock_post):
-    #     sensitivity = SensitivityType.objects.all()
+    @patch("requests.post")
+    def test_security_classification(self, mock_post):
+        sensitivity = SensitivityType.objects.all()
 
-    #     data = {
-    #         "requesting_data_wizard_view-current_step": ["security-classification"],
-    #         "security-classification-government_security_classification": 2,
-    #         "security-classification-sensitivity": sensitivity,
-    #     }
+        data = {
+            "requesting_data_about_this_data_wizard_view-current_step": ["security-classification"],
+            "security-classification-government_security_classification": 2,
+            "security-classification-sensitivity": sensitivity,
+        }
 
-    #     response = self.client.post(
-    #         reverse(
-    #             "requesting-data-step",
-    #             args=["security-classification"],
-    #         ),
-    #         data=data,
-    #     )
+        response = self.client.post(
+            reverse(
+                "requesting-data-about-this-data-step",
+                args=["security-classification"],
+            ),
+            data=data,
+        )
 
-    #     assert response.status_code == HTTPStatus.OK
-    #     assert mock_post.called is False
+        assert response.status_code == HTTPStatus.OK
+        assert mock_post.called is False
 
-    # def test_personal_data_view(self):
-    #     self.check_view_response(step="personal-data", field="personal_data")
+    def test_personal_data_view(self):
+        self.check_view_response(step="personal-data", field="personal_data", stage="about_this_data")
 
-    # def test_special_personal_data_view(self):
-    #     self.check_view_response(step="special-personal-data", field="special_personal_data")
+    def test_special_personal_data_view(self):
+        self.check_view_response(step="special-personal-data", field="special_personal_data", stage="about_this_data")
 
-    # def test_commercial_sensitive_view(self):
-    #     self.check_view_response(step="commercial-sensitive", field="commercial_sensitive")
+    def test_commercial_sensitive_view(self):
+        self.check_view_response(step="commercial-sensitive", field="commercial_sensitive", stage="about_this_data")
 
-    # def test_retention_period_view(self):
-    #     self.check_view_response(step="retention-period", field="retention_period")
+    def test_retention_period_view(self):
+        self.check_view_response(step="retention-period", field="retention_period", stage="about_this_data")
 
-    # def test_update_frequency_view(self):
-    #     self.check_view_response(
-    #         step="update-frequency", field="update_frequency", test="constant"
-    #     )
+    def test_update_frequency_view(self):
+        self.check_view_response(
+            step="update-frequency", field="update_frequency", test="constant", stage="about_this_data"
+        )
 
-    # @patch("requests.post")
-    # def test_intended_access_view(self, mock_post):
-    #     data = {
-    #         "requesting_data_wizard_view-current_step": ["intended-access"],
-    #         "intended-access-intended_access": ["yes"],
-    #         "intended-access-operational_impact": ["Test intended access"],
-    #     }
+    @patch("requests.post")
+    def test_intended_access_view(self, mock_post):
+        data = {
+            "requesting_data_access_restrictions_wizard_view-current_step": ["intended-access"],
+            "intended-access-intended_access": ["yes"],
+            "intended-access-operational_impact": ["Test intended access"],
+        }
 
-    #     response = self.client.post(
-    #         reverse(
-    #             "requesting-data-step",
-    #             args=["intended-access"],
-    #         ),
-    #         data=data,
-    #     )
+        response = self.client.post(
+            reverse(
+                "requesting-data-access-restrictions-step",
+                args=["intended-access"]
+            ),
+            data=data,
+        )
 
-    #     assert response.status_code == HTTPStatus.OK
-    #     assert mock_post.called is False
+        assert response.status_code == HTTPStatus.FOUND
+        assert mock_post.called is False
 
-    # def test_location_restrictions_view(self):
-    #     self.check_view_response(step="location-restrictions", field="location_restrictions")
+    def test_location_restrictions_view(self):
+        self.check_view_response(step="location-restrictions", field="location_restrictions", stage="access_restrictions")
 
-    # def test_network_restrictions_view(self):
-    #     self.check_view_response(step="network-restrictions", field="network_restrictions")
+    def test_network_restrictions_view(self):
+        self.check_view_response(step="network-restrictions", field="network_restrictions", stage="access_restrictions")
 
-    # def test_user_restrictions_view(self):
-    #     self.check_view_response(step="user-restrictions", field="user_restrictions")
+    def test_user_restrictions_view(self):
+        self.check_view_response(step="user-restrictions", field="user_restrictions", stage="access_restrictions")
