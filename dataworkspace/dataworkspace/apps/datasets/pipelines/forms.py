@@ -100,7 +100,7 @@ class BasePipelineCreateForm(GOVUKDesignSystemModelForm):
             raise ValidationError("'Custom schedule' selected in schedule field but custom schedule field was empty or invalid.")
         elif self.cleaned_data["schedule"] != '@custom' and self.cleaned_data.get("custom_schedule", ""):
             raise ValidationError("Custom CRON expressions can only be entered with 'Custom Schedule' selected.")
-        
+
 
 class SQLPipelineCreateForm(BasePipelineCreateForm):
     pipeline_type = PipelineType.SQL
