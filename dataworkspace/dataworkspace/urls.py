@@ -161,7 +161,7 @@ urlpatterns = [
         name="requesting-data-access-restrictions-step",
     ),
     path(
-        "requesting-data/tracker",
+        "requesting-data/tracker/<uuid:requesting_dataset_id>",
         RequestingDataTrackerView.as_view(),
         name="requesting-data-tracker",
     ),

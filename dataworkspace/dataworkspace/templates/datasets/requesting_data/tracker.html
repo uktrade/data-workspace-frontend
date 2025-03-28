@@ -70,16 +70,18 @@
   </li>
 </ul>
 
-<h2 class="govuk-heading-m">Finalise requesting data</h2>
-<div class="govuk-hint">You've completed all of the steps to request new data.</div>
+{% if all_stages_complete %}
+  <h2 class="govuk-heading-m">Finalise requesting data</h2>
+  <div class="govuk-hint">You've completed all of the steps to request new data.</div>
 
-<form action="" method="post">
-  {% csrf_token %}
-    <input type="hidden" name="requesting_dataset" value="{{requesting_dataset.id}}">
-    <button type="submit" class="govuk-button" data-module="govuk-button">
-      Submit
-    </button>
-</form>
+  <form action="" method="post">
+    {% csrf_token %}
+      <input name="requesting_dataset" value="{{requesting_dataset_id}}">
+      <button type="submit" class="govuk-button" data-module="govuk-button">
+        Submit
+      </button>
+  </form>
+{% endif %}
 
 {% endblock %}
 

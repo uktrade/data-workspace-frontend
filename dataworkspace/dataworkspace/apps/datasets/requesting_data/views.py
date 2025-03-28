@@ -1,3 +1,4 @@
+from http.client import HTTPResponse
 import re
 from django import forms
 from django.forms import model_to_dict
@@ -235,8 +236,8 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
         requesting_dataset.save()
         self.request.session["requesting_dataset"] = requesting_dataset.id
         return HttpResponseRedirect(
-            reverse("requesting-data-about-this-data-step", args={("security-classification")})
-        )
+            reverse("requesting-data-tracker", kwargs={"requesting_dataset_id": requesting_dataset.id},
+        ))
 
 
 class RequestingDataAboutThisDataWizardView(NamedUrlSessionWizardView, FormPreview):
@@ -258,20 +259,6 @@ class RequestingDataAboutThisDataWizardView(NamedUrlSessionWizardView, FormPrevi
         ("update-frequency", DatasetUpdateFrequencyForm),
         ("summary", SummaryPageForm),
     ]
-
-    # def get_form_kwargs(self, step=None):
-    #     kwargs = super().get_form_kwargs(step)
-    #     requesting_dataset_id = self.request.session.get("requesting_dataset")
-    #     requesting_dataset = get_object_or_404(RequestingDataset, id=requesting_dataset_id)
-
-    #     if requesting_dataset_id:
-    #         form_class = self.form_list[step]
-    #         if issubclass(form_class, forms.ModelForm):
-    #             kwargs["instance"] = requesting_dataset
-    #         else:
-    #             kwargs["initial"] = {'requesting_dataset_id': requesting_dataset.id}
-    #     print("KWARGS IN GET KWARGS: ", kwargs)
-    #     return kwargs
 
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form=form, **kwargs)
@@ -324,9 +311,10 @@ class RequestingDataAboutThisDataWizardView(NamedUrlSessionWizardView, FormPrevi
 
         requesting_dataset = add_fields(form_list, requesting_dataset, notes_fields)
         requesting_dataset.stage_two_complete = True
+        requesting_dataset.save()
         return HttpResponseRedirect(
-            reverse("requesting-data-access-restrictions-step", args={("intended-access")})
-        )
+            reverse("requesting-data-tracker", kwargs={"requesting_dataset_id": requesting_dataset.id},
+        ))
 
 
 class RequestingDataAccessRestrictionsWizardView(NamedUrlSessionWizardView, FormPreview):
@@ -366,12 +354,11 @@ class RequestingDataAccessRestrictionsWizardView(NamedUrlSessionWizardView, Form
         # DatasetUsageForm to be sent to restrictions on usage.
 
         requesting_dataset = add_fields(form_list, requesting_dataset, notes_fields)
-        # requesting_dataset.stage_three_complete = True
+        requesting_dataset.stage_three_complete = True
+        requesting_dataset.save()
         return HttpResponseRedirect(
-            reverse(
-                "datasets:find_datasets",
-            )
-        )
+            reverse("requesting-data-tracker", kwargs={"requesting_dataset_id": requesting_dataset.id},
+        ))
 
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form=form, **kwargs)
@@ -412,3 +399,43 @@ class RequestingDataAccessRestrictionsWizardView(NamedUrlSessionWizardView, Form
 class RequestingDataTrackerView(FormView):
     form_class = TrackerPageForm
     template_name = "datasets/requesting_data/tracker.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        requesting_dataset = RequestingDataset.objects.get(
+            id=self.kwargs.get("requesting_dataset_id")
+        )
+
+        stage_one_complete = requesting_dataset.stage_one_complete
+        stage_two_complete = requesting_dataset.stage_two_complete
+        stage_three_complete = requesting_dataset.stage_three_complete
+        context["stage_one_complete"] = stage_one_complete
+        context["stage_two_complete"] = stage_two_complete
+        context["stage_three_complete"] = stage_three_complete
+        if stage_one_complete and stage_two_complete and stage_three_complete:
+            context["all_stages_complete"] = True
+        context["requesting_dataset_id"] = requesting_dataset.id
+        return context
+
+    def form_valid(self, form):
+        requesting_dataset = RequestingDataset.objects.get(
+            id=form.cleaned_data["requesting_dataset"]
+        )
+        data_dict = model_to_dict(
+                requesting_dataset,
+                exclude=["id", "tags", "user", "sensitivity", "data_catalogue_editors", "stage_one_complete", "stage_two_complete", "stage_three_complete"],
+            )
+        data_dict["enquiries_contact"] = requesting_dataset.enquiries_contact
+        data_dict["information_asset_manager"] = requesting_dataset.information_asset_manager
+        data_dict["information_asset_owner"] = requesting_dataset.information_asset_owner
+        data_dict["slug"] = requesting_dataset.name.lower().replace(" ", "-")
+
+        dataset = DataSet.objects.create(**data_dict)
+        dataset.data_catalogue_editors.set(requesting_dataset.data_catalogue_editors.all())
+        dataset.sensitivity.set(requesting_dataset.sensitivity.all())
+
+        RequestingDataset.objects.filter(id=requesting_dataset.id).delete()
+
+        return HttpResponseRedirect(
+            reverse("datasets:find_datasets",
+        ))
