@@ -148,7 +148,7 @@ def test_create_pipeline_validates_custom_schedule_statement(mock_sync, staff_cl
         },
         follow=True,
     )
-    assert b"'Custom schedule' selected in schedule field but custom schedule field was left empty" in resp.content
+    assert b"'Custom schedule' selected in schedule field but custom schedule field was empty or invalid." in resp.content
 
 
 @mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
