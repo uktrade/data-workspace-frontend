@@ -1554,6 +1554,7 @@ class DatasetEditUnpublishView(EditBaseView, UpdateView, View):
     def post(self, request, *arg, **kwargs):
         dataset = find_dataset(kwargs["pk"], request.user)
         dataset.published = False
+        dataset.save() 
         # Send to zendesk to notify analyst about the page status
         return redirect('/datasets')
 
