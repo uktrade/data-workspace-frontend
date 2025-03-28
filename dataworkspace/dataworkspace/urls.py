@@ -42,6 +42,7 @@ from dataworkspace.apps.datasets.requesting_data.views import (
     RequestingDataAboutThisDataWizardView,
     RequestingDataAccessRestrictionsWizardView,
     RequestingDataSummaryInformationWizardView,
+    RequestingDataTrackerView,
 )
 from dataworkspace.apps.datasets.views import home_view
 
@@ -158,6 +159,11 @@ urlpatterns = [
             url_name="requesting-data-access-restrictions-step"
         ),
         name="requesting-data-access-restrictions-step",
+    ),
+    path(
+        "requesting-data/tracker/<uuid:requesting_dataset_id>",
+        RequestingDataTrackerView.as_view(),
+        name="requesting-data-tracker",
     ),
     path(
         "support/custom-visualisation-review/",

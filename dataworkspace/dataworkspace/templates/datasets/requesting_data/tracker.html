@@ -9,29 +9,81 @@
 {% load i18n %}
 
 {% block content %}
-{% if form.errors %}
-  <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
-    <h2 class="govuk-error-summary__title" id="error-summary-title">
-      There is a problem
-    </h2>
-    <div class="govuk-error-summary__body">
-      <ul class="govuk-list govuk-error-summary__list">
-      {% for field, errors in form.errors.items %}
-          {% for error in errors %}
-              <li>
-              <a href="#id_{{ field }}">{{ error }}</a>
-              </li>
-          {% endfor %}
-      {% endfor %}
-      </ul>
+<h1 class="govuk-heading-l">Request data</h1>
+
+<h2 class="govuk-heading-m">Request data process</h2>
+<div class="govuk-hint">To request data, you need to complete the following process:</div>
+<ul class="govuk-task-list">
+  <li class="govuk-task-list__item govuk-task-list__item--with-link">
+    <div class="govuk-task-list__name-and-hint">
+      <a class="govuk-link govuk-task-list__link" href="{% url 'requesting-data-summary-information-step' 'name' %}" aria-describedby="company-details-1-status">
+        Summary information
+      </a>
     </div>
-  </div>
+    {% if stage_one_complete %}
+      <div class="govuk-task-list__status" id="company-details-1-status">
+        Completed
+      </div>
+    {% else %}
+      <div class="govuk-task-list__status" id="company-details-2-status">
+        <strong class="govuk-tag govuk-tag--blue">
+          Incomplete
+        </strong>
+      </div>
+    {% endif %}
+  </li>
+  <li class="govuk-task-list__item govuk-task-list__item--with-link">
+    <div class="govuk-task-list__name-and-hint">
+      <a class="govuk-link govuk-task-list__link" href="{% url 'requesting-data-about-this-data-step' 'security-classification' %}" aria-describedby="company-details-2-status">
+        About the data
+      </a>
+    </div>
+    {% if stage_two_complete %}
+      <div class="govuk-task-list__status" id="company-details-1-status">
+        Completed
+      </div>
+    {% else %}
+      <div class="govuk-task-list__status" id="company-details-2-status">
+        <strong class="govuk-tag govuk-tag--blue">
+          Incomplete
+        </strong>
+      </div>
+    {% endif %}
+  </li>
+  <li class="govuk-task-list__item govuk-task-list__item--with-link">
+    <div class="govuk-task-list__name-and-hint">
+      <a class="govuk-link govuk-task-list__link" href="{% url 'requesting-data-access-restrictions-step' 'intended-access' %}" aria-describedby="company-details-3-hint company-details-3-status">
+        Access restrictions
+      </a>
+    </div>
+    {% if stage_three_complete %}
+      <div class="govuk-task-list__status" id="company-details-1-status">
+        Completed
+      </div>
+    {% else %}
+      <div class="govuk-task-list__status" id="company-details-2-status">
+        <strong class="govuk-tag govuk-tag--blue">
+          Incomplete
+        </strong>
+      </div>
+    {% endif %}
+  </li>
+</ul>
+
+{% if all_stages_complete %}
+  <h2 class="govuk-heading-m">Finalise requesting data</h2>
+  <div class="govuk-hint">You've completed all of the steps to request new data.</div>
+
+  <form action="" method="post">
+    {% csrf_token %}
+      <input name="requesting_dataset" value="{{requesting_dataset_id}}">
+      <button type="submit" class="govuk-button" data-module="govuk-button">
+        Submit
+      </button>
+  </form>
 {% endif %}
 
-<h1 class="govuk-heading-l">Summary information</h1>
-
-<h2 class="govuk-heading-m">Your answers</h2>
-
+{% endblock %}
 
 
 
