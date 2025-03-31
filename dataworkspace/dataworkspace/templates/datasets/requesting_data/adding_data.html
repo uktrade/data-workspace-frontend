@@ -15,50 +15,10 @@
     Add new catalogue item
     </a>    
     <h2 class="govuk-heading-m">Catalogue items in progress</h2>
-        <p class="govuk-body">Below is a list of catalogue pages that you've begun to create. You can resume progress of adding this catalogue page by pressing the resume link within that listing.</p>
- 
-<div class="govuk-summary-card">
-  <div class="govuk-summary-card__title-wrapper">
-    <h2 class="govuk-summary-card__title">
-      Lead tenant
-    </h2>
-  </div>
-  <div class="govuk-summary-card__content">
-    <dl class="govuk-summary-list">
-      <div class="govuk-summary-list__row">
-        <dt class="govuk-summary-list__key">
-          Age
-        </dt>
-        <dd class="govuk-summary-list__value">
-          38
-        </dd>
-        <dd class="govuk-summary-list__actions">
-          <a class="govuk-link" href="#">Change<span class="govuk-visually-hidden"> age (Lead tenant)</span></a>
-        </dd>
-      </div>
-      <div class="govuk-summary-list__row">
-        <dt class="govuk-summary-list__key">
-          Nationality
-        </dt>
-        <dd class="govuk-summary-list__value">
-          UK national resident in UK
-        </dd>
-        <dd class="govuk-summary-list__actions">
-          <a class="govuk-link" href="#">Change<span class="govuk-visually-hidden"> nationality (Lead tenant)</span></a>
-        </dd>
-      </div>
-      <div class="govuk-summary-list__row">
-        <dt class="govuk-summary-list__key">
-          Working situation
-        </dt>
-        <dd class="govuk-summary-list__value">
-          Part time – less than 30 hours a week
-        </dd>
-        <dd class="govuk-summary-list__actions">
-          <a class="govuk-link" href="#">Change<span class="govuk-visually-hidden"> working situation (Lead tenant)</span></a>
-        </dd>
-      </div>
-    </dl>
-  </div>
-</div>
+        
+    <p class="govuk-body">Below is a list of catalogue pages that you've begun to create. You can resume progress of adding this catalogue page by pressing the resume link within that listing.</p>
+    {% for name, request in requests.items %}
+            {% include 'partials/requesting_data_journeys.html' %}
+    {% endfor %}
+
 {% endblock %}

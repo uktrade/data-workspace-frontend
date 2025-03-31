@@ -217,9 +217,7 @@ class SupportView(FormView):
 
         if support_Type == form.SupportTypes.NEW_DATASET:
             if waffle.flag_is_active(request, settings.REQUESTING_DATA):
-                return HttpResponseRedirect(
-                    reverse("adding-data")
-                )
+                return HttpResponseRedirect(reverse("adding-data"))
             return HttpResponseRedirect(
                 f'{reverse("add-dataset-request")}?email={cleaned["email"]}'
             )

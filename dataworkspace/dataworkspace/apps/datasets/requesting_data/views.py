@@ -66,6 +66,28 @@ def add_fields(form_list, requesting_dataset, notes_fields):
 class AddingData(TemplateView):
     template_name = "datasets/requesting_data/adding_data.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        incomplete_requests = RequestingDataset.objects.filter(user=self.request.user.id)
+        print("incomplete_requests", incomplete_requests)
+        requests = {}
+        for request in incomplete_requests:
+            progress = 0
+            if request.stage_one_complete:
+                progress += 1
+            if request.stage_two_complete:
+                progress += 1
+            if request.stage_three_complete:
+                progress += 1
+            requests[request.name] = {
+                "name": request.name,
+                "created_date": request.created_date,
+                "progress": progress,
+                "uuid": request.id,
+            }
+        context["requests"] = requests
+        return context
+
 
 class AddNewDataset(TemplateView):
     template_name = "datasets/requesting_data/add_new_dataset.html"
@@ -76,9 +98,9 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
         ("name", DatasetNameForm),
         ("descriptions", DatasetDescriptionsForm),
         ("origin", DatasetDataOriginForm),
-        ("information-asset-owner", DatasetInformationAssetOwnerForm),
-        ("information-asset-manager", DatasetInformationAssetManagerForm),
-        ("enquiries-contact", DatasetEnquiriesContactForm),
+        # ("information-asset-owner", DatasetInformationAssetOwnerForm),
+        # ("information-asset-manager", DatasetInformationAssetManagerForm),
+        # ("enquiries-contact", DatasetEnquiriesContactForm),
         ("existing-system", DatasetExistingSystemForm),
         ("licence", DatasetLicenceForm),
         ("restrictions", DatasetRestrictionsForm),
@@ -187,6 +209,7 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
 
             context["summary"] = section
         context["stage"] = "Summary Information"
+
         return context
 
     notes_fields = [
@@ -209,6 +232,7 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
             return "datasets/requesting_data/form_template.html"
 
     def done(self, form_list, **kwargs):
+        user_id = self.request.user.id
 
         notes_fields = [
             "origin",
@@ -225,6 +249,7 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
 
         # DatasetUsageForm to be sent to restrictions on usage.
         requesting_dataset = add_fields(form_list, requesting_dataset, notes_fields)
+        requesting_dataset.user = user_id
         requesting_dataset.stage_one_complete = True
         requesting_dataset.save()
         self.request.session["requesting_dataset"] = requesting_dataset.id

@@ -76,7 +76,7 @@
 
   <form action="" method="post">
     {% csrf_token %}
-      <input name="requesting_dataset" value="{{requesting_dataset_id}}">
+      <input type="hidden" name="requesting_dataset" value="{{requesting_dataset_id}}">
       <button type="submit" class="govuk-button" data-module="govuk-button">
         Submit
       </button>
