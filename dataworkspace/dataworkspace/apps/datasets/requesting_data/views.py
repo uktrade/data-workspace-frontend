@@ -208,7 +208,6 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
             "origin",
             "existing_system",
             "usage",
-
         ]
 
         # these fields need to added to notes as they no do have fields themselves but are useful to analysts.
@@ -224,8 +223,11 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
         requesting_dataset.save()
         self.request.session["requesting_dataset"] = requesting_dataset.id
         return HttpResponseRedirect(
-            reverse("requesting-data-tracker", kwargs={"requesting_dataset_id": requesting_dataset.id},
-                    ))
+            reverse(
+                "requesting-data-tracker",
+                kwargs={"requesting_dataset_id": requesting_dataset.id},
+            )
+        )
 
 
 class RequestingDataAboutThisDataWizardView(NamedUrlSessionWizardView, FormPreview):
@@ -301,8 +303,11 @@ class RequestingDataAboutThisDataWizardView(NamedUrlSessionWizardView, FormPrevi
         requesting_dataset.stage_two_complete = True
         requesting_dataset.save()
         return HttpResponseRedirect(
-            reverse("requesting-data-tracker", kwargs={"requesting_dataset_id": requesting_dataset.id},
-                    ))
+            reverse(
+                "requesting-data-tracker",
+                kwargs={"requesting_dataset_id": requesting_dataset.id},
+            )
+        )
 
 
 class RequestingDataAccessRestrictionsWizardView(NamedUrlSessionWizardView, FormPreview):
@@ -344,8 +349,11 @@ class RequestingDataAccessRestrictionsWizardView(NamedUrlSessionWizardView, Form
         requesting_dataset.stage_three_complete = True
         requesting_dataset.save()
         return HttpResponseRedirect(
-            reverse("requesting-data-tracker", kwargs={"requesting_dataset_id": requesting_dataset.id},
-                    ))
+            reverse(
+                "requesting-data-tracker",
+                kwargs={"requesting_dataset_id": requesting_dataset.id},
+            )
+        )
 
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form=form, **kwargs)
@@ -410,7 +418,16 @@ class RequestingDataTrackerView(FormView):
         )
         data_dict = model_to_dict(
             requesting_dataset,
-            exclude=["id", "tags", "user", "sensitivity", "data_catalogue_editors", "stage_one_complete", "stage_two_complete", "stage_three_complete"],
+            exclude=[
+                "id",
+                "tags",
+                "user",
+                "sensitivity",
+                "data_catalogue_editors",
+                "stage_one_complete",
+                "stage_two_complete",
+                "stage_three_complete",
+            ],
         )
         data_dict["enquiries_contact"] = requesting_dataset.enquiries_contact
         data_dict["information_asset_manager"] = requesting_dataset.information_asset_manager
@@ -424,5 +441,7 @@ class RequestingDataTrackerView(FormView):
         RequestingDataset.objects.filter(id=requesting_dataset.id).delete()
 
         return HttpResponseRedirect(
-            reverse("datasets:find_datasets",
-                    ))
+            reverse(
+                "datasets:find_datasets",
+            )
+        )
