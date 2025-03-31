@@ -52,7 +52,13 @@ export default [
       globals: {
         ...globals.browser,
         ...globals.jest,
-        ...globals.node
+        ...globals.node,
+        // Cypress
+        Cypress: 'readonly',
+        cy: 'readonly',
+        context: 'readonly',
+        before: 'readonly',
+        after: 'readonly'
       },
       parser: tsParser,
       ecmaVersion: 5,
@@ -65,7 +71,7 @@ export default [
     rules: {
       'prettier/prettier': 2,
       semi: ['error', 'always'],
-      quotes: ['error', 'single'],
+      quotes: ['error', 'single', { avoidEscape: true }],
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'off',
 
