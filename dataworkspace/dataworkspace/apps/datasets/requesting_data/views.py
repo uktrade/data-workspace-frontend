@@ -141,7 +141,7 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
                 context["search_query"] = search_query
                 if search_query:
                     context["search_results"] = self.get_users(search_query=search_query)
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 return context
 
         # could be abstracted
@@ -165,8 +165,8 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
             section = []
             questions = {}
 
-            for name, form in self.form_list.items():
-                for name, field in form.base_fields.items():
+            for name, form_item in self.form_list.items():  # pylint: disable=no-member
+                for name, field in form_item.base_fields.items():
                     question = field.label
                     questions[name] = question
             for step in self.storage.data["step_data"]:
@@ -267,8 +267,8 @@ class RequestingDataAboutThisDataWizardView(NamedUrlSessionWizardView, FormPrevi
             section = []
             questions = {}
 
-            for name, form in self.form_list.items():
-                for name, field in form.base_fields.items():
+            for name, form_item in self.form_list.items():  # pylint: disable=no-member
+                for name, field in form_item.base_fields.items():
                     question = field.label
                     questions[name] = question
             for step in self.storage.data["step_data"]:
@@ -373,8 +373,8 @@ class RequestingDataAccessRestrictionsWizardView(NamedUrlSessionWizardView, Form
             section = []
             questions = {}
 
-            for name, form in self.form_list.items():
-                for name, field in form.base_fields.items():
+            for name, form_item in self.form_list.items():  # pylint: disable=no-member
+                for name, field in form_item.base_fields.items():
                     question = field.label
                     questions[name] = question
             for step in self.storage.data["step_data"]:
