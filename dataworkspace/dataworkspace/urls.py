@@ -40,6 +40,8 @@ from dataworkspace.apps.core.views import (
 )
 
 from dataworkspace.apps.datasets.requesting_data.views import (
+    AddNewDataset,
+    AddingData,
     RequestingDataAboutThisDataWizardView,
     RequestingDataAccessRestrictionsWizardView,
     RequestingDataSummaryInformationWizardView,
@@ -139,6 +141,16 @@ urlpatterns = [
         "support/add-dataset-request/",
         login_required(AddDatasetRequestView.as_view()),
         name="add-dataset-request",
+    ),
+    path(
+        "requesting-data/adding-data",
+        AddingData.as_view(),
+        name="adding-data",
+    ),
+    path(
+        "requesting-data/add-new-dataset",
+        AddNewDataset.as_view(),
+        name="add-new-dataset",
     ),
     path(
         "requesting-data/summary-information/<str:step>",

@@ -1,5 +1,5 @@
 from django.forms import model_to_dict
-from django.views.generic import FormView
+from django.views.generic import FormView, TemplateView
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.http import HttpResponseRedirect
@@ -61,6 +61,14 @@ def add_fields(form_list, requesting_dataset, notes_fields):
                 setattr(requesting_dataset, field, form.cleaned_data.get(field))
             requesting_dataset.save()
     return requesting_dataset
+
+
+class AddingData(TemplateView):
+    template_name = "datasets/requesting_data/adding_data.html"
+
+
+class AddNewDataset(TemplateView):
+    template_name = "datasets/requesting_data/add_new_dataset.html"
 
 
 class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, FormPreview):
