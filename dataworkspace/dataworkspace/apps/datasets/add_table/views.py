@@ -226,6 +226,12 @@ class UploadCSVView(FormView):
         )
         return ctx
 
+    def form_invalid(self, form):
+        error_messages = form.errors.get("__all__", [])
+        if any("ClamAV" in msg for msg in error_messages):
+            return self.render_to_response({"timeout_error": True})
+        return self.render_to_response(self.get_context_data(form=form))
+
     def form_valid(self, form):
         csv_file = form.cleaned_data["csv_file"]
         client = get_s3_client()
