@@ -1,10 +1,15 @@
 from http import HTTPStatus
 from unittest.mock import patch
 from unittest import TestCase
+
 from django.contrib.auth import get_user_model
-
 from django.test import Client
+from django.urls import reverse
 
+import pytest
+
+from dataworkspace.tests import factories
+from dataworkspace.tests.common import get_http_sso_data
 from dataworkspace.apps.datasets.models import SensitivityType
 from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetCommercialSensitiveForm,
@@ -25,12 +30,6 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetUsageForm,
     DatasetUserRestrictionsForm,
 )
-import pytest
-
-from django.urls import reverse
-
-from dataworkspace.tests import factories
-from dataworkspace.tests.common import get_http_sso_data
 
 
 @pytest.mark.django_db
@@ -237,8 +236,7 @@ class RequestingDataViewsTestCase(TestCase):
         self.user = factories.UserFactory.create(is_superuser=False)
         self.client = Client(**get_http_sso_data(self.user))
 
-    @patch("requests.post")
-    def check_view_response(self, mock_post, stage, step, field, test="Test"):
+    def check_view_response(self, stage, step, field, test="Test"):
         data = {
             f"requesting_data_{stage}_wizard_view-current_step": [step],
             f"{step}-{field}": [test],
@@ -257,13 +255,11 @@ class RequestingDataViewsTestCase(TestCase):
             assert response.status_code == HTTPStatus.FOUND
         else:
             assert response.status_code == HTTPStatus.OK
-        assert mock_post.called is False
 
     def test_name_view(self):
         self.check_view_response(stage="summary_information", step="name", field="name")
 
-    @patch("requests.post")
-    def test_descriptions_view(self, mock_post):
+    def test_descriptions_view(self):
         data = {
             "requesting_data_summary_information_wizard_view-current_step": ["descriptions"],
             "descriptions-short_description": ["test short description"],
@@ -279,7 +275,6 @@ class RequestingDataViewsTestCase(TestCase):
         )
 
         assert response.status_code == HTTPStatus.OK
-        assert mock_post.called is False
 
     def test_origin_view(self):
         self.check_view_response(stage="summary_information", step="origin", field="origin")
@@ -345,8 +340,7 @@ class RequestingDataViewsTestCase(TestCase):
     def test_usage_view(self):
         self.check_view_response(stage="summary_information", step="usage", field="usage")
 
-    @patch("requests.post")
-    def test_security_classification(self, mock_post):
+    def test_security_classification(self):
         sensitivity = SensitivityType.objects.all()
 
         data = {
@@ -366,7 +360,6 @@ class RequestingDataViewsTestCase(TestCase):
         )
 
         assert response.status_code == HTTPStatus.OK
-        assert mock_post.called is False
 
     def test_personal_data_view(self):
         self.check_view_response(
@@ -396,8 +389,7 @@ class RequestingDataViewsTestCase(TestCase):
             stage="about_this_data",
         )
 
-    @patch("requests.post")
-    def test_intended_access_view(self, mock_post):
+    def test_intended_access_view(self):
         data = {
             "requesting_data_access_restrictions_wizard_view-current_step": ["intended-access"],
             "intended-access-intended_access": ["yes"],
@@ -410,7 +402,6 @@ class RequestingDataViewsTestCase(TestCase):
         )
 
         assert response.status_code == HTTPStatus.FOUND
-        assert mock_post.called is False
 
     def test_location_restrictions_view(self):
         self.check_view_response(

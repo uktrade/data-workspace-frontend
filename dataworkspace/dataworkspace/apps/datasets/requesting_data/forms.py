@@ -45,7 +45,7 @@ class DatasetDescriptionsForm(GOVUKDesignSystemForm):
 
     description = GOVUKDesignSystemTextareaField(
         label="Describe this dataset",
-        help_text="Please ensure this contains enough detail to ensure non-experts viewing the Data Workspace catalogue can understand it's contents. Minimum 30 words",
+        help_text="Please ensure this contains enough detail to ensure non-experts viewing the Data Workspace catalogue can understand it's contents. Minimum 30 words",  # pylint: disable=line-too-long
         required=True,
         widget=GOVUKDesignSystemTextareaWidget(
             heading="h2",
@@ -251,7 +251,7 @@ class DatasetPersonalDataForm(GOVUKDesignSystemForm):
     personal_data = GOVUKDesignSystemTextareaField(
         required=False,
         label="Does it contain personal data?",
-        help_text="Personal data means any information relating to an identified or identifiable living individual. “Identifiable living individual” means a living individual who can be identified, directly or indirectly, in particular by reference to - (a) an identifier such as a name, an identification number, location data or an online identifier, or (b) one or more factors specific to the physical, physiological, genetic, mental, economic, cultural or social identity of the individual.",
+        help_text="Personal data means any information relating to an identified or identifiable living individual. “Identifiable living individual” means a living individual who can be identified, directly or indirectly, in particular by reference to - (a) an identifier such as a name, an identification number, location data or an online identifier, or (b) one or more factors specific to the physical, physiological, genetic, mental, economic, cultural or social identity of the individual.",  # pylint: disable=line-too-long
         widget=GOVUKDesignSystemTextareaWidget(
             heading="h2",
             label_size="m",
@@ -266,7 +266,7 @@ class DatasetSpecialPersonalDataForm(GOVUKDesignSystemForm):
     special_personal_data = GOVUKDesignSystemTextareaField(
         required=False,
         label="Does it contain special category personal data?",
-        help_text="Special category data is personal data which the GDPR says is more sensitive, and so needs more protection.",
+        help_text="Special category data is personal data which the GDPR says is more sensitive, and so needs more protection.",  # pylint: disable=line-too-long
         widget=GOVUKDesignSystemTextareaWidget(
             heading="h2",
             label_size="m",
@@ -281,7 +281,7 @@ class DatasetCommercialSensitiveForm(GOVUKDesignSystemForm):
     commercial_sensitive = GOVUKDesignSystemTextareaField(
         required=False,
         label="Does it contain commercially sensitive data?",
-        help_text="Commercially sensitive information is information that if disclosed, could prejudice a supplier's commercial interests e.g. trade secrets, profit margins or new ideas. This type of information is protected through Confidentiality Agreements.",
+        help_text="Commercially sensitive information is information that if disclosed, could prejudice a supplier's commercial interests e.g. trade secrets, profit margins or new ideas. This type of information is protected through Confidentiality Agreements.",  # pylint: disable=line-too-long
         widget=GOVUKDesignSystemTextareaWidget(
             heading="h2",
             label_size="m",

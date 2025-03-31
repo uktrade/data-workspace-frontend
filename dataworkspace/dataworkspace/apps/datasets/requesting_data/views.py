@@ -1,8 +1,8 @@
 from django.forms import model_to_dict
 from django.views.generic import FormView
 from formtools.preview import FormPreview
-from formtools.wizard.views import NamedUrlSessionWizardView
 from django.contrib.auth import get_user_model
+from formtools.wizard.views import NamedUrlSessionWizardView
 
 from django.http import HttpResponseRedirect
 from django.urls import reverse
