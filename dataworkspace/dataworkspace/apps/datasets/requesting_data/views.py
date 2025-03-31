@@ -1,16 +1,14 @@
 from django.forms import model_to_dict
 from django.views.generic import FormView
-from formtools.preview import FormPreview
 from django.contrib.auth import get_user_model
-from formtools.wizard.views import NamedUrlSessionWizardView
-
+from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
+from formtools.preview import FormPreview  # pylint: disable=import-error
+from formtools.wizard.views import NamedUrlSessionWizardView  # pylint: disable=import-error
+
 from dataworkspace.apps.datasets.models import DataSet, RequestingDataset
-
-from django.db.models import Q
-
 from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetCommercialSensitiveForm,
     DatasetEnquiriesContactForm,
@@ -332,7 +330,8 @@ class RequestingDataAccessRestrictionsWizardView(NamedUrlSessionWizardView, Form
 
         notes_fields = [
             "intended_access",
-            "operational_impact" "location_restrictions",
+            "operational_impact",
+            "location_restrictions",
             "network_restrictions",
             "security_clearance",
             "user_restrictions",

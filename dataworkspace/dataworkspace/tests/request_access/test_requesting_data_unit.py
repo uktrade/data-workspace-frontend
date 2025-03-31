@@ -39,10 +39,10 @@ class RequestingDataFormsTestCase(TestCase):
         self.user = factories.UserFactory.create(is_superuser=False)
         self.client = Client(**get_http_sso_data(self.user))
 
-    def check_for_valid_form(self, form, input, expected_response, label):
+    def check_for_valid_form(self, form, data_input, expected_response, label):
         form = form(
             {
-                label: input,
+                label: data_input,
             }
         )
         assert form.is_valid()
@@ -51,7 +51,7 @@ class RequestingDataFormsTestCase(TestCase):
     def test_valid_form_name(self):
         self.check_for_valid_form(
             form=DatasetNameForm,
-            input="""["Test name"]""",
+            data_input="""["Test name"]""",
             expected_response="Test name",
             label="name",
         )
@@ -70,7 +70,7 @@ class RequestingDataFormsTestCase(TestCase):
     def test_valid_form_origin(self):
         self.check_for_valid_form(
             form=DatasetDataOriginForm,
-            input="""["Test origin"]""",
+            data_input="""["Test origin"]""",
             expected_response="Test origin",
             label="origin",
         )
@@ -95,7 +95,7 @@ class RequestingDataFormsTestCase(TestCase):
     def test_valid_form_existing_system(self):
         self.check_for_valid_form(
             form=DatasetExistingSystemForm,
-            input="""["Test existing system"]""",
+            data_input="""["Test existing system"]""",
             expected_response="Test existing system",
             label="existing_system",
         )
@@ -103,7 +103,7 @@ class RequestingDataFormsTestCase(TestCase):
     def test_valid_form_licence(self):
         self.check_for_valid_form(
             form=DatasetLicenceForm,
-            input="""["Test licence"]""",
+            data_input="""["Test licence"]""",
             expected_response="Test licence",
             label="licence",
         )
@@ -111,7 +111,7 @@ class RequestingDataFormsTestCase(TestCase):
     def test_valid_form_restrictions(self):
         self.check_for_valid_form(
             form=DatasetRestrictionsForm,
-            input="""["Test restrictions"]""",
+            data_input="""["Test restrictions"]""",
             expected_response="Test restrictions",
             label="restrictions",
         )
@@ -119,7 +119,7 @@ class RequestingDataFormsTestCase(TestCase):
     def test_valid_form_usage(self):
         self.check_for_valid_form(
             form=DatasetUsageForm,
-            input="""["Test usage"]""",
+            data_input="""["Test usage"]""",
             expected_response="Test usage",
             label="usage",
         )
@@ -139,7 +139,7 @@ class RequestingDataFormsTestCase(TestCase):
     def test_valid_form_location_restrictions(self):
         self.check_for_valid_form(
             form=DatasetLocationRestrictionsForm,
-            input="""["Test location restrictions"]""",
+            data_input="""["Test location restrictions"]""",
             expected_response="Test location restrictions",
             label="location_restrictions",
         )
@@ -147,7 +147,7 @@ class RequestingDataFormsTestCase(TestCase):
     def test_valid_form_network_restrictions(self):
         self.check_for_valid_form(
             form=DatasetNetworkRestrictionsForm,
-            input="""["Test network restrictions"]""",
+            data_input="""["Test network restrictions"]""",
             expected_response="Test network restrictions",
             label="network_restrictions",
         )
@@ -155,7 +155,7 @@ class RequestingDataFormsTestCase(TestCase):
     def test_valid_form_user_restrictions(self):
         self.check_for_valid_form(
             form=DatasetUserRestrictionsForm,
-            input="""["Test user restrictions"]""",
+            data_input="""["Test user restrictions"]""",
             expected_response="Test user restrictions",
             label="user_restrictions",
         )
@@ -186,7 +186,7 @@ class RequestingDataFormsTestCase(TestCase):
     def test_valid_form_personal_data(self):
         self.check_for_valid_form(
             form=DatasetPersonalDataForm,
-            input="""["Test personal data"]""",
+            data_input="""["Test personal data"]""",
             expected_response="Test personal data",
             label="personal_data",
         )
@@ -194,7 +194,7 @@ class RequestingDataFormsTestCase(TestCase):
     def test_valid_form_special_personal_data(self):
         self.check_for_valid_form(
             form=DatasetSpecialPersonalDataForm,
-            input="""["Test special personal data"]""",
+            data_input="""["Test special personal data"]""",
             expected_response="Test special personal data",
             label="special_personal_data",
         )
@@ -202,7 +202,7 @@ class RequestingDataFormsTestCase(TestCase):
     def test_valid_form_commercial_sensitive_form(self):
         self.check_for_valid_form(
             form=DatasetCommercialSensitiveForm,
-            input="""["Test commercial personal data"]""",
+            data_input="""["Test commercial personal data"]""",
             expected_response="Test commercial personal data",
             label="commercial_sensitive",
         )
@@ -210,7 +210,7 @@ class RequestingDataFormsTestCase(TestCase):
     def test_valid_form_retention_period(self):
         self.check_for_valid_form(
             form=DatasetRetentionPeriodForm,
-            input="""["Test retention period"]""",
+            data_input="""["Test retention period"]""",
             expected_response="Test retention period",
             label="retention_policy",
         )
