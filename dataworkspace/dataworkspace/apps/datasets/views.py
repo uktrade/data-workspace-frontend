@@ -1553,7 +1553,7 @@ class DatasetEditUnpublishView(EditBaseView, UpdateView, View):
         dataset.published = False
         dataset.save()
         # Send to zendesk to notify analyst about the page status
-        return redirect('/datasets')
+        return redirect("/datasets")
 
 
 class VisualisationCatalogueItemEditView(EditBaseView, UpdateView):
