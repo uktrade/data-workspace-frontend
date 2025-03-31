@@ -25,7 +25,7 @@ class TestRequestingData(TestCase):
         input_label = soup.find("label").contents[0]
 
         assert response.status_code == 200
-        assert "Summary information" in header
+        assert "Summary Information" in header
         assert label in input_label
 
     def assert_common_content_radio_buttons_page(self, stage, url_name, label, radio_options):
@@ -73,7 +73,7 @@ class TestRequestingData(TestCase):
         labels = soup.find_all("label")
 
         assert response.status_code == 200
-        assert "Summary information" in header
+        assert "Summary Information" in header
         assert "Summarise this dataset" in labels[0].contents[0]
         assert "Describe this dataset" in labels[1].contents[0]
 
