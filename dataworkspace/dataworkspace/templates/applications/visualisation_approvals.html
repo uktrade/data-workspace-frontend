@@ -18,11 +18,11 @@
 {% flag THIRD_APPROVER %}
    <p class="govuk-body">Currently {{ approvals | length }} out of 3 have approved this visualisation:</p>
      <ul class="govuk-list govuk-list--bullet" data-test="approvals-list">
-      {% for approver in approvals %}
-        {% if approver.status == 'team member' %}
-        <li>A member of the Data Workspace team approved this visualisation on {{ approver.date_approved }}</li>
+      {% for approval in approvals %}
+        {% if approval.approval_type == 'team member' %}
+        <li>A member of the Data Workspace team approved this visualisation on {{ approval.approval_date }}</li>
         {% else %}
-         <li>{% if request.user.get_full_name == approver.name and approver.status == 'owner' %}You{% else %}{{ approver.name }} ({{approver.status}}){% endif %} approved this visualisation on {{ approver.date_approved }}</li>
+         <li>{% if request.user.get_full_name == approval.approver and approval.approval_type == 'owner' %}You{% else %}{{ approval.approver }} ({{approval.approval_type}}){% endif %} approved this visualisation on {{ approval.approval_date }}</li>
         {% endif %}
       {% endfor %}
    </ul>
@@ -53,6 +53,8 @@
     {{ form.non_field_errors }}
     {{ form.visualisation }}
     {{ form.approver }}
+    {{ form.approval_date }}
+    {{ form.approval_type }}
     {% if not another_user_with_same_type_already_approved %}
       {% if current_user_already_approved %}
         <button type="submit" class="govuk-button" name="action" value="unapprove">Unapprove</button>

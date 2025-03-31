@@ -35,6 +35,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     ApplicationInstanceDbUsers,
     ApplicationTemplate,
+    VisualisationApproval,
 )
 from dataworkspace.apps.applications.spawner import (
     _fargate_task_describe,
@@ -1965,9 +1966,9 @@ def _self_certify_renewal_email_notification():
     logger.info("_self_certify_renewal_email_notification: Stop")
 
 
-def has_all_three_approval_types(approvals: list[dict]) -> bool:
+def has_all_three_approval_types(approvals: list[VisualisationApproval]) -> bool:
     return all(
-        len([a for a in approvals if a["status"] == approval_type]) > 0
+        len([a for a in approvals if a.approval_type == approval_type]) > 0
         for approval_type in ["owner", "peer reviewer", "team member"]
     )
 
@@ -2016,3 +2017,8 @@ def visualisation_approvals(dw_approvals, project_members):
         if approver_types[approver_type]
     ]
     return project_approvals
+
+
+def format_visualisation_approval_date(timestamp: datetime) -> str:
+    formatted = timestamp.strftime("%d %B %Y, %I:%M%p")
+    return formatted[:-2] + formatted[-2:].lower()

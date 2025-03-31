@@ -11,6 +11,7 @@ from django.dispatch import receiver
 from dataworkspace.apps.core.models import Database, TimeStampedModel
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
+#from dataworkspace.apps.applications.utils import format_visualisation_approval_date
 
 
 class ApplicationTemplate(TimeStampedModel):
@@ -177,9 +178,26 @@ class VisualisationTemplate(ApplicationTemplate):
 
 
 class VisualisationApproval(TimeStampedModel):
+    approval_type_choices = [
+        ("owner", "owner"),
+        ("peer reviewer", "peer reviewer"),
+        ("team member", "team member"),
+    ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     approved = models.BooleanField(default=True)
     approver = models.ForeignKey(get_user_model(), on_delete=models.PROTECT)
+    # field to hold formatted date from TimeStampedModel.created_date
+    approval_date = models.CharField(
+        blank=True,
+        default=None,
+        null=True,
+    )
+    approval_type = models.CharField(
+        blank=True,
+        choices=approval_type_choices,
+        default=None,
+        null=True,
+    )
     visualisation = models.ForeignKey(VisualisationTemplate, on_delete=models.CASCADE)
 
     def __init__(self, *args, **kwargs):
@@ -194,6 +212,10 @@ class VisualisationApproval(TimeStampedModel):
             )
         elif self._initial_approved is self.approved and self.modified_date is not None:
             raise ValueError("The only change that can be made to an approval is to unapprove it.")
+        if self.approval_type not in dict(self.approval_type_choices):
+            raise ValueError(
+                f"Value for approver type must be in {dict(self.approval_type_choices).keys()}"
+            )
         super().save(force_insert, force_update, using, update_fields)
 
         if self.approved:

@@ -59,11 +59,12 @@ from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import (
     application_options,
     fetch_visualisation_log_events,
+    format_visualisation_approval_date,
     get_quicksight_dashboard_name_url,
-    visualisation_approvals,
     has_all_three_approval_types,
     stop_spawner_and_application,
     sync_quicksight_permissions,
+    visualisation_approvals,
 )
 from dataworkspace.apps.applications.utils_tools import get_grouped_tools
 from dataworkspace.apps.core.errors import (
@@ -1077,15 +1078,12 @@ def visualisation_approvals_html_GET(request, gitlab_project):
     dw_approvals = VisualisationApproval.objects.filter(
         visualisation=application_template, approved=True
     ).all()
-
+    current_user_approval = next(filter(lambda a: a.approver == request.user, dw_approvals), None)
     if waffle.flag_is_active(request, settings.THIRD_APPROVER):
         if settings.GITLAB_FIXTURES:
             project_members = get_fixture("project_members_fixture.json")
         else:
             project_members = gitlab_project_members(gitlab_project["id"])
-
-    approval = next(filter(lambda a: a.approver == request.user, dw_approvals), None)
-
     if settings.GITLAB_FIXTURES:
         current_gitlab_user = get_fixture("user_fixture.json")[0]
     else:
@@ -1100,45 +1098,55 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         if len(current_gitlab_user) > 1:
             return HttpResponse(status=500)
         current_gitlab_user = current_gitlab_user[0]
-
     if settings.GITLAB_FIXTURES:
         visualisation_branches = get_fixture("visualisation_branches_fixture.json")
     else:
         visualisation_branches = _visualisation_branches(gitlab_project)
     another_user_with_same_type_already_approved = None
-    current_user_type = None
-    project_approvals = dw_approvals
-    if waffle.flag_is_active(request, settings.THIRD_APPROVER):
-        current_user_type = get_approver_type(
-            gitlab_project["id"], request.user, current_gitlab_user
-        )
-
-        project_approvals = visualisation_approvals(dw_approvals, project_members)
-        is_approved_by_all = has_all_three_approval_types(project_approvals)
-        another_user_with_same_type_already_approved = (
-            len(
-                [
-                    p
-                    for p in project_approvals
-                    if p["status"] == current_user_type
-                    and p["name"] != current_gitlab_user["name"]
-                ]
-            )
-            > 0
-        )
-    is_approved_by_all = (
-        is_approved_by_all if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None
+    current_user_type = (
+        current_user_approval.approval_type if current_user_approval is not None else None
     )
-
+    # backwards compatibility with legacy system that didn't use VisualisationApproval.approval_type
+    is_approved_by_all = len(dw_approvals) >= 3
+    if waffle.flag_is_active(request, settings.THIRD_APPROVER):
+        current_user_type = (
+            get_approver_type(gitlab_project["id"], request.user, current_gitlab_user)
+            if current_user_type is None
+            else current_user_type
+        )
+        is_approved_by_all = is_approved_by_all or has_all_three_approval_types(dw_approvals)
+        another_user_with_same_type_already_approved = any(
+            (dw_a.approval_type == current_user_type and dw_a.approver != request.user for dw_a in dw_approvals)
+        )
+    print("current_user_type", current_user_type)
     form = VisualisationApprovalForm(
         third_approver_flag=waffle.flag_is_active(request, settings.THIRD_APPROVER),
-        instance=approval,
+        instance=current_user_approval,
         initial={
             "visualisation": application_template,
             "approver": request.user,
             "approved": False,
+            "approval_date": format_visualisation_approval_date(datetime.now()),
+            "approval_type": current_user_type,
         },
     )
+    print("initial", {
+            "visualisation": application_template,
+            "approver": request.user,
+            "approved": False,
+            "approval_date": format_visualisation_approval_date(datetime.now()),
+            "approval_type": current_user_type,
+        })
+    print("template_context", {
+            "another_user_with_same_type_already_approved": another_user_with_same_type_already_approved,
+            "approvals": dw_approvals,
+            "current_user_already_approved": (
+                current_user_approval.approved if current_user_approval is not None else None
+            ),
+            "current_user_type": current_user_type,
+            "form": form,
+            "is_approved_by_all": is_approved_by_all,
+        },)
     return _render_visualisation(
         request,
         "applications/visualisation_approvals.html",
@@ -1147,16 +1155,14 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         visualisation_branches,
         current_menu_item="approvals",
         template_specific_context={
-            "approvals": (
-                project_approvals
-                if waffle.flag_is_active(request, settings.THIRD_APPROVER)
-                else dw_approvals
-            ),
             "another_user_with_same_type_already_approved": another_user_with_same_type_already_approved,
-            "current_user_already_approved": approval.approved if approval else False,
+            "approvals": dw_approvals,
+            "current_user_already_approved": (
+                current_user_approval.approved if current_user_approval is not None else None
+            ),
             "current_user_type": current_user_type,
-            "is_approved_by_all": is_approved_by_all,
             "form": form,
+            "is_approved_by_all": is_approved_by_all,
         },
     )
 
@@ -1513,20 +1519,6 @@ def visualisation_publish_html_view(request, gitlab_project_id):
         return visualisation_publish_html_POST(request, gitlab_project)
 
     return HttpResponse(status=405)
-
-
-def _visualisation_approvals(application_template, request, gitlab_project):
-    dw_approvals = VisualisationApproval.objects.filter(
-        visualisation=application_template, approved=True
-    ).all()
-    if waffle.flag_is_active(request, settings.THIRD_APPROVER):
-        if settings.GITLAB_FIXTURES:
-            project_members = get_fixture("project_members_fixture.json")
-        else:
-            project_members = gitlab_project_members(gitlab_project["id"])
-
-        return visualisation_approvals(dw_approvals, project_members)
-    return dw_approvals
 
 
 def _visualisation_is_approved(project_approvals, request, application_template):
