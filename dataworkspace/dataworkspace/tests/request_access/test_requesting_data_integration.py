@@ -33,7 +33,6 @@ class TestRequestingData(TestCase):
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         header = soup.find("h1").contents[0]
-        # TODO update this in the templates to be label not h2 for consistency
         input_label = soup.find("h2").contents[0]
         radios = soup.find_all("input", type="radio")
         radio_names = [radio.get("value").lower() for radio in radios]
@@ -188,7 +187,6 @@ class TestRequestingData(TestCase):
     #     header = soup.find("h2").contents[0]
     #     labels = soup.find_all("label")
     #     assert response.status_code == 200
-    #     # assert "Access restrictions" in header #TODO change headers for each section
     #     assert "Should access on Data Workspace be open to all users by request?" in header
     #     assert "Will this change of access have any operational impact?" in labels[2].contents[0]
 
