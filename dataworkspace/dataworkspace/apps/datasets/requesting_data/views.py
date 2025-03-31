@@ -1,11 +1,5 @@
 from django.forms import model_to_dict
-from http.client import HTTPResponse
-import re
-from django import forms
 from django.views.generic import FormView
-from django.forms import model_to_dict
-from django.shortcuts import get_object_or_404
-from dataworkspace.tests.conftest import user
 from formtools.preview import FormPreview
 from formtools.wizard.views import NamedUrlSessionWizardView
 from django.contrib.auth import get_user_model
