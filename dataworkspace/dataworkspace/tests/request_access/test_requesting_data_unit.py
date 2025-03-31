@@ -350,7 +350,9 @@ class RequestingDataViewsTestCase(TestCase):
         sensitivity = SensitivityType.objects.all()
 
         data = {
-            "requesting_data_about_this_data_wizard_view-current_step": ["security-classification"],
+            "requesting_data_about_this_data_wizard_view-current_step": [
+                "security-classification"
+            ],
             "security-classification-government_security_classification": 2,
             "security-classification-sensitivity": sensitivity,
         }
@@ -367,20 +369,31 @@ class RequestingDataViewsTestCase(TestCase):
         assert mock_post.called is False
 
     def test_personal_data_view(self):
-        self.check_view_response(step="personal-data", field="personal_data", stage="about_this_data")
+        self.check_view_response(
+            step="personal-data", field="personal_data", stage="about_this_data"
+        )
 
     def test_special_personal_data_view(self):
-        self.check_view_response(step="special-personal-data", field="special_personal_data", stage="about_this_data")
+        self.check_view_response(
+            step="special-personal-data", field="special_personal_data", stage="about_this_data"
+        )
 
     def test_commercial_sensitive_view(self):
-        self.check_view_response(step="commercial-sensitive", field="commercial_sensitive", stage="about_this_data")
+        self.check_view_response(
+            step="commercial-sensitive", field="commercial_sensitive", stage="about_this_data"
+        )
 
     def test_retention_period_view(self):
-        self.check_view_response(step="retention-period", field="retention_period", stage="about_this_data")
+        self.check_view_response(
+            step="retention-period", field="retention_period", stage="about_this_data"
+        )
 
     def test_update_frequency_view(self):
         self.check_view_response(
-            step="update-frequency", field="update_frequency", test="constant", stage="about_this_data"
+            step="update-frequency",
+            field="update_frequency",
+            test="constant",
+            stage="about_this_data",
         )
 
     @patch("requests.post")
@@ -392,10 +405,7 @@ class RequestingDataViewsTestCase(TestCase):
         }
 
         response = self.client.post(
-            reverse(
-                "requesting-data-access-restrictions-step",
-                args=["intended-access"]
-            ),
+            reverse("requesting-data-access-restrictions-step", args=["intended-access"]),
             data=data,
         )
 
@@ -403,10 +413,18 @@ class RequestingDataViewsTestCase(TestCase):
         assert mock_post.called is False
 
     def test_location_restrictions_view(self):
-        self.check_view_response(step="location-restrictions", field="location_restrictions", stage="access_restrictions")
+        self.check_view_response(
+            step="location-restrictions",
+            field="location_restrictions",
+            stage="access_restrictions",
+        )
 
     def test_network_restrictions_view(self):
-        self.check_view_response(step="network-restrictions", field="network_restrictions", stage="access_restrictions")
+        self.check_view_response(
+            step="network-restrictions", field="network_restrictions", stage="access_restrictions"
+        )
 
     def test_user_restrictions_view(self):
-        self.check_view_response(step="user-restrictions", field="user_restrictions", stage="access_restrictions")
+        self.check_view_response(
+            step="user-restrictions", field="user_restrictions", stage="access_restrictions"
+        )
