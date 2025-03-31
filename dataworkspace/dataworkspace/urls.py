@@ -46,6 +46,7 @@ from dataworkspace.apps.datasets.requesting_data.views import (
     RequestingDataAccessRestrictionsWizardView,
     RequestingDataSummaryInformationWizardView,
     RequestingDataTrackerView,
+    RequestingDatasetSubmission,
 )
 from dataworkspace.apps.datasets.views import home_view
 
@@ -177,6 +178,11 @@ urlpatterns = [
         "requesting-data/tracker/<uuid:requesting_dataset_id>",
         RequestingDataTrackerView.as_view(),
         name="requesting-data-tracker",
+    ),
+    path(
+        "requesting-data/submission",
+        RequestingDatasetSubmission.as_view(),
+        name="requesting-data-submission",
     ),
     path(
         "support/custom-visualisation-review/",

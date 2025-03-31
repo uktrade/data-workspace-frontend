@@ -474,6 +474,10 @@ class RequestingDataTrackerView(FormView):
 
         return HttpResponseRedirect(
             reverse(
-                "datasets:find_datasets",
+                "requesting-data-submission",
             )
         )
+
+
+class RequestingDatasetSubmission(TemplateView):
+    template_name = "datasets/requesting_data/submission.html"
