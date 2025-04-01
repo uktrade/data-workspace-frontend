@@ -1560,7 +1560,7 @@ def visualisation_publish_html_GET(request, gitlab_project):
 @transaction.atomic
 def _set_published_on_catalogue_item(request, gitlab_project, catalogue_item, publish):
     approvals = VisualisationApproval.objects.filter(
-        visualisation=application_template, approved=True
+        visualisation=catalogue_item.visualisation_template, approved=True
     )
     is_approved_by_all = is_visualisation_approved_by_all(
         approvals, third_approver_flag=settings.THIRD_APPROVER

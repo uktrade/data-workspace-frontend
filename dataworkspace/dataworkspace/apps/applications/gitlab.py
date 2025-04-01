@@ -49,8 +49,6 @@ def get_current_gitlab_user(user_sso_id: str) -> dict:
                 ("provider", "oauth2_generic"),
             ),
         )
-        if len(current_gitlab_user) > 1:
-            return HttpResponse(status=500)
         return current_gitlab_user[0]
 
 

@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from datetime import datetime
 from unittest import mock
 
 import pytest
@@ -12,6 +13,7 @@ from freezegun import freeze_time
 from waffle.testutils import override_flag
 
 from dataworkspace.apps.applications.models import ApplicationInstance, VisualisationApproval
+from dataworkspace.apps.applications.utils import format_visualisation_approval_date
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
@@ -21,7 +23,6 @@ from dataworkspace.tests.common import get_http_sso_data
 def _visualisation_ui_gitlab_mocks(
     peer_reviewer_access=True,
     access_level=30,
-    project_members=None,
     user=None,
 ):
     with mock.patch(
@@ -381,7 +382,7 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
             approval_type="owner",
         )
         client = Client(**get_http_sso_data(second_peer_reviewer))
-        with _visualisation_ui_gitlab_mocks(project_members=project_members):
+        with _visualisation_ui_gitlab_mocks():
             response = client.get(
                 reverse("visualisations:approvals", args=(1,)),
                 follow=True,
