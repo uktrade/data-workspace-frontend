@@ -226,7 +226,7 @@ class VisualisationApproval(TimeStampedModel):
             raise ValueError(
                 f"Value for approver type must be in {dict(self.approval_type_choices).keys()}"
             )
-        super().save(force_insert, force_update, using, update_fields)
+        super().save(update_type_from_null, force_insert, force_update, using, update_fields)
 
         if self.approved:
             log_event(self.approver, EventLog.TYPE_VISUALISATION_APPROVED, related_object=self)
