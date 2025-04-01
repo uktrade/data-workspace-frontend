@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
+from dataworkspace.zendesk import create_support_request
 from formtools.preview import FormPreview  # pylint: disable=import-error
 from formtools.wizard.views import NamedUrlSessionWizardView  # pylint: disable=import-error
 
@@ -445,6 +446,7 @@ class RequestingDataTrackerView(FormView):
         return context
 
     def form_valid(self, form):
+        User = get_user_model()
         requesting_dataset = RequestingDataset.objects.get(
             id=form.cleaned_data["requesting_dataset"]
         )
@@ -472,9 +474,16 @@ class RequestingDataTrackerView(FormView):
 
         RequestingDataset.objects.filter(id=requesting_dataset.id).delete()
 
+        zendesk_ticket_id = create_support_request(
+            self.request.user, 
+            User.objects.get(id=requesting_dataset.user).email,
+            ["A new dataset has been requested."], 
+        )
+
         return HttpResponseRedirect(
             reverse(
                 "requesting-data-submission",
+                kwargs={"zendesk_ticket_id": zendesk_ticket_id},
             )
         )
 
