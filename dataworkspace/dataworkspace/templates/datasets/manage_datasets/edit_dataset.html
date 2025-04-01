@@ -163,7 +163,7 @@
                     </button>
                 </fieldset>
             </form>
-            <aside role="complementary" data-test="Unpublish-catalogue-page">
+            <aside role="complementary" aria-labelledby="subsection-title" data-test="unpublish-catalogue-page">
               <h2 class="govuk-heading-m" id="subsection-title">Unpublish this catalogue page</h2>
               
               <p class="govuk-body">
@@ -172,7 +172,7 @@
               <p class="govuk-body">
                 This action will:
               </p>
-              <ul class="govuk-list govuk-list--bullet">
+              <ul data-test="unpublish-list" class="govuk-list govuk-list--bullet">
                 <li>remove the catalogue page from Data Workspace</li>
                 <li>remove the data from any dashboards or data cuts</li>
                 <li>revoke access for any users</li>
