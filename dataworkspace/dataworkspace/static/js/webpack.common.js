@@ -31,7 +31,7 @@ module.exports = {
   context: __dirname,
   entry: {...APPS, ...REACT_APPS},
   output: {
-    path: path.resolve('./bundles/'),
+    path: path.resolve(__dirname, 'static/js/bundles'),
     filename: '[name].[contenthash].js',
     clean: true
   },
