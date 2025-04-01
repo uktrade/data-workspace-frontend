@@ -1095,10 +1095,12 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         # this is retrospectively filling in that field that was added after the model was created
         for approval in approvals:
             if approval.approval_type is None:
+                approval_gitlab_user = get_current_gitlab_user(approval.approver.profile.sso_id)
                 approval.approval_type = get_approver_type(
-                    gitlab_project["id"], approval.approver, approval.approver.profile.sso_id
+                    gitlab_project["id"], approval.approver, approval_gitlab_user
                 )
                 approval.approval_date = format_visualisation_approval_date(approval.created_date)
+                approval.save()
         current_gitlab_user = get_current_gitlab_user(request.user.profile.sso_id)
         current_user_type = (
             get_approver_type(gitlab_project["id"], request.user, current_gitlab_user)
