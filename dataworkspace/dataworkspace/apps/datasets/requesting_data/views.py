@@ -99,9 +99,9 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
         ("name", DatasetNameForm),
         ("descriptions", DatasetDescriptionsForm),
         ("origin", DatasetDataOriginForm),
-        # ("information-asset-owner", DatasetInformationAssetOwnerForm),
-        # ("information-asset-manager", DatasetInformationAssetManagerForm),
-        # ("enquiries-contact", DatasetEnquiriesContactForm),
+        ("information-asset-owner", DatasetInformationAssetOwnerForm),
+        ("information-asset-manager", DatasetInformationAssetManagerForm),
+        ("enquiries-contact", DatasetEnquiriesContactForm),
         ("existing-system", DatasetExistingSystemForm),
         ("licence", DatasetLicenceForm),
         ("restrictions", DatasetRestrictionsForm),
@@ -176,7 +176,7 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
         # could be abstracted
         if self.steps.current == "summary":
 
-            # the feild label in the forms
+            # the field label in the forms
             section_one_fields = [
                 "name",
                 "short_description",
@@ -193,21 +193,19 @@ class RequestingDataSummaryInformationWizardView(NamedUrlSessionWizardView, Form
 
             section = []
             questions = {}
-
             for name, form_item in self.form_list.items():  # pylint: disable=no-member
                 for name, field in form_item.base_fields.items():
                     question = field.label
                     questions[name] = question
-            for step in self.storage.data["step_data"]:
-                for key, value in self.get_cleaned_data_for_step(step).items():
-
-                    if key in section_one_fields:
-                        section.append(
-                            {
-                                step: {"question": questions[key], "answer": value},
-                            },
-                        )
-
+            for field in section_one_fields:
+                section.append(
+                    {
+                        "TO DO": {
+                            "question": questions[field],
+                            "answer": self.get_all_cleaned_data()[field],
+                        },
+                    },
+                )
             context["summary"] = section
         context["stage"] = "Summary Information"
 
@@ -303,14 +301,15 @@ class RequestingDataAboutThisDataWizardView(NamedUrlSessionWizardView, FormPrevi
                 for name, field in form_item.base_fields.items():
                     question = field.label
                     questions[name] = question
-            for step in self.storage.data["step_data"]:
-                for key, value in self.get_cleaned_data_for_step(step).items():
-                    if key in section_two_fields:
-                        section.append(
-                            {
-                                step: {"question": questions[key], "answer": value},
-                            },
-                        )
+            for field in section_two_fields:
+                section.append(
+                    {
+                        "TO DO": {
+                            "question": questions[field],
+                            "answer": self.get_all_cleaned_data()[field],
+                        },
+                    },
+                )
 
             context["summary"] = section
         context["stage"] = "About This Data"
@@ -393,13 +392,11 @@ class RequestingDataAccessRestrictionsWizardView(NamedUrlSessionWizardView, Form
 
         if self.steps.current == "summary":
             # the feild label in the forms
-            section_two_fields = [
-                "current_access",
+            section_three_fields = [
                 "intended_access",
                 "operational_impact",
                 "location_restrictions",
                 "network_restrictions",
-                "security_clearance",
                 "user_restrictions",
             ]
 
@@ -410,14 +407,15 @@ class RequestingDataAccessRestrictionsWizardView(NamedUrlSessionWizardView, Form
                 for name, field in form_item.base_fields.items():
                     question = field.label
                     questions[name] = question
-            for step in self.storage.data["step_data"]:
-                for key, value in self.get_cleaned_data_for_step(step).items():
-                    if key in section_two_fields:
-                        section.append(
-                            {
-                                step: {"question": questions[key], "answer": value},
-                            },
-                        )
+            for field in section_three_fields:
+                section.append(
+                    {
+                        "TO DO": {
+                            "question": questions[field],
+                            "answer": self.get_all_cleaned_data()[field],
+                        },
+                    },
+                )
 
             context["summary"] = section
         context["stage"] = "Access Restriction"

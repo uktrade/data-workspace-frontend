@@ -152,7 +152,7 @@ class DatasetRestrictionsForm(GOVUKDesignSystemForm):
 
 class DatasetUsageForm(GOVUKDesignSystemForm):
     usage = GOVUKDesignSystemTextareaField(
-        label="How can this data be used on Data Workspace?",
+        label="What will the data be used for on Data Workspace?",
         required=True,
         widget=GOVUKDesignSystemTextareaWidget(
             heading="h2",
