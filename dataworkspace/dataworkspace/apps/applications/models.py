@@ -209,7 +209,7 @@ class VisualisationApproval(TimeStampedModel):
             raise ValueError(
                 "A new record must be created for a new approval - you cannot flip a rescinded approval."
             )
-        elif self._initial_approved is self.approved and self.modified_date is not None and update_type_from_null is False: 
+        elif self._initial_approved is self.approved and self.modified_date is not None and update_type_from_null is False:
             raise ValueError("The only change that can be made to an approval is to unapprove it.")
         if self.approval_type not in dict(self.approval_type_choices):
             raise ValueError(
