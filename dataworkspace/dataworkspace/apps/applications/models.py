@@ -12,8 +12,6 @@ from dataworkspace.apps.core.models import Database, TimeStampedModel
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 
-# from dataworkspace.apps.applications.utils import format_visualisation_approval_date
-
 
 class ApplicationTemplate(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
