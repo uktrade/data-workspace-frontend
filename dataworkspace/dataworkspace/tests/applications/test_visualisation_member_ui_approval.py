@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from datetime import datetime
 from unittest import mock
 
 import pytest
@@ -12,6 +13,7 @@ from freezegun import freeze_time
 from waffle.testutils import override_flag
 
 from dataworkspace.apps.applications.models import ApplicationInstance, VisualisationApproval
+from dataworkspace.apps.applications.utils import format_visualisation_approval_date
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
@@ -21,14 +23,11 @@ from dataworkspace.tests.common import get_http_sso_data
 def _visualisation_ui_gitlab_mocks(
     owner_access=False,
     access_level=30,
-    project_members=None,
     user=None,
 ):
     with mock.patch(
         "dataworkspace.apps.applications.views._visualisation_gitlab_project"
     ) as projects_mock, mock.patch(
-        "dataworkspace.apps.applications.views.gitlab_project_members"
-    ) as project_members_mock, mock.patch(
         "dataworkspace.apps.applications.gitlab.is_project_owner"
     ) as owner_access_mock, mock.patch(
         "dataworkspace.apps.applications.views._visualisation_branches"
@@ -40,12 +39,6 @@ def _visualisation_ui_gitlab_mocks(
         "dataworkspace.apps.applications.views.get_approver_type"
     ) as approver_type:
         access_mock.return_value = True
-        projects_mock.return_value = {
-            "id": 1,
-            "default_branch": "master",
-            "name": "test-gitlab-project",
-            "description": "Some description",
-        }
         branches_mock.return_value = [
             {
                 "name": "master",
@@ -53,30 +46,9 @@ def _visualisation_ui_gitlab_mocks(
             }
         ]
         owner_access_mock.return_value = owner_access
-        project_members_mock.return_value = []
         user_mock.return_value = user if user else [{"id": 3, "name": "James Robinson"}]
         approver_type.return_value = "team member"
-        project_members_mock.return_value = (
-            project_members
-            if project_members
-            else [
-                {
-                    "id": 2,
-                    "name": "Ledia Luli",
-                    "username": "ledia.luli",
-                    "state": "active",
-                    "access_level": 30,
-                },
-                {
-                    "id": 1,
-                    "name": "Ian Leggett",
-                    "username": "ian.leggett",
-                    "state": "active",
-                    "access_level": 40,
-                },
-            ]
-        )
-        yield projects_mock, branches_mock, access_mock, owner_access_mock, user_mock, project_members_mock, approver_type
+        yield projects_mock, branches_mock, access_mock, owner_access_mock, user_mock, approver_type
 
 
 class TestDataVisualisationMemberUIApprovalPage:
@@ -151,28 +123,15 @@ class TestDataVisualisationMemberUIApprovalPage:
             visualisation_template=v,
         )
         factories.VisualisationApprovalFactory.create(
-            approved=True, visualisation=v, approver=another_team_member
+            approved=True,
+            visualisation=v,
+            approver=another_team_member,
+            approval_date=format_visualisation_approval_date(datetime.now()),
+            approval_type="team member",
         )
 
         client = Client(**get_http_sso_data(team_member))
-        with _visualisation_ui_gitlab_mocks(
-            project_members=[
-                {
-                    "id": 2,
-                    "name": "Ledia Luli",
-                    "username": "ledia.luli",
-                    "state": "active",
-                    "access_level": 30,
-                },
-                {
-                    "id": 3,
-                    "name": "James Robinson",
-                    "username": "james.robinson",
-                    "state": "active",
-                    "access_level": 30,
-                },
-            ]
-        ):
+        with _visualisation_ui_gitlab_mocks():
             response = client.get(
                 reverse("visualisations:approvals", args=(1,)),
                 follow=True,
@@ -214,7 +173,11 @@ class TestDataVisualisationMemberUIApprovalPage:
             visualisation_template=v,
         )
         factories.VisualisationApprovalFactory.create(
-            approved=True, visualisation=v, approver=team_member
+            approved=True,
+            visualisation=v,
+            approver=team_member,
+            approval_date=format_visualisation_approval_date(datetime.now()),
+            approval_type="team member",
         )
 
         client = Client(**get_http_sso_data(team_member))
@@ -262,7 +225,11 @@ class TestDataVisualisationMemberUIApprovalPage:
             visualisation_template=v,
         )
         factories.VisualisationApprovalFactory.create(
-            approved=True, visualisation=v, approver=peer_reviewer
+            approved=True,
+            visualisation=v,
+            approver=peer_reviewer,
+            approval_date=format_visualisation_approval_date(datetime.now()),
+            approval_type="peer reviewer",
         )
 
         client = Client(**get_http_sso_data(user))
@@ -310,7 +277,11 @@ class TestDataVisualisationMemberUIApprovalPage:
             visualisation_template=v,
         )
         factories.VisualisationApprovalFactory.create(
-            approved=True, visualisation=v, approver=owner
+            approved=True,
+            visualisation=v,
+            approver=owner,
+            approval_date=format_visualisation_approval_date(datetime.now()),
+            approval_type="owner",
         )
 
         client = Client(**get_http_sso_data(user))
@@ -355,10 +326,18 @@ class TestDataVisualisationMemberUIApprovalPage:
             visualisation_template=v,
         )
         factories.VisualisationApprovalFactory.create(
-            approved=True, visualisation=v, approver=owner
+            approved=True,
+            visualisation=v,
+            approver=owner,
+            approval_date=format_visualisation_approval_date(datetime.now()),
+            approval_type="owner",
         )
         factories.VisualisationApprovalFactory.create(
-            approved=True, visualisation=v, approver=peer_reviewer
+            approved=True,
+            visualisation=v,
+            approver=peer_reviewer,
+            approval_date=format_visualisation_approval_date(datetime.now()),
+            approval_type="peer reviewer",
         )
         client = Client(**get_http_sso_data(user))
         with _visualisation_ui_gitlab_mocks():
@@ -416,42 +395,28 @@ class TestDataVisualisationMemberUIApprovalPage:
             visualisation_template=v,
         )
         factories.VisualisationApprovalFactory.create(
-            approved=True, visualisation=v, approver=team_member_reviewer
+            approved=True,
+            visualisation=v,
+            approver=team_member_reviewer,
+            approval_date=format_visualisation_approval_date(datetime.now()),
+            approval_type="team member",
         )
         factories.VisualisationApprovalFactory.create(
-            approved=True, visualisation=v, approver=peer_reviewer
+            approved=True,
+            visualisation=v,
+            approver=peer_reviewer,
+            approval_date=format_visualisation_approval_date(datetime.now()),
+            approval_type="peer reviewer",
         )
         factories.VisualisationApprovalFactory.create(
-            approved=True, visualisation=v, approver=owner
+            approved=True,
+            visualisation=v,
+            approver=owner,
+            approval_date=format_visualisation_approval_date(datetime.now()),
+            approval_type="owner",
         )
-
-        project_members = [
-            {
-                "id": 1,
-                "name": "Ian Leggett",
-                "username": "ian.leggett",
-                "state": "active",
-                "access_level": 30,
-            },
-            {
-                "id": 2,
-                "name": "Ledia Luli",
-                "username": "ledia.luli",
-                "state": "active",
-                "access_level": 40,
-            },
-            {
-                "id": 3,
-                "name": "James Robinson",
-                "username": "james.robinson",
-                "state": "active",
-                "access_level": 30,
-            },
-        ]
-
         client = Client(**get_http_sso_data(user))
         with _visualisation_ui_gitlab_mocks(
-            project_members=project_members,
             user=[
                 {
                     "id": 5,
@@ -525,42 +490,28 @@ class TestDataVisualisationMemberUIApprovalPage:
             visualisation_template=v,
         )
         factories.VisualisationApprovalFactory.create(
-            approved=True, visualisation=v, approver=team_member_reviewer
+            approved=True,
+            visualisation=v,
+            approver=team_member_reviewer,
+            approval_date=format_visualisation_approval_date(datetime.now()),
+            approval_type="team member",
         )
         factories.VisualisationApprovalFactory.create(
-            approved=True, visualisation=v, approver=peer_reviewer
+            approved=True,
+            visualisation=v,
+            approver=peer_reviewer,
+            approval_date=format_visualisation_approval_date(datetime.now()),
+            approval_type="peer reviewer",
         )
         factories.VisualisationApprovalFactory.create(
-            approved=True, visualisation=v, approver=owner
+            approved=True,
+            visualisation=v,
+            approver=owner,
+            approval_date=format_visualisation_approval_date(datetime.now()),
+            approval_type="owner",
         )
-
-        project_members = [
-            {
-                "id": 1,
-                "name": "Ian Leggett",
-                "username": "ian.leggett",
-                "state": "active",
-                "access_level": 30,
-            },
-            {
-                "id": 2,
-                "name": "Ledia Luli",
-                "username": "ledia.luli",
-                "state": "active",
-                "access_level": 40,
-            },
-            {
-                "id": 3,
-                "name": "James Robinson",
-                "username": "james.robinson",
-                "state": "active",
-                "access_level": 30,
-            },
-        ]
-
         client = Client(**get_http_sso_data(team_member_reviewer))
         with _visualisation_ui_gitlab_mocks(
-            project_members=project_members,
             user=[
                 {
                     "id": 3,

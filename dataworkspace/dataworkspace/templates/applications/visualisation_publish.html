@@ -57,14 +57,14 @@
     </h3>
     {% if approved  %}
       <p class="govuk-body govuk-!-margin-bottom-6">
-        You can release your visualisation to production. {{ project_approvals| length }} out of 3 users have approved it.
+        You can release your visualisation to production. {{ approvals| length }} out of 3 users have approved it.
       </p>
       {% include "partials/react-slot-data.html" with mount_id="confirm-publish-visualisation" data='{"is_catalogue": false}' test_id="confirm-publish-visualisation" %}
     {% else %}
       <div class="govuk-warning-text govuk-!-margin-bottom-4">
         <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
         <strong class="govuk-warning-text__text">
-          You cannot release your visualisation to production. This is because only {{ project_approvals| length }} out of 3 user{{ project_approvals | pluralize }} {{ project_approvals | pluralize:'has,have' }} approved it.
+          You cannot release your visualisation to production. This is because only {{ approvals | length }} out of 3 user{{ project_approvals | pluralize }} {{ project_approvals | pluralize:'has,have' }} approved it.
         </strong>
       </div>
       <div>

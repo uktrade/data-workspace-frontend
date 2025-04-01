@@ -22,7 +22,7 @@
         {% if approval.approval_type == 'team member' %}
         <li>A member of the Data Workspace team approved this visualisation on {{ approval.approval_date }}</li>
         {% else %}
-         <li>{% if request.user.get_full_name == approval.approver and approval.approval_type == 'owner' %}You{% else %}{{ approval.approver }} ({{approval.approval_type}}){% endif %} approved this visualisation on {{ approval.approval_date }}</li>
+         <li>{% if request.user.get_full_name == approval.approver and approval.approval_type == 'owner' %}You{% else %}{{ approval.approver }} ({{approval.approval_type | title}}){% endif %} approved this visualisation on {{ approval.approval_date }}</li>
         {% endif %}
       {% endfor %}
    </ul>

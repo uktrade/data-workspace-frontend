@@ -11,7 +11,8 @@ from django.dispatch import receiver
 from dataworkspace.apps.core.models import Database, TimeStampedModel
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
-#from dataworkspace.apps.applications.utils import format_visualisation_approval_date
+
+# from dataworkspace.apps.applications.utils import format_visualisation_approval_date
 
 
 class ApplicationTemplate(TimeStampedModel):
