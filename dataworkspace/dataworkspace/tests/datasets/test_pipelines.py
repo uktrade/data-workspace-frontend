@@ -136,6 +136,26 @@ def test_create_pipeline_validates_create_statement(mock_sync, staff_client):
 
 
 @mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
+def test_create_pipeline_validates_custom_schedule_statement(mock_sync, staff_client):
+    staff_client.post(reverse("admin:index"), follow=True)
+    resp = staff_client.post(
+        reverse("pipelines:create-sql"),
+        data={
+            "type": "sql",
+            "table_name": "test",
+            "schedule": "@custom",
+            "custom_schedule": "",
+            "sql": "SELECT * FROM foo;",
+        },
+        follow=True,
+    )
+    assert (
+        b"selected in schedule field but custom schedule field was empty or invalid"
+        in resp.content
+    )
+
+
+@mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
 def test_create_pipeline_validates_duplicate_column_names(mock_sync, staff_client):
     staff_client.post(reverse("admin:index"), follow=True)
     resp = staff_client.post(

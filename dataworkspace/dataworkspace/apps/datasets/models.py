@@ -2898,6 +2898,7 @@ class Pipeline(TimeStampedUserModel):
     schedule = models.TextField(
         choices=PipelineScheduleType.choices, default=PipelineScheduleType.DAILY
     )
+    custom_schedule = models.CharField(max_length=64, blank=True)
 
     class Meta:
         ordering = ("table_name",)
