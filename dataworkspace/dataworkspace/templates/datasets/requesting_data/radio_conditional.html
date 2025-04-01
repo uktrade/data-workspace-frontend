@@ -4,7 +4,7 @@
 
 {% block page_title %}Request a new dataset - {{ block.super }}{% endblock page_title %}
 {% block breadcrumbs %}
-<a href="{% url 'support' %}" class="govuk-back-link">Back</a>
+<a href="{{ backlink }}" class="govuk-back-link">Back</a>
 {% endblock %}
 {% block content %}
 {% if form.errors %}
