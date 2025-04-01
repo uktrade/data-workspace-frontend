@@ -106,7 +106,6 @@ class S3FileStorage(FileSystemStorage):
 
 
 def malware_file_validator(file: FieldFile):
-    raise ValidationError("error")
     if not settings.LOCAL:
         clamav_response = _upload_to_clamav(file)
 

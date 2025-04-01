@@ -48,8 +48,8 @@ def get_current_gitlab_user(user_sso_id: str) -> dict:
                 ("extern_uid", user_sso_id),
                 ("provider", "oauth2_generic"),
             ),
-        )
-        return current_gitlab_user[0]
+        )[0]
+    return current_gitlab_user
 
 
 def gitlab_api_v4(method: str, path: str, params: tuple = ()):
