@@ -68,8 +68,8 @@ class TestEventLogAPIView(BaseAPIViewTest):
 
     def test_visualisation_approval_success(self, unauthenticated_client):
         # We create the visualisation approvals, which in turn create the event log items
-        approval_0 = factories.VisualisationApprovalFactory()
-        approval_1 = factories.VisualisationApprovalFactory()
+        approval_0 = factories.VisualisationApprovalFactory(approval_type="owner")
+        approval_1 = factories.VisualisationApprovalFactory(approval_type="team member")
 
         response = unauthenticated_client.get(self.url)
 

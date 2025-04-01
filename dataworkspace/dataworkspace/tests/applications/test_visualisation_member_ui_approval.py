@@ -39,6 +39,12 @@ def _visualisation_ui_gitlab_mocks(
         "dataworkspace.apps.applications.views.get_approver_type"
     ) as approver_type:
         access_mock.return_value = True
+        projects_mock.return_value = {
+            "id": 1,
+            "default_branch": "master",
+            "name": "test-gitlab-project",
+            "description": "Some description",
+        }
         branches_mock.return_value = [
             {
                 "name": "master",
@@ -657,6 +663,8 @@ class TestDataVisualisationMemberUIApprovalPage:
             approved=True,
             approver=user,
             visualisation=vis_cat_item.visualisation_template,
+            approval_date=format_visualisation_approval_date(datetime.now()),
+            approval_type="team member",
         )
 
         # Login to admin site
