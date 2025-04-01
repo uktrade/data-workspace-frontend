@@ -38,6 +38,7 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 from django.views.generic import DetailView, FormView, TemplateView, UpdateView, View
 from psycopg2 import sql
 
+from dataworkspace import zendesk
 from dataworkspace import datasets_db
 from dataworkspace.apps.accounts.models import UserDataTableView
 from dataworkspace.apps.api_v1.core.views import invalidate_superset_user_cached_credentials
@@ -1547,12 +1548,22 @@ class DatasetEditView(EditBaseView, UpdateView):
         return super().form_valid(form)
 
 
-class DatasetEditUnpublishView(EditBaseView, UpdateView, View):
-    def post(self, request, *arg, **kwargs):
+class DatasetEditUnpublishView(EditBaseView, UpdateView):
+    def post(self, request, *args, **kwargs):
         dataset = find_dataset(kwargs["pk"], request.user)
         dataset.published = False
         dataset.save()
-        # Send to zendesk to notify analyst about the page status
+        # In Dev Ignore the API call to Zendesk and notify
+        # if settings.ENVIRONMENT == "Dev":
+        #     dataset.save()
+        #     return super().post(request, *args, **kwargs)
+        if isinstance(dataset, (DataSet, VisualisationCatalogueItem)):
+            zendesk.notify_unpublish_catalogue_page(
+                request,
+                dataset,
+            )
+            dataset.save()
+
         return redirect("/datasets")
 
 

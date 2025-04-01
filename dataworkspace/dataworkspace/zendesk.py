@@ -203,6 +203,23 @@ If access has not been granted to the requestor within 5 working days, this will
     return ticket_reference
 
 
+def notify_unpublish_catalogue_page(request, dataset):
+    message = f"""
+A catalogue page has been unpublished and needs action from the support team. 
+
+Contact the user and find out why they have unpublished this page. 
+
+"""
+
+    create_support_request(
+        request.user,
+        request.user.email,
+        message,
+        subject=f"{dataset.name} has been unpublished by {request.user}",
+        tag="dataset-unpublish-request",
+    )
+
+
 def notify_visualisation_access_request(request, access_request, dataset):
     dataset_url = request.build_absolute_uri(dataset.get_absolute_url())
     message = f"""
