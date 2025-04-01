@@ -206,7 +206,6 @@ class VisualisationApproval(TimeStampedModel):
     @transaction.atomic
     def save(
         self,
-        update_type_from_null=False,
         force_insert=False,
         force_update=False,
         using=None,
@@ -216,17 +215,11 @@ class VisualisationApproval(TimeStampedModel):
             raise ValueError(
                 "A new record must be created for a new approval - you cannot flip a rescinded approval."
             )
-        elif (
-            self._initial_approved is self.approved
-            and self.modified_date is not None
-            and update_type_from_null is False
-        ):
-            raise ValueError("The only change that can be made to an approval is to unapprove it.")
         if self.approval_type not in dict(self.approval_type_choices):
             raise ValueError(
                 f"Value for approver type must be in {dict(self.approval_type_choices).keys()}"
             )
-        super().save(update_type_from_null, force_insert, force_update, using, update_fields)
+        super().save(force_insert, force_update, using, update_fields)
 
         if self.approved:
             log_event(self.approver, EventLog.TYPE_VISUALISATION_APPROVED, related_object=self)
