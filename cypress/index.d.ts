@@ -5,16 +5,16 @@ declare namespace Cypress {
      * @example cy.dataCy('greeting')
      */
     setUsersEditorAccess(
-      dataSetId: import("./fixtures/datasets").DataCatalogueIDType,
+      dataSetId: import('./fixtures/datasets').DataCatalogueIDType,
       hasEditorAccess: boolean
     ): Chainable<Element>;
 
     resetUserPermissions(
-      dataSetId: import("./fixtures/datasets").DataCatalogueIDType
+      dataSetId: import('./fixtures/datasets').DataCatalogueIDType
     ): Chainable<Element>;
 
     resetAllPermissions(
-      dataSetId: import("./fixtures/datasets").DataCatalogueIDType
+      dataSetId: import('./fixtures/datasets').DataCatalogueIDType
     ): Chainable<Element>;
     updateNotificationBanner(
       notificationId: number,
