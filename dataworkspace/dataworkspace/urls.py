@@ -40,10 +40,13 @@ from dataworkspace.apps.core.views import (
 )
 
 from dataworkspace.apps.datasets.requesting_data.views import (
+    AddNewDataset,
+    AddingData,
     RequestingDataAboutThisDataWizardView,
     RequestingDataAccessRestrictionsWizardView,
     RequestingDataSummaryInformationWizardView,
     RequestingDataTrackerView,
+    RequestingDatasetSubmission,
 )
 from dataworkspace.apps.datasets.views import home_view
 
@@ -141,6 +144,16 @@ urlpatterns = [
         name="add-dataset-request",
     ),
     path(
+        "requesting-data/adding-data",
+        AddingData.as_view(),
+        name="adding-data",
+    ),
+    path(
+        "requesting-data/add-new-dataset",
+        AddNewDataset.as_view(),
+        name="add-new-dataset",
+    ),
+    path(
         "requesting-data/summary-information/<str:step>",
         RequestingDataSummaryInformationWizardView.as_view(
             url_name="requesting-data-summary-information-step"
@@ -165,6 +178,11 @@ urlpatterns = [
         "requesting-data/tracker/<uuid:requesting_dataset_id>",
         RequestingDataTrackerView.as_view(),
         name="requesting-data-tracker",
+    ),
+    path(
+        "requesting-data/submission/<str:zendesk_ticket_id>",
+        RequestingDatasetSubmission.as_view(),
+        name="requesting-data-submission",
     ),
     path(
         "support/custom-visualisation-review/",
