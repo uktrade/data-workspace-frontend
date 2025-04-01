@@ -1086,11 +1086,19 @@ def visualisation_approvals_html_GET(request, gitlab_project):
     current_user_type = (
         current_user_approval.approval_type if current_user_approval is not None else None
     )
-    # backwards compatibility with legacy system that didn't use VisualisationApproval.approval_type
     is_approved_by_all = is_visualisation_approved_by_all(
         approvals, third_approver_flag=settings.THIRD_APPROVER
     )
     if waffle.flag_is_active(request, settings.THIRD_APPROVER):
+        # backwards compatibility with old system where approver_type was generated dynamically
+        # now it's saved as field in the VisualisationApproval model
+        # this is retrospectively filling in that field that was added after the model was created
+        for approval in approvals:
+            if approval.approval_type is None:
+                approval.approval_type = get_approver_type(
+                    gitlab_project["id"], approval.approver, approval.approver.profile.sso_id
+                )
+                approval.approval_date = format_visualisation_approval_date(approval.created_date)
         current_gitlab_user = get_current_gitlab_user(request.user.profile.sso_id)
         current_user_type = (
             get_approver_type(gitlab_project["id"], request.user, current_gitlab_user)
