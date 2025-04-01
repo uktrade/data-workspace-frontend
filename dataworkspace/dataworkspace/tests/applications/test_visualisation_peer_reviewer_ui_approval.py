@@ -30,7 +30,7 @@ def _visualisation_ui_gitlab_mocks(
     ) as projects_mock, mock.patch(
         "dataworkspace.apps.applications.views._visualisation_branches"
     ) as branches_mock, mock.patch(
-        "dataworkspace.apps.applications.views.gitlab_api_v4"
+        "dataworkspace.apps.applications.gitlab.gitlab_api_v4"
     ) as user_mock, mock.patch(
         "dataworkspace.apps.applications.views.gitlab_has_developer_access"
     ) as access_mock, mock.patch(
@@ -235,7 +235,11 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
         user.user_permissions.add(develop_visualisations_permission)
 
         owner = factories.UserFactory.create(
-            first_name="Ledia", last_name="Luli", is_staff=False, is_superuser=False
+            first_name="Ledia",
+            last_name="Luli",
+            email="ledia.luli@digital.trade.gov.uk",
+            is_staff=False,
+            is_superuser=False,
         )
 
         v = factories.VisualisationTemplateFactory.create(gitlab_project_id=1)
@@ -401,7 +405,7 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
             approval_list_items[0]
             .get_text()
             .startswith(
-                "Tina Belcher (owner) approved this visualisation on 01 January 2025, 01:01am"
+                "A member of the Data Workspace team approved this visualisation on 01 January 2025, 01:01am"
             )
         )
         assert (
@@ -415,7 +419,7 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
             approval_list_items[2]
             .get_text()
             .startswith(
-                "A member of the Data Workspace team approved this visualisation on 01 January 2025, 01:01am"
+                "Tina Belcher (owner) approved this visualisation on 01 January 2025, 01:01am"
             )
         )
         assert "This visualisation has been peer-reviewed" in second_peer_reviewer_header
@@ -460,6 +464,7 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
                     "approved": "on",
                     "approver": user.id,
                     "visualisation": str(visualisation.visualisation_template.id),
+                    "approval_type": "peer reviewer",
                 },
                 follow=True,
             )
@@ -487,6 +492,7 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
             approved=True,
             approver=user,
             visualisation=vis_cat_item.visualisation_template,
+            approval_type="peer reviewer",
         )
 
         # Login to admin site

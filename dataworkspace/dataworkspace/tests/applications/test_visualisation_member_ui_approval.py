@@ -32,7 +32,7 @@ def _visualisation_ui_gitlab_mocks(
     ) as owner_access_mock, mock.patch(
         "dataworkspace.apps.applications.views._visualisation_branches"
     ) as branches_mock, mock.patch(
-        "dataworkspace.apps.applications.views.gitlab_api_v4"
+        "dataworkspace.apps.applications.gitlab.gitlab_api_v4"
     ) as user_mock, mock.patch(
         "dataworkspace.apps.applications.views.gitlab_has_developer_access"
     ) as access_mock, mock.patch(
@@ -445,7 +445,7 @@ class TestDataVisualisationMemberUIApprovalPage:
         self.assert_common_content(soup, already_approved_by_another_member=True)
         assert len(approval_list_items) == 3
         assert (
-            approval_list_items[0]
+            approval_list_items[2]
             .get_text()
             .startswith(
                 "Ledia Luli (owner) approved this visualisation on 01 January 2025, 01:01am"
@@ -459,7 +459,7 @@ class TestDataVisualisationMemberUIApprovalPage:
             )
         )
         assert (
-            approval_list_items[2]
+            approval_list_items[0]
             .get_text()
             .startswith(
                 "A member of the Data Workspace team approved this visualisation on 01 January 2025, 01:01am"
@@ -539,9 +539,8 @@ class TestDataVisualisationMemberUIApprovalPage:
 
         self.assert_common_content(soup, self_approval=True)
         assert len(approval_list_items) == 3
-        print(list(ap.get_text() for ap in approval_list_items))
         assert (
-            approval_list_items[0]
+            approval_list_items[2]
             .get_text()
             .startswith(
                 "Ledia Luli (owner) approved this visualisation on 01 January 2025, 01:01am"
@@ -555,7 +554,7 @@ class TestDataVisualisationMemberUIApprovalPage:
             )
         )
         assert (
-            approval_list_items[2]
+            approval_list_items[0]
             .get_text()
             .startswith(
                 "A member of the Data Workspace team approved this visualisation on 01 January 2025, 01:01am"
@@ -594,6 +593,7 @@ class TestDataVisualisationMemberUIApprovalPage:
                     "approved": "on",
                     "approver": user.id,
                     "visualisation": str(visualisation.visualisation_template.id),
+                    "approval_type": "team member",
                 },
                 follow=True,
             )
@@ -631,6 +631,7 @@ class TestDataVisualisationMemberUIApprovalPage:
                     "action": "approve",
                     "approver": user.id,
                     "visualisation": str(visualisation.visualisation_template.id),
+                    "approval_type": "team member",
                 },
                 follow=True,
             )
@@ -681,6 +682,7 @@ class TestDataVisualisationMemberUIApprovalPage:
                     "action": "unapprove",
                     "approver": user.id,
                     "visualisation": str(vis_cat_item.visualisation_template.id),
+                    "approval_type": "team member",
                 },
                 follow=True,
             )
