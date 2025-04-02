@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
 
 import { Button } from '@govuk-react/button';
+import { ListItem, Paragraph, UnorderedList } from 'govuk-react';
+import styled from 'styled-components';
 
 import ConfirmDialog from '../../components/ConfirmDialog';
+import { ERROR_COLOUR } from '../../constants';
+
+const StyledParagraph = styled(Paragraph)`
+  padding-top: 30px;
+`;
 
 type unpublishDataType = {
   unpublish_url: string;
@@ -37,14 +44,33 @@ const UnpublishCataloguePage = ({
       {isOpen && (
         <ConfirmDialog
           actionUrl={data.unpublish_url}
-          bodyText={
-            'You‘re responsible for the information security and data protection of the data this visualisation uses. All data must be published to the Data Workspace catalogue. Storing and using data from Gitlab is not permitted.'
+          bodyElement={
+            <>
+              <StyledParagraph>
+                By clicking the 'Yes' button below you're confirmimg:
+              </StyledParagraph>
+              <UnorderedList>
+                <ListItem>
+                  <Paragraph>
+                    this catalogue page needs to be unpublished because of a
+                    potential data breach
+                  </Paragraph>
+                </ListItem>
+                <ListItem>
+                  <Paragraph>
+                    you understand that any data linked to this catalogue page
+                    will also be removed
+                  </Paragraph>
+                </ListItem>
+              </UnorderedList>
+            </>
           }
           csrf_token={csrf_token}
-          title="Unpublish catalogue"
+          title="Final review before unpublishing"
           open={isOpen}
           onClose={closeModal}
-          buttonTextAccept="Unpublish catalogue"
+          buttonTextAccept="Yes, unpublish catalogue page"
+          buttonColourAccept={ERROR_COLOUR}
           buttonTextCancel={'Close'}
           buttonValueAccept="unpublish-catalogue"
           warning={true}
