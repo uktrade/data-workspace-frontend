@@ -1553,16 +1553,30 @@ class DatasetEditUnpublishView(EditBaseView, UpdateView):
         dataset = find_dataset(kwargs["pk"], request.user)
         dataset.published = False
         dataset.save()
+        absolute_url = self.request.build_absolute_uri(
+            reverse("datasets:dataset_detail", args=[self.obj.id])
+        )
         # In Dev Ignore the API call to Zendesk and notify
-        # if settings.ENVIRONMENT == "Dev":
-        #     dataset.save()
-        #     return super().post(request, *args, **kwargs)
-        if isinstance(dataset, (DataSet, VisualisationCatalogueItem)):
-            zendesk.notify_unpublish_catalogue_page(
-                request,
-                dataset,
-            )
-            dataset.save()
+        if settings.ENVIRONMENT != "Dev":
+            if isinstance(dataset, (DataSet, VisualisationCatalogueItem)):
+                zendesk.notify_unpublish_catalogue_page(
+                    request,
+                    dataset,
+                )
+                dataset.save()
+                send_email(
+                    settings.NOTIFY_UNPUBLISH_DATASET_CATALOUGE_PAGE_TEMPLATE_ID,
+                    request.user.email,
+                    personalisation={
+                        "email_address": request.user.email,
+                        "dataset_name": dataset.name,
+                        "dataset_url": absolute_url,
+                    },
+                )
+        messages.success(
+            self.request,
+            f"An email has been sent to {request.user.email} to let them know they now have unpublish the dataset.",
+        )
 
         return redirect("/datasets")
 
