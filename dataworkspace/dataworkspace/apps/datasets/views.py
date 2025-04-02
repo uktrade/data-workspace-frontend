@@ -1571,10 +1571,6 @@ class DatasetEditUnpublishView(EditBaseView, UpdateView):
                     "dataset_url": absolute_url,
                 },
             )
-        messages.success(
-            self.request,
-            f"An email has been sent to {request.user.email} to let them know they now have unpublish the dataset.",
-        )
 
         return redirect("/datasets")
 
