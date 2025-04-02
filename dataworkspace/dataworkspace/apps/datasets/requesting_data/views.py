@@ -66,6 +66,90 @@ class AddingData(TemplateView):
 class AddNewDataset(TemplateView):
     template_name = "datasets/requesting_data/add_new_dataset.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        requesting_dataset = RequestingDataset.objects.create(name="Untitled")
+        # requesting_dataset.name = "Untitled"
+            # self.request.session["requesting_dataset"] = requesting_dataset.id
+        context["requesting_dataset_id"] = str(requesting_dataset.id)
+        self.kwargs["dataset_uuid"]
+        print('HELLLOOOOOOOO')
+        print(context["requesting_dataset_id"])
+        print(type(context["requesting_dataset_id"]))
+        return super().get_context_data(**kwargs)
+
+
+class RequestingDataTrackerView(FormView):
+    form_class = TrackerPageForm
+    template_name = "datasets/requesting_data/tracker.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        requesting_dataset = RequestingDataset.objects.get(
+            id=self.request.session["requesting_dataset"]
+        )
+        # requesting_dataset = RequestingDataset.objects.get_or_create(
+        #     id=self.kwargs.get("requesting_dataset_id", name="Untitled")
+        # )
+        # requesting_dataset.name = "Untitled"
+            # self.request.session["requesting_dataset"] = requesting_dataset.id
+        context["requesting_dataset_id"] = requesting_dataset.id
+
+        # TODO refactor
+        stage_one_complete = requesting_dataset.stage_one_complete
+        stage_two_complete = requesting_dataset.stage_two_complete
+        stage_three_complete = requesting_dataset.stage_three_complete
+        context["stage_one_complete"] = stage_one_complete
+        context["stage_two_complete"] = stage_two_complete
+        context["stage_three_complete"] = stage_three_complete
+        if stage_one_complete and stage_two_complete and stage_three_complete:
+            context["all_stages_complete"] = True
+        
+        return context
+
+    def form_valid(self, form):
+        requesting_dataset = RequestingDataset.objects.get(
+            id=form.cleaned_data["requesting_dataset"]
+        )
+        data_dict = model_to_dict(
+            requesting_dataset,
+            exclude=[
+                "id",
+                "tags",
+                "user",
+                "sensitivity",
+                "data_catalogue_editors",
+                "stage_one_complete",
+                "stage_two_complete",
+                "stage_three_complete",
+            ],
+        )
+        # TODO refactor
+        data_dict["enquiries_contact"] = requesting_dataset.enquiries_contact
+        data_dict["information_asset_manager"] = requesting_dataset.information_asset_manager
+        data_dict["information_asset_owner"] = requesting_dataset.information_asset_owner
+        data_dict["slug"] = requesting_dataset.name.lower().replace(" ", "-")
+
+        dataset = DataSet.objects.create(**data_dict)
+        dataset.data_catalogue_editors.set(requesting_dataset.data_catalogue_editors.all())
+        dataset.sensitivity.set(requesting_dataset.sensitivity.all())
+        dataset.save()
+
+        RequestingDataset.objects.filter(id=requesting_dataset.id).delete()
+
+        # zendesk_ticket_id = create_support_request(
+        #     self.request.user, 
+        #     User.objects.get(id=requesting_dataset.user).email,
+        #     ["A new dataset has been requested."], 
+        # )
+
+        return HttpResponseRedirect(
+            reverse(
+                "requesting-data-submission",
+                # kwargs={"zendesk_ticket_id": zendesk_ticket_id},
+            )
+        )
+
 
 class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
 
@@ -240,15 +324,18 @@ class RequestingDataSummaryInformationWizardView(RequestingDatasetBaseWizardView
         return context
 
     def done(self, form_list, **kwargs):
-        requesting_dataset = RequestingDataset.objects.create(
-            name=form_list[0].cleaned_data.get("name")
+        # requesting_dataset = RequestingDataset.objects.create(
+        #     name=form_list[0].cleaned_data.get("name")
+        # )
+        requesting_dataset = RequestingDataset.objects.get(
+            id=self.request.session["requesting_dataset"]
         )
         requesting_dataset.user = self.request.user.id
         requesting_dataset.stage_one_complete = True
         requesting_dataset = self.add_fields(form_list, requesting_dataset, self.notes_fields)
         requesting_dataset.save()
 
-        self.request.session["requesting_dataset"] = requesting_dataset.id
+        # self.request.session["requesting_dataset"] = requesting_dataset.id
         return HttpResponseRedirect(
             reverse(
                 "requesting-data-tracker",
@@ -368,73 +455,6 @@ class RequestingDataAccessRestrictionsWizardView(RequestingDatasetBaseWizardView
             reverse(
                 "requesting-data-tracker",
                 kwargs={"requesting_dataset_id": requesting_dataset.id},
-            )
-        )
-
-
-class RequestingDataTrackerView(FormView):
-    form_class = TrackerPageForm
-    template_name = "datasets/requesting_data/tracker.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        requesting_dataset = RequestingDataset.objects.get(
-            id=self.kwargs.get("requesting_dataset_id")
-        )
-        context["requesting_dataset_id"] = requesting_dataset.id
-
-        # TODO refactor
-        stage_one_complete = requesting_dataset.stage_one_complete
-        stage_two_complete = requesting_dataset.stage_two_complete
-        stage_three_complete = requesting_dataset.stage_three_complete
-        context["stage_one_complete"] = stage_one_complete
-        context["stage_two_complete"] = stage_two_complete
-        context["stage_three_complete"] = stage_three_complete
-        if stage_one_complete and stage_two_complete and stage_three_complete:
-            context["all_stages_complete"] = True
-        
-        return context
-
-    def form_valid(self, form):
-        requesting_dataset = RequestingDataset.objects.get(
-            id=form.cleaned_data["requesting_dataset"]
-        )
-        data_dict = model_to_dict(
-            requesting_dataset,
-            exclude=[
-                "id",
-                "tags",
-                "user",
-                "sensitivity",
-                "data_catalogue_editors",
-                "stage_one_complete",
-                "stage_two_complete",
-                "stage_three_complete",
-            ],
-        )
-        # TODO refactor
-        data_dict["enquiries_contact"] = requesting_dataset.enquiries_contact
-        data_dict["information_asset_manager"] = requesting_dataset.information_asset_manager
-        data_dict["information_asset_owner"] = requesting_dataset.information_asset_owner
-        data_dict["slug"] = requesting_dataset.name.lower().replace(" ", "-")
-
-        dataset = DataSet.objects.create(**data_dict)
-        dataset.data_catalogue_editors.set(requesting_dataset.data_catalogue_editors.all())
-        dataset.sensitivity.set(requesting_dataset.sensitivity.all())
-        dataset.save()
-
-        RequestingDataset.objects.filter(id=requesting_dataset.id).delete()
-
-        # zendesk_ticket_id = create_support_request(
-        #     self.request.user, 
-        #     User.objects.get(id=requesting_dataset.user).email,
-        #     ["A new dataset has been requested."], 
-        # )
-
-        return HttpResponseRedirect(
-            reverse(
-                "requesting-data-submission",
-                # kwargs={"zendesk_ticket_id": zendesk_ticket_id},
             )
         )
 
