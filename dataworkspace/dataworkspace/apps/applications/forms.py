@@ -205,10 +205,12 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
 class VisualisationApprovalForm(GOVUKDesignSystemModelForm):
     class Meta:
         model = VisualisationApproval
-        fields = ["approved", "visualisation", "approver"]
+        fields = ["approved", "visualisation", "approver", "approval_type", "approval_date"]
         widgets = {
             "visualisation": HiddenInput,
             "approver": HiddenInput,
+            "approval_date": HiddenInput,
+            "approval_type": HiddenInput,
         }
 
     approved = GOVUKDesignSystemBooleanField(
@@ -219,7 +221,7 @@ class VisualisationApprovalForm(GOVUKDesignSystemModelForm):
         ),
     )
 
-    def __init__(self, *args, third_approver_flag=None, **kwargs):
+    def __init__(self, *args, third_approver_flag: bool = None, **kwargs):
         # If the visualisation has already been approved, we want to render a form that allows the user to unapprove it.
         if kwargs.get("instance") and kwargs.get("instance").approved:
             self._initial_approved = True

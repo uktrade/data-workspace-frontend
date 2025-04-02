@@ -37,6 +37,21 @@ def get_approver_type(
     return None
 
 
+def get_current_gitlab_user(user_sso_id: str) -> dict:
+    if settings.GITLAB_FIXTURES:
+        current_gitlab_user = get_fixture("user_fixture.json")[0]
+    else:
+        current_gitlab_user = gitlab_api_v4(
+            "GET",
+            "/users",
+            params=(
+                ("extern_uid", user_sso_id),
+                ("provider", "oauth2_generic"),
+            ),
+        )[0]
+    return current_gitlab_user
+
+
 def gitlab_api_v4(method: str, path: str, params: tuple = ()):
     return gitlab_api_v4_with_status(method, path, params)[0]
 
@@ -185,14 +200,6 @@ def _ensure_user_has_manage_unpublish_perm(user):
                 action_flag=ADDITION,
                 change_message="Added 'manage unpublished visualisations' permission",
             )
-
-
-def gitlab_project_members(gitlab_project_id: int) -> list[dict]:
-    if settings.GITLAB_FIXTURES:
-        project_members = get_fixture("project_members_fixture.json")
-    else:
-        project_members = gitlab_api_v4("GET", f"/projects/{gitlab_project_id}/members/all")
-    return project_members
 
 
 def gitlab_project_member_by_id(gitlab_user, gitlab_project_id: int) -> dict:
