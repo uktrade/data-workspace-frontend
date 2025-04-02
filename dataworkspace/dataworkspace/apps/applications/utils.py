@@ -1969,7 +1969,7 @@ def _self_certify_renewal_email_notification():
 def is_visualisation_approved_by_all(
     approvals: list[VisualisationApproval], third_approver_flag: bool = False
 ) -> bool:
-    if third_approver_flag == True:
+    if third_approver_flag is True:
         return all(
             len([a for a in approvals if a.approval_type == approval_type]) > 0
             for approval_type in ["owner", "peer reviewer", "team member"]
