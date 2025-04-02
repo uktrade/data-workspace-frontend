@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
+from dataworkspace.apps.datasets.constants import SecurityClassificationAndHandlingInstructionType
 from dataworkspace.zendesk import create_support_request
 from formtools.preview import FormPreview  # pylint: disable=import-error
 from formtools.wizard.views import NamedUrlSessionWizardView  # pylint: disable=import-error
@@ -38,6 +39,7 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
 
 User = get_user_model()
 
+
 class AddingData(TemplateView):
     template_name = "datasets/requesting_data/adding_data.html"
 
@@ -66,17 +68,16 @@ class AddingData(TemplateView):
 class AddNewDataset(TemplateView):
     template_name = "datasets/requesting_data/add_new_dataset.html"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        requesting_dataset = RequestingDataset.objects.create(name="Untitled")
-        # requesting_dataset.name = "Untitled"
-            # self.request.session["requesting_dataset"] = requesting_dataset.id
-        context["requesting_dataset_id"] = str(requesting_dataset.id)
-        self.kwargs["dataset_uuid"]
-        print('HELLLOOOOOOOO')
-        print(context["requesting_dataset_id"])
-        print(type(context["requesting_dataset_id"]))
-        return super().get_context_data(**kwargs)
+    def post(self, request, *args, **kwargs):
+        print("VALIDDDDD")
+        requesting_dataset = RequestingDataset.objects.create()
+        self.kwargs["requesting_dataset_id"] = requesting_dataset.id
+        return HttpResponseRedirect(
+            reverse(
+                "requesting-data-tracker",
+                kwargs={"requesting_dataset_id": requesting_dataset.id},
+            )
+        )
 
 
 class RequestingDataTrackerView(FormView):
@@ -86,13 +87,15 @@ class RequestingDataTrackerView(FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         requesting_dataset = RequestingDataset.objects.get(
-            id=self.request.session["requesting_dataset"]
+            id=self.kwargs["requesting_dataset_id"]
         )
+        self.request.session["requesting_dataset"] = requesting_dataset.id
+
         # requesting_dataset = RequestingDataset.objects.get_or_create(
         #     id=self.kwargs.get("requesting_dataset_id", name="Untitled")
         # )
         # requesting_dataset.name = "Untitled"
-            # self.request.session["requesting_dataset"] = requesting_dataset.id
+        # self.request.session["requesting_dataset"] = requesting_dataset.id
         context["requesting_dataset_id"] = requesting_dataset.id
 
         # TODO refactor
@@ -104,7 +107,7 @@ class RequestingDataTrackerView(FormView):
         context["stage_three_complete"] = stage_three_complete
         if stage_one_complete and stage_two_complete and stage_three_complete:
             context["all_stages_complete"] = True
-        
+
         return context
 
     def form_valid(self, form):
@@ -138,9 +141,9 @@ class RequestingDataTrackerView(FormView):
         RequestingDataset.objects.filter(id=requesting_dataset.id).delete()
 
         # zendesk_ticket_id = create_support_request(
-        #     self.request.user, 
+        #     self.request.user,
         #     User.objects.get(id=requesting_dataset.user).email,
-        #     ["A new dataset has been requested."], 
+        #     ["A new dataset has been requested."],
         # )
 
         return HttpResponseRedirect(
@@ -181,7 +184,7 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
                     setattr(requesting_dataset, field, form.cleaned_data.get(field))
             requesting_dataset.save()
         return requesting_dataset
-    
+
     def get_users(self, search_query):
         email_filter = Q(email__icontains=search_query)
         if len(search_query.split(" ")) > 1:
@@ -207,7 +210,7 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
             )
 
         return search_results
-    
+
     def get_template(self, step):
         if step == "summary":
             return "datasets/requesting_data/summary.html"
@@ -219,7 +222,7 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
             return "datasets/requesting_data/security.html"
         else:
             return "datasets/requesting_data/form_template.html"
-        
+
     def get_user_search_context(self, context, step):
         context["form_page"] = step
         context["field"] = step.replace("-", "_")
@@ -230,7 +233,7 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
                 context["search_results"] = self.get_users(search_query=search_query.strip())
         except Exception:  # pylint: disable=broad-except
             return context
-        
+
     def get_summary_context(self):
         summary_list = []
         questions = {}
@@ -239,6 +242,13 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
                 questions[name] = field.label
         for step in self.storage.data["step_data"]:
             for key, value in self.get_cleaned_data_for_step(step).items():
+                if key == "sensitivity":
+                    continue
+                if key == "government_security_classification":
+                    if value == 1:
+                        value = "Offical"
+                    if value == 2:
+                        value = "Offical-Sensitive"
                 summary_list.append(
                     {
                         step: {"question": questions[key], "answer": value},
@@ -295,10 +305,20 @@ class RequestingDataSummaryInformationWizardView(RequestingDatasetBaseWizardView
 
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form=form, **kwargs)
+        requesting_dataset = RequestingDataset.objects.get(
+            id=self.request.session["requesting_dataset"]
+        )
         context["stage"] = "Summary Information"
         step = self.steps.current
+
+        if step == "descriptions":
+            context["link_text"] = "Find out the best practice for writing descriptions."
+            context["link"] = "https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/creating-and-updating-a-catalogue-pages/data-descriptions/"
+        if step in self.user_search_pages:
+            context["link_text"] = "Find out more information about Security roles and responsibilities"
+            context["link"] = "https://data-services-help.trade.gov.uk/data-workspace/how-to/data-owner-basics/managing-data-key-tasks-and-responsibilities/"
         if self.steps.current == "name":
-            context["backlink"] = reverse("datasets:add_table:table-schema")
+            context["backlink"] = reverse("requesting-data-tracker", args={requesting_dataset.id})
         else:
             context["backlink"] = reverse("requesting-data-summary-information-step", args={self.steps.prev})
 
@@ -335,7 +355,6 @@ class RequestingDataSummaryInformationWizardView(RequestingDatasetBaseWizardView
         requesting_dataset = self.add_fields(form_list, requesting_dataset, self.notes_fields)
         requesting_dataset.save()
 
-        # self.request.session["requesting_dataset"] = requesting_dataset.id
         return HttpResponseRedirect(
             reverse(
                 "requesting-data-tracker",
@@ -377,9 +396,19 @@ class RequestingDataAboutThisDataWizardView(RequestingDatasetBaseWizardView):
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form=form, **kwargs)
         step = self.steps.current
+
+        if step == "government_security_classification":
+            context["link_text"] = "Find out more information about security classifications"
+            context["link"] = "https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/creating-and-updating-a-catalogue-pages/set-the-security-classification-of-your-data/"
+        if step == "special_personal_data":
+            context["link_text"] = "Find out more information about special category personal data"
+            context["link"] = "NOT SURE !!!!"
+        requesting_dataset = RequestingDataset.objects.get(
+            id=self.request.session["requesting_dataset"]
+        )
         context["stage"] = "About This Data"
         if self.steps.current == "security-classification":
-            context["backlink"] = reverse("datasets:add_table:table-schema")
+            context["backlink"] = reverse("requesting-data-tracker", args={requesting_dataset.id})
         else:
             context["backlink"] = reverse("requesting-data-about-this-data-step", args={self.steps.prev})
         if step == "summary":
@@ -430,13 +459,16 @@ class RequestingDataAccessRestrictionsWizardView(RequestingDatasetBaseWizardView
 
     def get_template_names(self):
         return self.get_template(self.steps.current)
-        
+
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form=form, **kwargs)
+        requesting_dataset = RequestingDataset.objects.get(
+            id=self.request.session["requesting_dataset"]
+        )
         step = self.steps.current
         context["stage"] = "Access Restriction"
         if self.steps.current == "intended-access":
-            context["backlink"] = reverse("datasets:add_table:table-schema")
+            context["backlink"] = reverse("requesting-data-tracker", args={requesting_dataset.id})
         else:
             context["backlink"] = reverse("requesting-data-access-restrictions-step", args={self.steps.prev})
         if step == "summary":
