@@ -1087,7 +1087,7 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         current_user_approval.approval_type if current_user_approval is not None else None
     )
     is_approved_by_all = is_visualisation_approved_by_all(
-        approvals, third_approver_flag=settings.THIRD_APPROVER
+        approvals, third_approver_flag=waffle.flag_is_active(request, settings.THIRD_APPROVER)
     )
     if waffle.flag_is_active(request, settings.THIRD_APPROVER):
         # backwards compatibility with old system where approver_type was generated dynamically
@@ -1531,7 +1531,7 @@ def _render_visualisation_publish_html(request, gitlab_project, catalogue_item=N
         visualisation=application_template, approved=True
     )
     is_approved_by_all = is_visualisation_approved_by_all(
-        approvals, third_approver_flag=settings.THIRD_APPROVER
+        approvals, third_approver_flag=waffle.flag_is_active(request, settings.THIRD_APPROVER)
     )
     visualisation_published = _visualisation_is_published(application_template)
     visualisation_domain = (
@@ -1573,7 +1573,7 @@ def _set_published_on_catalogue_item(request, gitlab_project, catalogue_item, pu
         visualisation=catalogue_item.visualisation_template, approved=True
     )
     is_approved_by_all = is_visualisation_approved_by_all(
-        approvals, third_approver_flag=settings.THIRD_APPROVER
+        approvals, third_approver_flag=waffle.flag_is_active(request, settings.THIRD_APPROVER)
     )
     visualisation_published = _visualisation_is_published(catalogue_item.visualisation_template)
     catalogue_item_complete = _visualisation_catalogue_item_is_complete(catalogue_item)
@@ -1630,7 +1630,7 @@ def _set_published_on_visualisation(request, gitlab_project, application_templat
         visualisation=application_template, approved=True
     )
     is_approved_by_all = is_visualisation_approved_by_all(
-        approvals, third_approver_flag=settings.THIRD_APPROVER
+        approvals, third_approver_flag=waffle.flag_is_active(request, settings.THIRD_APPROVER)
     )
     if publish is False or is_approved_by_all is True:
         application_template.visible = publish
