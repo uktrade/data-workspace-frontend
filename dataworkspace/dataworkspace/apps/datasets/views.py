@@ -1554,8 +1554,8 @@ class DatasetEditUnpublishView(EditBaseView, UpdateView, View):
         dataset.save()
         messages.success(
             request,
-            f'{dataset.name} has been unpublished from Data Workspace. '
-            f'A support ticket has been raised and the Data Workspace team will contact you with next steps.'
+            f"{dataset.name} has been unpublished from Data Workspace. "
+            f"A support ticket has been raised and the Data Workspace team will contact you with next steps.",
         )
         # Send to zendesk to notify analyst about the page status
         return redirect("datasets:find_datasets")
