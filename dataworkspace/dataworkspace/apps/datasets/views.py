@@ -1558,7 +1558,7 @@ class DatasetEditUnpublishView(EditBaseView, UpdateView, View):
             f'A support ticket has been raised and the Data Workspace team will contact you with next steps.'
         )
         # Send to zendesk to notify analyst about the page status
-        return redirect("/datasets")
+        return redirect("datasets:find_datasets")
 
 
 class VisualisationCatalogueItemEditView(EditBaseView, UpdateView):
