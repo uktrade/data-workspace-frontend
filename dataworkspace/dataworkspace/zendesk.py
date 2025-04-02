@@ -204,10 +204,10 @@ If access has not been granted to the requestor within 5 working days, this will
 
 
 def notify_unpublish_catalogue_page(request, dataset):
-    message = f"""
-A catalogue page has been unpublished and needs action from the support team. 
+    message = """
+A catalogue page has been unpublished and needs action from the support team.
 
-Contact the user and find out why they have unpublished this page. 
+Contact the user and find out why they have unpublished this page.
 
 """
 
