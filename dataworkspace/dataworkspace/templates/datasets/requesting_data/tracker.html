@@ -1,5 +1,4 @@
 {% extends '_main.html' %}
-
 {% load waffle_tags %}
 
 {% block breadcrumbs %}
@@ -9,6 +8,8 @@
 {% load i18n %}
 
 {% block content %}
+<myComponent data="{{data}}"></myComponent>
+
 <h1 class="govuk-heading-l">Request data</h1>
 
 <h2 class="govuk-heading-m">Request data process</h2>
