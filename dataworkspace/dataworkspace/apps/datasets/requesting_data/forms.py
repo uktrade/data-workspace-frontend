@@ -82,8 +82,6 @@ class DatasetInformationAssetOwnerForm(forms.Form):
         cleaned_data["information_asset_owner"] = User.objects.get(id=user_id)
         return cleaned_data
 
-    # Is User.id and user_id the same as the name of the IAO?
-
 
 class DatasetInformationAssetManagerForm(forms.Form):
     information_asset_manager = forms.CharField(

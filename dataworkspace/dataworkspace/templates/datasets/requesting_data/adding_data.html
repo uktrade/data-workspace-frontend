@@ -21,4 +21,32 @@
             {% include 'partials/requesting_data_journeys.html' %}
     {% endfor %}
 
+
+{% block footer_scripts %}
+
+  <script nonce="{{ request.csp_nonce }}">
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll(".showDialog").forEach((button) => {
+            button.addEventListener("click", () => {
+                const dialogId = button.getAttribute("data-dialog-id")
+                console.log("dialogId:", dialogId)
+                const favDialog = document.querySelector(`[data-dialog-id="${dialogId}"]`)
+                favDialog.showModal()
+            })
+            })
+        document.querySelectorAll(".favDialog").forEach((favDialog)=> {
+            const confirmBtn = favDialog.querySelector(".confirmBtn")
+            const dialogId = favDialog.getAttribute("data-dialog-id")
+            confirmBtn.addEventListener("click", (event) => {
+            event.preventDefault()
+            favDialog.close()
+            location.href = `requesting-data/delete-requesting-dataset-journey/${dialogId}`
+        })         
+        }) 
+    })
+  </script>
+  {% endblock footer_scripts %}
+
+
+
 {% endblock %}

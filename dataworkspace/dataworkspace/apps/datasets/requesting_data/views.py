@@ -1,11 +1,16 @@
+from django.conf import settings
 from django.forms import model_to_dict
+from django.views import View
 from django.views.generic import FormView, TemplateView
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
+from csp.decorators import csp_update
+
 from dataworkspace.apps.datasets.constants import SecurityClassificationAndHandlingInstructionType
+from dataworkspace.apps.datasets.views import EditBaseView
 from dataworkspace.zendesk import create_support_request
 from formtools.preview import FormPreview  # pylint: disable=import-error
 from formtools.wizard.views import NamedUrlSessionWizardView  # pylint: disable=import-error
@@ -56,6 +61,7 @@ class AddingData(TemplateView):
             if request.stage_three_complete:
                 progress += 1
             requests[request.name] = {
+                "id": request.id,
                 "name": request.name,
                 "created_date": request.created_date,
                 "progress": progress,
@@ -78,6 +84,15 @@ class AddNewDataset(TemplateView):
                 kwargs={"requesting_dataset_id": requesting_dataset.id},
             )
         )
+
+
+class DeleteRequestingDatasetJourney(View):
+    def get(self, request, requesting_dataset_id):
+        RequestingDataset.objects.filter(id=requesting_dataset_id).delete()
+        return HttpResponseRedirect(
+            reverse(
+                "adding-data"
+            ))
 
 
 class RequestingDataTrackerView(FormView):
