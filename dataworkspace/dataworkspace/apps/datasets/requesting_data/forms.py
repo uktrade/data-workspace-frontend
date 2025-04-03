@@ -6,7 +6,10 @@ from django.forms import ValidationError
 from dataworkspace.apps.datasets.models import RequestingDataset, SensitivityType
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
+    GOVUKDesignSystemDateField,
+    GOVUKDesignSystemDateWidget,
     GOVUKDesignSystemForm,
+    GOVUKDesignSystemTextCharCountWidget,
     GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextareaWidget,
     GOVUKDesignSystemRadiosWidget,
@@ -128,6 +131,16 @@ class DatasetExistingSystemForm(GOVUKDesignSystemForm):
 
 
 class DatasetLicenceForm(GOVUKDesignSystemForm):
+    licence_required = GOVUKDesignSystemRadioField(
+        required=True,
+        choices=[("yes", "Yes"), ("no", "No")],
+        label="Do you need/have a licence for this data?",
+        widget=GOVUKDesignSystemRadiosWidget(
+            label_is_heading=True,
+            label_size="m",
+        ),
+    )
+
     licence = GOVUKDesignSystemCharField(
         label="What licence do you have for this data?",
         required=False,
@@ -136,6 +149,12 @@ class DatasetLicenceForm(GOVUKDesignSystemForm):
             label_size="m",
         ),
     )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data["licence_required"] == "yes" and cleaned_data["licence"] == "":
+            raise forms.ValidationError("Please enter the licence you have for this data")
+        return cleaned_data
 
 
 class DatasetRestrictionsForm(GOVUKDesignSystemForm):

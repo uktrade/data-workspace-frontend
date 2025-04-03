@@ -32,7 +32,7 @@ def add_class(field, class_attr):
             field.field.widget.attrs["class"], class_attr
         )
     else:
-        field.field.widget.attrs["class"] = class_attr
+        field.field.widget.attrs["class"] = "class_attr"
     return field
 
 

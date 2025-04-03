@@ -212,6 +212,8 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
         return search_results
 
     def get_template(self, step):
+        if step == "licence":
+            return "datasets/requesting_data/radio_button.html"
         if step == "summary":
             return "datasets/requesting_data/summary.html"
         if step in self.user_search_pages:
