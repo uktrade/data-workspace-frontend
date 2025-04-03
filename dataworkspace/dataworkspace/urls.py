@@ -180,7 +180,7 @@ urlpatterns = [
         name="requesting-data-tracker",
     ),
     path(
-        "requesting-data/submission/<str:zendesk_ticket_id>",
+        "requesting-data/submission/",
         RequestingDatasetSubmission.as_view(),
         name="requesting-data-submission",
     ),
