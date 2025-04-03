@@ -38,6 +38,7 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 from django.views.generic import DetailView, FormView, TemplateView, UpdateView, View
 from psycopg2 import sql
 
+from dataworkspace import zendesk
 from dataworkspace import datasets_db
 from dataworkspace.apps.accounts.models import UserDataTableView
 from dataworkspace.apps.api_v1.core.views import invalidate_superset_user_cached_credentials
@@ -1547,17 +1548,35 @@ class DatasetEditView(EditBaseView, UpdateView):
         return super().form_valid(form)
 
 
-class DatasetEditUnpublishView(EditBaseView, UpdateView, View):
+class DatasetEditUnpublishView(EditBaseView, UpdateView):
     def post(self, request, *arg, **kwargs):
         dataset = find_dataset(kwargs["pk"], request.user)
         dataset.published = False
         dataset.save()
+        absolute_url = self.request.build_absolute_uri(
+            reverse("datasets:dataset_detail", args=[self.obj.id])
+        )
+
+        # In Dev Ignore the API call to Zendesk and notify
+        if settings.ENVIRONMENT != "Dev":
+            zendesk.notify_unpublish_catalogue_page(
+                request,
+                dataset,
+            )
+            send_email(
+                settings.NOTIFY_UNPUBLISH_DATASET_CATALOUGE_PAGE_TEMPLATE_ID,
+                request.user.email,
+                personalisation={
+                    "email_address": request.user.email,
+                    "dataset_name": dataset.name,
+                    "dataset_url": absolute_url,
+                },
+            )
         messages.success(
             request,
             f"{dataset.name} has been unpublished from Data Workspace. "
             f"A support ticket has been raised and the Data Workspace team will contact you with next steps.",
         )
-        # Send to zendesk to notify analyst about the page status
         return redirect("datasets:find_datasets")
 
 
