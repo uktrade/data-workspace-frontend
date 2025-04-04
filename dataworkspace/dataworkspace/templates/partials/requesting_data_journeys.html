@@ -19,7 +19,7 @@
       <li class="govuk-summary-card__action">
         <dialog class ="favDialog" data-dialog-id="{{ request.id }}">
           <form>
-              <h2 class= "govuk-heading-l"> Are you sure you want to delete </h2>
+              <h2 class= "govuk-heading-l"> Are you sure you want to delete {{ request.name }}?</h2>
               <div class="govuk-button-group">
                 <button class="govuk-button govuk-button--warning confirmBtn" value="default">Delete</button>
                 <button class = "govuk-button govuk-button--secondary" value="cancel" formmethod="dialog">Cancel</button>
