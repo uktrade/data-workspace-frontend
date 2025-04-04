@@ -227,16 +227,16 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
         return search_results
 
     def get_template(self, step):
-        if step == "summary":
-            return "datasets/requesting_data/summary.html"
+        if step == "licence":
+            return "datasets/requesting_data/form_types/radio_input.html"
         if step in self.user_search_pages:
-            return "datasets/requesting_data/user_search.html"
+            return "datasets/requesting_data/form_types/user_search.html"
         if step == "security-classification":
-            return "datasets/requesting_data/security.html"
-        if step == "security-classification":
-            return "datasets/requesting_data/security.html"
+            return "datasets/requesting_data/form_types/security_classification.html"
+        if step == "summary":
+            return "datasets/requesting_data/form_types/summary.html"
         else:
-            return "datasets/requesting_data/form_template.html"
+            return "datasets/requesting_data/form_types/basic_form.html"
 
     def get_user_search_context(self, context, step):
         context["form_page"] = step

@@ -26,24 +26,24 @@
   </div>
 {% endif %}
 
-<h1 class="govuk-heading-l">Summary information</h2>
-<form method="post">
-      {% csrf_token %}
-      <div class="govuk-radios govuk-radios--conditional" data-module="govuk-radios">
-        {{ form.personal_data }}
-        <div class="govuk-radios__conditional govuk-radios__conditional--hidden" id="conditional-message">
-          {{ form.message }}
-        </div>
-      </div>
-      {{ form.email }}
-      <button type="submit" class="govuk-button">Continue</button>
-    </form>
+<h1 class="govuk-heading-l">{{ stage }}</h1>
+  <form method="post" novalidate>
+    {% csrf_token %}
+            {{ wizard.management_form }}
+        {{ wizard.form.management_form }}
+    {% for field in form %}
+      {{ field }}
+    {% endfor %}
+    <button type="submit" class="govuk-button" data-module="govuk-button">
+      Continue
+    </button>
+  </form>
 
 <p class="govuk-body">
   <a href="{{ link }}" class="govuk-link">{{ link_text }}</a>
 </p>
 
-  <script nonce="{{ request.csp_nonce }}">
+  <!-- <script nonce="{{ request.csp_nonce }}">
 
   document.addEventListener("DOMConentLoaded", function(){
     let governmentSecurityClassification = document.querySelectorAll('input[data-type="security_classification"]');
@@ -61,7 +61,7 @@
       })
     })
     })
-  </script>
+  </script> -->
 
 
 {% endblock %}

@@ -1,0 +1,70 @@
+{% extends '_main.html' %}
+
+{% load waffle_tags %}
+
+{% block page_title %}Request a new dataset - {{ block.super }}{% endblock page_title %}
+{% block breadcrumbs %}
+<a href="{{ backlink }}" class="govuk-back-link">Back</a>
+{% endblock %}
+{% block content %}
+  <form method="post" novalidate>
+    {% csrf_token %}
+      {{ wizard.management_form }}
+        <input type="hidden" id="hidden-radio-input" name="licence-licence_required" value="">
+
+        <div class="govuk-form-group">
+          <fieldset class="govuk-fieldset" aria-describedby="hint">
+            <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+              <h1 class="govuk-fieldset__heading">
+                Is the data set published anywhere else?
+              </h1>
+            </legend>
+            <div class="govuk-radios" data-module="govuk-radios">
+              <div class="govuk-radios__item">
+                <input class="govuk-radios__input" id="licence-licence_required_yes" type="radio" name="licence-radio">
+                <label class="govuk-label govuk-radios__label" for="licence-licence_required_yes">
+                  Yes
+                </label>
+              </div>
+              <div class="govuk-radios__conditional govuk-radios__conditional--hidden" id="conditional-input">
+                <div class="govuk-form-group">
+                  <label class="govuk-label" for="licence-input">
+                    Enter the URL of where it's currently published
+                  </label>
+                  <input class="govuk-input govuk-!-width-one-third" id="licence-input" name="licence-licence">
+                </div>
+              </div>
+              <div class="govuk-radios__item">
+                <input class="govuk-radios__input" id="licence-licence_required_no" type="radio" name="licence-radio">
+                <label class="govuk-label govuk-radios__label" for="licence-licence_required_no">
+                  No
+                </label>
+              </div>
+            </div>
+          </fieldset>
+        </div>
+
+        <button type="submit" class="govuk-button" data-module="govuk-button">
+          Continue
+        </button>
+  </form>
+
+  <script nonce="{{ request.csp_nonce }}">
+    document.addEventListener('DOMContentLoaded', () => {
+      const yesButton = document.getElementsByClassName("govuk-radios__input")[0].addEventListener("click", showInput);
+      const noButton = document.getElementsByClassName("govuk-radios__input")[1].addEventListener("click", hideInput);
+      const input = document.querySelector("#conditional-input")
+      const hiddenInput = document.querySelector("#hidden-radio-input")
+
+      function showInput() {
+        input.classList.remove('govuk-radios__conditional--hidden');
+        hiddenInput.value = "yes"
+      };
+      function hideInput() {
+        input.classList.add('govuk-radios__conditional--hidden');
+        hiddenInput.value = "no"
+      };
+    });
+  </script>
+{% endblock %}
+
