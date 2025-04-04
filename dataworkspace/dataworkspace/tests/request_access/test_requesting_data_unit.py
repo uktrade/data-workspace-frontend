@@ -419,3 +419,9 @@ class RequestingDataViewsTestCase(TestCase):
         self.check_view_response(
             step="user-restrictions", field="user_restrictions", stage="access_restrictions"
         )
+
+    def test_adding_data_view(self):
+        pass
+
+    def test_add_new_dataset_view(self):
+        pass

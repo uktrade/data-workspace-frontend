@@ -32,6 +32,7 @@ class GOVUKDesignSystemWidgetMixin:
         suffix=None,
         character_limit="200",
         extra_input_classes="",
+        id=None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -48,6 +49,7 @@ class GOVUKDesignSystemWidgetMixin:
             suffix=suffix,
             character_limit=character_limit,
             extra_input_classes=extra_input_classes,
+            id=id,
         )
 
     def __deepcopy__(self, memo):

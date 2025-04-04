@@ -1,14 +1,15 @@
 {% extends '_main.html' %}
-
 {% load waffle_tags %}
 
 {% block breadcrumbs %}
-<a href="{% url 'support' %}" class="govuk-back-link">Back</a>
+<a href="{{ backlink }}" class="govuk-back-link">Back</a>
 {% endblock %}
 
 {% load i18n %}
 
 {% block content %}
+<myComponent data="{{data}}"></myComponent>
+
 <h1 class="govuk-heading-l">Request data</h1>
 
 <h2 class="govuk-heading-m">Request data process</h2>
@@ -76,7 +77,7 @@
 
   <form action="" method="post">
     {% csrf_token %}
-      <input name="requesting_dataset" value="{{requesting_dataset_id}}">
+      <input type="hidden" name="requesting_dataset" value="{{requesting_dataset_id}}">
       <button type="submit" class="govuk-button" data-module="govuk-button">
         Submit
       </button>
