@@ -1,4 +1,5 @@
 {% extends '_main.html' %}
+{% load waffle_tags %}
 {% load render_bundle from webpack_loader %}
 
 {% load humanize static datasets_tags core_tags waffle_tags %}
@@ -163,6 +164,7 @@
                     </button>
                 </fieldset>
             </form>
+            {% flag UNPUBLISH_DATASET_CATALOGUE_PAGE_FLAG %}
             <aside role="complementary" aria-labelledby="subsection-title" data-test="unpublish-catalogue-page">
               <h2 class="govuk-heading-m" id="subsection-title">Unpublish this catalogue page</h2>
               
@@ -179,6 +181,7 @@
               </ul>
             {% include "partials/react-slot-data.html" with mount_id="unpublish-catalogue-page" data=unpublish_data test_id="unpublish-catalogue-page" %}
           </aside>
+          {% endflag %}
         </div>
     </div>
 {% endblock %}
