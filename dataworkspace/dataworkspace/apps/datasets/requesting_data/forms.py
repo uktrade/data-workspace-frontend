@@ -131,6 +131,11 @@ class DatasetExistingSystemForm(GOVUKDesignSystemForm):
 
 
 class DatasetLicenceForm(GOVUKDesignSystemForm):
+    licence_required = forms.CharField(
+        label="Do you need/have a licence for this data?",
+        widget=forms.TextInput(),
+    )
+
     licence = GOVUKDesignSystemCharField(
         label="What licence do you have for this data?",
         required=False,
@@ -139,6 +144,13 @@ class DatasetLicenceForm(GOVUKDesignSystemForm):
             label_size="m",
         ),
     )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data["licence_required"] == "yes" and cleaned_data["licence"] ==  "":
+            raise ValidationError("Please enter a URL.")
+        return cleaned_data
+
 
 
 class DatasetRestrictionsForm(GOVUKDesignSystemForm):
