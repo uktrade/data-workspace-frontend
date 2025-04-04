@@ -436,7 +436,7 @@ class RequestingDataAboutThisDataWizardView(RequestingDatasetBaseWizardView):
         )
         context["stage"] = "About This Data"
         step = self.steps.current
-        self.get_base_context(context, requesting_dataset, "summary-information", step)
+        self.get_base_context(context, requesting_dataset, "about-this-data", step)
 
         if step == "government_security_classification":
             context["link_text"] = "Find out more information about security classifications"
@@ -499,7 +499,7 @@ class RequestingDataAccessRestrictionsWizardView(RequestingDatasetBaseWizardView
         )
         step = self.steps.current
         context["stage"] = "Access Restriction"
-        self.get_base_context(context, requesting_dataset, "summary-information", step)
+        self.get_base_context(context, requesting_dataset, "access-restrictions", step)
 
         if self.steps.current == "intended-access":
             context["backlink"] = reverse("requesting-data-tracker", args={requesting_dataset.id})
