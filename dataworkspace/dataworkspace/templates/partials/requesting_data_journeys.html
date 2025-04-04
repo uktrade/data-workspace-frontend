@@ -1,8 +1,16 @@
+<style>
+.favDialog {
+  padding: 30px 30px 15px 30px;
+}
+.govuk-button-group {
+  padding-bottom: 0px;
+}
+</style>
+
 <div class="govuk-summary-card">
   <div class="govuk-summary-card__title-wrapper">
     <h2 class="govuk-summary-card__title">
       {{ request.name }} 
-
     </h2>
     <ul class="govuk-summary-card__actions">
       <li class="govuk-summary-card__action">
@@ -12,9 +20,9 @@
         <dialog class ="favDialog" data-dialog-id="{{ request.id }}">
           <form>
               <h2 class= "govuk-heading-l"> Are you sure you want to delete </h2>
-              <div>
-              <button class = "govuk-button govuk-button--secondary" value="cancel" formmethod="dialog">Cancel</button>
-              <button class="govuk-button govuk-button--warning confirmBtn" value="default">Delete</button>
+              <div class="govuk-button-group">
+                <button class="govuk-button govuk-button--warning confirmBtn" value="default">Delete</button>
+                <button class = "govuk-button govuk-button--secondary" value="cancel" formmethod="dialog">Cancel</button>
               </div>
           </form>
         </dialog>

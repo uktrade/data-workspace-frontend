@@ -261,9 +261,9 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
                     continue
                 if key == "government_security_classification":
                     if value == 1:
-                        value = "Offical"
+                        value = "Offiical"
                     if value == 2:
-                        value = "Offical-Sensitive"
+                        value = "Offiical-Sensitive"
                 summary_list.append(
                     {
                         step: {"question": questions[key], "answer": value},
