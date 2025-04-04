@@ -145,10 +145,9 @@ class DatasetLicenceForm(GOVUKDesignSystemForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        if cleaned_data["licence_required"] == "yes" and cleaned_data["licence"] ==  "":
+        if cleaned_data["licence_required"] == "yes" and cleaned_data["licence"] == "":
             raise ValidationError("Please enter a URL.")
         return cleaned_data
-
 
 
 class DatasetRestrictionsForm(GOVUKDesignSystemForm):
@@ -333,7 +332,7 @@ class DatasetUpdateFrequencyForm(GOVUKDesignSystemForm):
     )
     message = GOVUKDesignSystemTextareaField(
         required=False,
-        label="Tell us how often the source data is update.",
+        label="Tell us how often the source data is updated.",
         widget=GOVUKDesignSystemTextareaWidget(
             label_is_heading=False,
             attrs={"rows": 5},
