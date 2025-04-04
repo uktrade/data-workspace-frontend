@@ -42,6 +42,7 @@ from dataworkspace.apps.core.views import (
 from dataworkspace.apps.datasets.requesting_data.views import (
     AddNewDataset,
     AddingData,
+    DeleteRequestingDatasetJourney,
     RequestingDataAboutThisDataWizardView,
     RequestingDataAccessRestrictionsWizardView,
     RequestingDataSummaryInformationWizardView,
@@ -153,6 +154,12 @@ urlpatterns = [
         AddNewDataset.as_view(),
         name="add-new-dataset",
     ),
+    path(
+        "requesting-data/delete-requesting-dataset-journey/<uuid:requesting_dataset_id>",
+        DeleteRequestingDatasetJourney.as_view(),
+        name="delete-requesting-dataset-journey",
+    ),
+
     path(
         "requesting-data/summary-information/<str:step>",
         RequestingDataSummaryInformationWizardView.as_view(

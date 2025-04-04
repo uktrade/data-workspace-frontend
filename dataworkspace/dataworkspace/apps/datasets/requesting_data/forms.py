@@ -320,7 +320,7 @@ class DatasetUpdateFrequencyForm(GOVUKDesignSystemForm):
     )
     message = GOVUKDesignSystemTextareaField(
         required=False,
-        label="Tell us how often the source data is update.",
+        label="Tell us how often the source data is updated.",
         widget=GOVUKDesignSystemTextareaWidget(
             label_is_heading=False,
             attrs={"rows": 5},

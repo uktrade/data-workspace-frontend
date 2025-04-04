@@ -1,11 +1,17 @@
+from django.conf import settings
 from django.forms import model_to_dict
+from django.shortcuts import render
+from django.views import View
 from django.views.generic import FormView, TemplateView
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
+from csp.decorators import csp_update
+
 from dataworkspace.apps.datasets.constants import SecurityClassificationAndHandlingInstructionType
+from dataworkspace.apps.datasets.views import EditBaseView
 from dataworkspace.zendesk import create_support_request
 from formtools.preview import FormPreview  # pylint: disable=import-error
 from formtools.wizard.views import NamedUrlSessionWizardView  # pylint: disable=import-error
@@ -56,6 +62,7 @@ class AddingData(TemplateView):
             if request.stage_three_complete:
                 progress += 1
             requests[request.name] = {
+                "id": request.id,
                 "name": request.name,
                 "created_date": request.created_date,
                 "progress": progress,
@@ -68,6 +75,12 @@ class AddingData(TemplateView):
 class AddNewDataset(TemplateView):
     template_name = "datasets/requesting_data/add_new_dataset.html"
 
+    def get(self, request):
+        previous_page = request.META["HTTP_REFERER"]
+        if '/requesting-data/tracker/' in previous_page:
+            RequestingDataset.objects.filter(id=self.request.session["requesting_dataset"]).delete()
+        return render(request, "datasets/requesting_data/add_new_dataset.html")
+
     def post(self, request, *args, **kwargs):
         requesting_dataset = RequestingDataset.objects.create()
         self.kwargs["requesting_dataset_id"] = requesting_dataset.id
@@ -77,6 +90,15 @@ class AddNewDataset(TemplateView):
                 kwargs={"requesting_dataset_id": requesting_dataset.id},
             )
         )
+
+
+class DeleteRequestingDatasetJourney(View):
+    def get(self, request, requesting_dataset_id):
+        RequestingDataset.objects.filter(id=requesting_dataset_id).delete()
+        return HttpResponseRedirect(
+            reverse(
+                "adding-data"
+            ))
 
 
 class RequestingDataTrackerView(FormView):
@@ -89,7 +111,6 @@ class RequestingDataTrackerView(FormView):
             id=self.kwargs["requesting_dataset_id"]
         )
         self.request.session["requesting_dataset"] = requesting_dataset.id
-
         context["requesting_dataset_id"] = requesting_dataset.id
 
         # TODO refactor
@@ -101,8 +122,25 @@ class RequestingDataTrackerView(FormView):
         context["stage_three_complete"] = stage_three_complete
         if stage_one_complete and stage_two_complete and stage_three_complete:
             context["all_stages_complete"] = True
+        if not stage_one_complete and not stage_two_complete and not stage_three_complete:
+            context["backlink"] = reverse("add-new-dataset")
+        if "/requesting-data/summary-information/summary" in self.request.META["HTTP_REFERER"]:
+            context["backlink"] = reverse("adding-data")
+        if "/requesting-data/about-this-data/summary" in self.request.META["HTTP_REFERER"]:
+            context["backlink"] = reverse("adding-data")
+        if "/requesting-data/access-restrictions/summary" in self.request.META["HTTP_REFERER"]:
+            context["backlink"] = reverse("adding-data")
+        if "/requesting-data/adding-data" in self.request.META["HTTP_REFERER"]:
+            context["backlink"] = reverse("adding-data")
 
+        # if step before was the last step of the section:
+        #     context["backlink"] = "last step of the section"
         return context
+
+    # def get(self, request, requesting_dataset_id):
+    #     previous_page = request.META["HTTP_REFERER"]
+    #     print("previous_page::::", previous_page)
+    #     return render(request, "datasets/requesting_data/tracker.html")
 
     def form_valid(self, form):
         requesting_dataset = RequestingDataset.objects.get(
@@ -251,9 +289,9 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
                     continue
                 if key == "government_security_classification":
                     if value == 1:
-                        value = "Offical"
+                        value = "Offiical"
                     if value == 2:
-                        value = "Offical-Sensitive"
+                        value = "Offiical-Sensitive"
                 summary_list.append(
                     {
                         step: {"question": questions[key], "answer": value},
