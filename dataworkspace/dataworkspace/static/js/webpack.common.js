@@ -10,7 +10,8 @@ const REACT_APPS = [
   'your-files',
   'data-catalogue-feedback',
   'confirm-remove-user',
-  'confirm-publish-visualisation'
+  'confirm-publish-visualisation',
+  'unpublish-catalogue-page'
 ].reduce(
   (prev, acc) => ({
     ...prev,

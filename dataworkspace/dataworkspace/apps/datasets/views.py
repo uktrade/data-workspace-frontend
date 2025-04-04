@@ -31,13 +31,14 @@ from django.http import (
     HttpResponseServerError,
     JsonResponse,
 )
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from django.views.generic import DetailView, FormView, TemplateView, UpdateView, View
 from psycopg2 import sql
 
+from dataworkspace import zendesk
 from dataworkspace import datasets_db
 from dataworkspace.apps.accounts.models import UserDataTableView
 from dataworkspace.apps.api_v1.core.views import invalidate_superset_user_cached_credentials
@@ -1509,6 +1510,13 @@ class DatasetEditView(EditBaseView, UpdateView):
             "authorized_email_domains": ",".join(self.object.authorized_email_domains),
         }
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["unpublish_data"] = json.dumps(
+            {"unpublish_url": reverse("datasets:unpublish_dataset", args=[self.obj.pk])}
+        )
+        return context
+
     def form_valid(self, form):
 
         if "description" in form.changed_data:
@@ -1538,6 +1546,34 @@ class DatasetEditView(EditBaseView, UpdateView):
             invalidate_superset_user_cached_credentials()
         messages.success(self.request, "Dataset updated")
         return super().form_valid(form)
+
+
+class DatasetEditUnpublishView(EditBaseView, UpdateView):
+    def post(self, request, *arg, **kwargs):
+        dataset = find_dataset(kwargs["pk"], request.user)
+        dataset.published = False
+        dataset.save()
+
+        # In Dev Ignore the API call to Zendesk and notify
+        if settings.ENVIRONMENT != "Dev":
+            zendesk.notify_unpublish_catalogue_page(
+                request,
+                dataset,
+            )
+            send_email(
+                settings.NOTIFY_UNPUBLISH_DATASET_CATALOUGE_PAGE_TEMPLATE_ID,
+                request.user.email,
+                personalisation={
+                    "email_address": request.user.email,
+                    "dataset_name": dataset.name,
+                },
+            )
+        messages.success(
+            request,
+            f"{dataset.name} has been unpublished from Data Workspace. "
+            f"A support ticket has been raised and the Data Workspace team will contact you with next steps.",
+        )
+        return redirect("datasets:find_datasets")
 
 
 class VisualisationCatalogueItemEditView(EditBaseView, UpdateView):

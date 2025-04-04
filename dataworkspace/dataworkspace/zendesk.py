@@ -266,6 +266,21 @@ If access has not been granted to the requestor within 5 working days, this will
     return ticket_reference
 
 
+def notify_unpublish_catalogue_page(request, dataset):
+    message = """
+A catalogue page has been unpublished and needs action from the support team.
+Contact the user and find out why they have unpublished this page.
+"""
+
+    create_support_request(
+        request.user,
+        request.user.email,
+        message,
+        subject=f"{dataset.name} has been unpublished by {request.user}",
+        tag="dataset-unpublish-request",
+    )
+
+
 def create_support_request(user, email, message, tag=None, subject=None):
     client = Zenpy(
         subdomain=settings.ZENDESK_SUBDOMAIN,

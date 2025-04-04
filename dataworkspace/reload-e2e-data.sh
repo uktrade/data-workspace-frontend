@@ -3,6 +3,7 @@
 django-admin flush --noinput
 echo "Cleared existing django data from DB"
 django-admin waffle_flag SUGGESTED_SEARCHES_FLAG --everyone --create
+django-admin waffle_flag UNPUBLISH_DATASET_CATALOGUE_PAGE_FLAG --everyone --create
 echo "Feature flags have been set"
 django-admin loaddata --ignorenonexistent --verbosity=3 dataworkspace/e2e_fixtures.json
 echo "Loaded fixtures data"
