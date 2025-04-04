@@ -7,36 +7,60 @@
 <a href="{{ backlink }}" class="govuk-back-link">Back</a>
 {% endblock %}
 {% block content %}
+
+  {% if form.errors %}
+    <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
+      <h2 class="govuk-error-summary__title" id="error-summary-title">
+        There is a problem
+      </h2>
+      <div class="govuk-error-summary__body">
+        <ul class="govuk-list govuk-error-summary__list">
+        {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+                <li>
+                <a href="#id_{{ field }}">{{ error }}</a>
+                </li>
+            {% endfor %}
+        {% endfor %}
+        </ul>
+      </div>
+    </div>
+  {% endif %}
+
   <form method="post" novalidate>
     {% csrf_token %}
       {{ wizard.management_form }}
-        <input type="hidden" id="hidden-radio-input" name="licence-licence_required" value="">
+
+        <input type="hidden" id="hidden-radio-input" name="{{step}}-{{radio_field}}" value="">
 
         <div class="govuk-form-group">
           <fieldset class="govuk-fieldset" aria-describedby="hint">
             <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
               <h1 class="govuk-fieldset__heading">
-                Is the data set published anywhere else?
+                {{stage}}
               </h1>
             </legend>
+            <div class="govuk-label govuk-label--m govuk-!-static-margin-0">
+              {{radio_label}}
+            </div>
             <div class="govuk-radios" data-module="govuk-radios">
               <div class="govuk-radios__item">
-                <input class="govuk-radios__input" id="licence-licence_required_yes" type="radio" name="licence-radio">
-                <label class="govuk-label govuk-radios__label" for="licence-licence_required_yes">
+                <input class="govuk-radios__input" id="{{radio_field}}-yes" type="radio" name="{{radio_field}}-radio">
+                <label class="govuk-label govuk-radios__label" for="{{radio_field}}-yes">
                   Yes
                 </label>
               </div>
               <div class="govuk-radios__conditional govuk-radios__conditional--hidden" id="conditional-input">
                 <div class="govuk-form-group">
-                  <label class="govuk-label" for="licence-input">
-                    Enter the URL of where it's currently published
+                  <label class="govuk-label" for="{{radio_field}}-input">
+                    {{input_label}}
                   </label>
-                  <input class="govuk-input govuk-!-width-one-third" id="licence-input" name="licence-licence">
+                  <input class="govuk-input" id="{{radio_field}}-input" name="{{step}}-{{input_field}}">
                 </div>
               </div>
               <div class="govuk-radios__item">
-                <input class="govuk-radios__input" id="licence-licence_required_no" type="radio" name="licence-radio">
-                <label class="govuk-label govuk-radios__label" for="licence-licence_required_no">
+                <input class="govuk-radios__input" id="{{radio_field}}-no" type="radio" name="{{radio_field}}-radio">
+                <label class="govuk-label govuk-radios__label" for="{{radio_field}}-no">
                   No
                 </label>
               </div>

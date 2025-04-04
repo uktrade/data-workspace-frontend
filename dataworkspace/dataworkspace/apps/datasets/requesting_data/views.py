@@ -69,7 +69,6 @@ class AddNewDataset(TemplateView):
     template_name = "datasets/requesting_data/add_new_dataset.html"
 
     def post(self, request, *args, **kwargs):
-        print("VALIDDDDD")
         requesting_dataset = RequestingDataset.objects.create()
         self.kwargs["requesting_dataset_id"] = requesting_dataset.id
         return HttpResponseRedirect(
@@ -162,6 +161,17 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
         "enquiries-contact",
     ]
 
+    radio_input_pages = [
+        "licence",
+        "usage",
+        # "personal-data",
+        # "special-personal-data",
+        # "commercial-sensitive",
+        # "location-restrictions",
+        # "network-restrictions",
+        # "user-restrictions",
+    ]
+
     def add_fields(self, form_list, requesting_dataset, notes_fields):
         for form in form_list:
             for field in form.cleaned_data:
@@ -212,7 +222,7 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
         return search_results
 
     def get_template(self, step):
-        if step == "licence":
+        if step in  self.radio_input_pages:
             return "datasets/requesting_data/form_types/radio_input.html"
         if step in self.user_search_pages:
             return "datasets/requesting_data/form_types/user_search.html"
@@ -340,6 +350,16 @@ class RequestingDataSummaryInformationWizardView(RequestingDatasetBaseWizardView
             self.get_user_search_context(context, step)
         elif step == "summary":
             context["summary"] = self.get_summary_context()
+
+        if step in self.radio_input_pages:
+            context["step"] = step
+            current_form = self.get_form(step=step)
+            radio_field = list(current_form.fields.keys())[0]
+            input_field = list(current_form.fields.keys())[1]
+            context["radio_field"] = radio_field
+            context["radio_label"] = current_form.fields[radio_field].label
+            context["input_field"] = input_field
+            context["input_label"] = current_form.fields[input_field].label
 
         return context
 

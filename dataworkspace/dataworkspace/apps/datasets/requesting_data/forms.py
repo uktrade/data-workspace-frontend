@@ -133,7 +133,8 @@ class DatasetExistingSystemForm(GOVUKDesignSystemForm):
 class DatasetLicenceForm(GOVUKDesignSystemForm):
     licence_required = forms.CharField(
         label="Do you need/have a licence for this data?",
-        widget=forms.TextInput(),
+        required=True,
+        widget=GOVUKDesignSystemTextWidget(),
     )
 
     licence = GOVUKDesignSystemCharField(
@@ -147,10 +148,10 @@ class DatasetLicenceForm(GOVUKDesignSystemForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        if cleaned_data["licence_required"] == "yes" and cleaned_data["licence"] ==  "":
-            raise ValidationError("Please enter a URL.")
+        licence_required = cleaned_data.get("licence_required", None)
+        if licence_required == "yes" and cleaned_data["licence"] ==  "":
+            raise ValidationError("Please enter a URL")
         return cleaned_data
-
 
 
 class DatasetRestrictionsForm(GOVUKDesignSystemForm):
@@ -168,17 +169,27 @@ class DatasetRestrictionsForm(GOVUKDesignSystemForm):
 
 
 class DatasetUsageForm(GOVUKDesignSystemForm):
-    usage = GOVUKDesignSystemTextareaField(
-        label="What will the data be used for on Data Workspace?",
+    usage_required = forms.CharField(
+        label="Are there any restrictions on usage?",
         required=True,
-        widget=GOVUKDesignSystemTextareaWidget(
-            heading="h2",
-            label_size="m",
+        widget=GOVUKDesignSystemTextWidget(),
+    )
+
+    usage = GOVUKDesignSystemCharField(
+        label="What will the data be used for on Data Workspace?",
+        required=False,
+        widget=GOVUKDesignSystemTextWidget(
             label_is_heading=True,
-            attrs={"rows": 5},
-            extra_label_classes="govuk-!-static-margin-0",
+            label_size="m",
         ),
     )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        usage_required = cleaned_data.get("usage_required", None)
+        if usage_required == "yes" and cleaned_data["usage"] ==  "":
+            raise ValidationError("Please enter the usage restrictions")
+        return cleaned_data
 
 
 class DatasetIntendedAccessForm(GOVUKDesignSystemForm):
