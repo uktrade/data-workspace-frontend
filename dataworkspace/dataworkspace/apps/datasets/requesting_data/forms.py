@@ -134,7 +134,8 @@ class DatasetLicenceForm(GOVUKDesignSystemForm):
     licence_required = forms.CharField(
         label="Do you need/have a licence for this data?",
         required=True,
-        widget=GOVUKDesignSystemTextWidget(),
+        widget=GOVUKDesignSystemTextWidget(label_is_heading=True,
+                                           label_size="m",),
     )
 
     licence = GOVUKDesignSystemCharField(
@@ -149,7 +150,7 @@ class DatasetLicenceForm(GOVUKDesignSystemForm):
     def clean(self):
         cleaned_data = super().clean()
         licence_required = cleaned_data.get("licence_required", None)
-        if licence_required == "yes" and cleaned_data["licence"] ==  "":
+        if licence_required == "yes" and cleaned_data["licence"] == "":
             raise ValidationError("Please enter a URL")
         return cleaned_data
 
@@ -187,7 +188,7 @@ class DatasetUsageForm(GOVUKDesignSystemForm):
     def clean(self):
         cleaned_data = super().clean()
         usage_required = cleaned_data.get("usage_required", None)
-        if usage_required == "yes" and cleaned_data["usage"] ==  "":
+        if usage_required == "yes" and cleaned_data["usage"] == "":
             raise ValidationError("Please enter the usage restrictions")
         return cleaned_data
 
@@ -233,7 +234,7 @@ class DatasetPersonalDataForm(GOVUKDesignSystemForm):
     def clean(self):
         cleaned_data = super().clean()
         personal_data_required = cleaned_data.get("personal_data_required", None)
-        if personal_data_required == "yes" and cleaned_data["personal_data"] ==  "":
+        if personal_data_required == "yes" and cleaned_data["personal_data"] == "":
             raise ValidationError("Please enter what personal data it contains")
         return cleaned_data
 
@@ -261,7 +262,7 @@ class DatasetSpecialPersonalDataForm(GOVUKDesignSystemForm):
     def clean(self):
         cleaned_data = super().clean()
         special_personal_data_required = cleaned_data.get("special_personal_data_required", None)
-        if special_personal_data_required == "yes" and cleaned_data["special_personal_data"] ==  "":
+        if special_personal_data_required == "yes" and cleaned_data["special_personal_data"] == "":
             raise ValidationError("Please enter what special category personal data it contains")
         return cleaned_data
 
@@ -289,7 +290,7 @@ class DatasetCommercialSensitiveForm(GOVUKDesignSystemForm):
     def clean(self):
         cleaned_data = super().clean()
         commercial_sensitive_required = cleaned_data.get("commercial_sensitive_required", None)
-        if commercial_sensitive_required == "yes" and cleaned_data["commercial_sensitive"] ==  "":
+        if commercial_sensitive_required == "yes" and cleaned_data["commercial_sensitive"] == "":
             raise ValidationError("Please enter what commercially sensitive data it contains")
         return cleaned_data
 
@@ -326,6 +327,7 @@ class DatasetUpdateFrequencyForm(GOVUKDesignSystemForm):
             attrs={"rows": 5},
         ),
     )
+
 
 class DatasetIntendedAccessForm(GOVUKDesignSystemForm):
     intended_access = GOVUKDesignSystemRadioField(
@@ -370,7 +372,7 @@ class DatasetLocationRestrictionsForm(GOVUKDesignSystemForm):
     def clean(self):
         cleaned_data = super().clean()
         location_restrictions_required = cleaned_data.get("location_restrictions_required", None)
-        if location_restrictions_required == "yes" and cleaned_data["location_restrictions"] ==  "":
+        if location_restrictions_required == "yes" and cleaned_data["location_restrictions"] == "":
             raise ValidationError("Please provide information on the location restrictions")
         return cleaned_data
 
@@ -397,7 +399,7 @@ class DatasetNetworkRestrictionsForm(GOVUKDesignSystemForm):
     def clean(self):
         cleaned_data = super().clean()
         network_restrictions_required = cleaned_data.get("network_restrictions_required", None)
-        if network_restrictions_required == "yes" and cleaned_data["network_restrictions"] ==  "":
+        if network_restrictions_required == "yes" and cleaned_data["network_restrictions"] == "":
             raise ValidationError("Please provide information on the network restrictions")
         return cleaned_data
 
@@ -424,7 +426,7 @@ class DatasetUserRestrictionsForm(GOVUKDesignSystemForm):
     def clean(self):
         cleaned_data = super().clean()
         user_restrictions_required = cleaned_data.get("user_restrictions_required", None)
-        if user_restrictions_required == "yes" and cleaned_data["user_restrictions"] ==  "":
+        if user_restrictions_required == "yes" and cleaned_data["user_restrictions"] == "":
             raise ValidationError("Please provide information on the user restrictions")
         return cleaned_data
 

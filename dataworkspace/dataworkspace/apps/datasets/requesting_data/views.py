@@ -255,7 +255,7 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
         return search_results
 
     def get_template(self, step):
-        if step in  self.radio_input_pages:
+        if step in self.radio_input_pages:
             return "datasets/requesting_data/form_types/radio_input.html"
         if step in self.user_search_pages:
             return "datasets/requesting_data/form_types/user_search.html"
@@ -298,7 +298,7 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
                     },
                 )
         return summary_list
-    
+
     def get_base_context(self, context, requesting_dataset, stage, step):
         if step in ["name", "security-classification", "intended-access"]:
             context["backlink"] = reverse("requesting-data-tracker", args={requesting_dataset.id})
@@ -444,7 +444,7 @@ class RequestingDataAboutThisDataWizardView(RequestingDatasetBaseWizardView):
         elif step == "special_personal_data":
             context["link_text"] = "Find out more information about special category personal data"
             context["link"] = "NOT SURE !!!!"
-    
+
         return context
 
     def done(self, form_list, **kwargs):
