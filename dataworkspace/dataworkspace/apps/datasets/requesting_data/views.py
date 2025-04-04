@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.forms import model_to_dict
+from django.shortcuts import render
 from django.views import View
 from django.views.generic import FormView, TemplateView
 from django.contrib.auth import get_user_model
@@ -74,8 +75,13 @@ class AddingData(TemplateView):
 class AddNewDataset(TemplateView):
     template_name = "datasets/requesting_data/add_new_dataset.html"
 
+    def get(self, request):
+        previous_page = request.META["HTTP_REFERER"]
+        if '/requesting-data/tracker/' in previous_page:
+            RequestingDataset.objects.filter(id=self.request.session["requesting_dataset"]).delete()
+        return render(request, "datasets/requesting_data/add_new_dataset.html")
+
     def post(self, request, *args, **kwargs):
-        print("VALIDDDDD")
         requesting_dataset = RequestingDataset.objects.create()
         self.kwargs["requesting_dataset_id"] = requesting_dataset.id
         return HttpResponseRedirect(
@@ -105,7 +111,7 @@ class RequestingDataTrackerView(FormView):
             id=self.kwargs["requesting_dataset_id"]
         )
         self.request.session["requesting_dataset"] = requesting_dataset.id
-
+        print("SELF:::", self.request.META["HTTP_REFERER"])
         # requesting_dataset = RequestingDataset.objects.get_or_create(
         #     id=self.kwargs.get("requesting_dataset_id", name="Untitled")
         # )
@@ -122,8 +128,25 @@ class RequestingDataTrackerView(FormView):
         context["stage_three_complete"] = stage_three_complete
         if stage_one_complete and stage_two_complete and stage_three_complete:
             context["all_stages_complete"] = True
+        if not stage_one_complete and not stage_two_complete and not stage_three_complete:
+            context["backlink"] = reverse("add-new-dataset")
+        if "/requesting-data/summary-information/summary" in self.request.META["HTTP_REFERER"]:
+            context["backlink"] = reverse("adding-data")
+        if "/requesting-data/about-this-data/summary" in self.request.META["HTTP_REFERER"]:
+            context["backlink"] = reverse("adding-data")
+        if "/requesting-data/access-restrictions/summary" in self.request.META["HTTP_REFERER"]:
+            context["backlink"] = reverse("adding-data")
+        if "/requesting-data/adding-data" in self.request.META["HTTP_REFERER"]:
+            context["backlink"] = reverse("adding-data")
 
+        # if step before was the last step of the section:
+        #     context["backlink"] = "last step of the section"
         return context
+
+    # def get(self, request, requesting_dataset_id):
+    #     previous_page = request.META["HTTP_REFERER"]
+    #     print("previous_page::::", previous_page)
+    #     return render(request, "datasets/requesting_data/tracker.html")
 
     def form_valid(self, form):
         requesting_dataset = RequestingDataset.objects.get(
