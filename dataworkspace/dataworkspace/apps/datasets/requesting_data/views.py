@@ -90,11 +90,6 @@ class RequestingDataTrackerView(FormView):
         )
         self.request.session["requesting_dataset"] = requesting_dataset.id
 
-        # requesting_dataset = RequestingDataset.objects.get_or_create(
-        #     id=self.kwargs.get("requesting_dataset_id", name="Untitled")
-        # )
-        # requesting_dataset.name = "Untitled"
-        # self.request.session["requesting_dataset"] = requesting_dataset.id
         context["requesting_dataset_id"] = requesting_dataset.id
 
         # TODO refactor
@@ -164,12 +159,12 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
     radio_input_pages = [
         "licence",
         "usage",
-        # "personal-data",
-        # "special-personal-data",
-        # "commercial-sensitive",
-        # "location-restrictions",
-        # "network-restrictions",
-        # "user-restrictions",
+        "personal-data",
+        "special-personal-data",
+        "commercial-sensitive",
+        "location-restrictions",
+        "network-restrictions",
+        "user-restrictions",
     ]
 
     def add_fields(self, form_list, requesting_dataset, notes_fields):
@@ -264,16 +259,34 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
                         step: {"question": questions[key], "answer": value},
                     },
                 )
-        # for field in fields:
-        #     summary_list.append(
-        #         {
-        #             "TO DO": {
-        #                 "question": questions[field],
-        #                 "answer": self.get_all_cleaned_data()[field],
-        #             },
-        #         },
-        #     )
         return summary_list
+    
+    def get_base_context(self, context, requesting_dataset, stage, step):
+        if step in ["name", "security-classification", "intended-access"]:
+            context["backlink"] = reverse("requesting-data-tracker", args={requesting_dataset.id})
+        else:
+            context["backlink"] = reverse(f"requesting-data-{stage}-step", args={self.steps.prev})
+
+        if step in self.radio_input_pages:
+            context["step"] = step
+            current_form = self.get_form(step=step)
+            radio_field = list(current_form.fields.keys())[0]
+            input_field = list(current_form.fields.keys())[1]
+            context["radio_field"] = radio_field
+            context["radio_label"] = current_form.fields[radio_field].label
+            context["input_field"] = input_field
+            context["input_label"] = current_form.fields[input_field].label
+        elif step == "summary":
+            context["summary"] = self.get_summary_context()
+
+        if step in self.user_search_pages:
+            current_form = self.get_form(step=step)
+            field = list(current_form.fields.keys())[0]
+            context["label"] = current_form.fields[field].label
+            context["help_text"] = current_form.fields[field].help_text
+            self.get_user_search_context(context, step)
+
+        return context
 
 
 class RequestingDataSummaryInformationWizardView(RequestingDatasetBaseWizardView):
@@ -320,53 +333,18 @@ class RequestingDataSummaryInformationWizardView(RequestingDatasetBaseWizardView
         )
         context["stage"] = "Summary Information"
         step = self.steps.current
+        self.get_base_context(context, requesting_dataset, "summary-information", step)
 
         if step == "descriptions":
             context["link_text"] = "Find out the best practice for writing descriptions."
             context["link"] = "https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/creating-and-updating-a-catalogue-pages/data-descriptions/"
-        if step in self.user_search_pages:
+        elif step in self.user_search_pages:
             context["link_text"] = "Find out more information about Security roles and responsibilities"
             context["link"] = "https://data-services-help.trade.gov.uk/data-workspace/how-to/data-owner-basics/managing-data-key-tasks-and-responsibilities/"
-        if self.steps.current == "name":
-            context["backlink"] = reverse("requesting-data-tracker", args={requesting_dataset.id})
-        else:
-            context["backlink"] = reverse("requesting-data-summary-information-step", args={self.steps.prev})
-
-        if step == "information-asset-owner":
-            context["label"] = "Name of Information Asset Owner"
-            context["help_text"] = (
-                "IAO's are responsible for ensuring information assets are handled and managed appropriately"
-            )
-            self.get_user_search_context(context, step)
-        elif step == "information-asset-manager":
-            context["label"] = "Name of Information Asset Manager"
-            context["help_text"] = (
-                "IAM's have knowledge and duties associated with an asset, and so often support the IAO"
-            )
-            self.get_user_search_context(context, step)
-        elif step == "enquiries-contact":
-            context["label"] = "Contact person"
-            context["help_text"] = "Description of contact person"
-            self.get_user_search_context(context, step)
-        elif step == "summary":
-            context["summary"] = self.get_summary_context()
-
-        if step in self.radio_input_pages:
-            context["step"] = step
-            current_form = self.get_form(step=step)
-            radio_field = list(current_form.fields.keys())[0]
-            input_field = list(current_form.fields.keys())[1]
-            context["radio_field"] = radio_field
-            context["radio_label"] = current_form.fields[radio_field].label
-            context["input_field"] = input_field
-            context["input_label"] = current_form.fields[input_field].label
 
         return context
 
     def done(self, form_list, **kwargs):
-        # requesting_dataset = RequestingDataset.objects.create(
-        #     name=form_list[0].cleaned_data.get("name")
-        # )
         requesting_dataset = RequestingDataset.objects.get(
             id=self.request.session["requesting_dataset"]
         )
@@ -415,24 +393,20 @@ class RequestingDataAboutThisDataWizardView(RequestingDatasetBaseWizardView):
 
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form=form, **kwargs)
-        step = self.steps.current
-
-        if step == "government_security_classification":
-            context["link_text"] = "Find out more information about security classifications"
-            context["link"] = "https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/creating-and-updating-a-catalogue-pages/set-the-security-classification-of-your-data/"
-        if step == "special_personal_data":
-            context["link_text"] = "Find out more information about special category personal data"
-            context["link"] = "NOT SURE !!!!"
         requesting_dataset = RequestingDataset.objects.get(
             id=self.request.session["requesting_dataset"]
         )
         context["stage"] = "About This Data"
-        if self.steps.current == "security-classification":
-            context["backlink"] = reverse("requesting-data-tracker", args={requesting_dataset.id})
-        else:
-            context["backlink"] = reverse("requesting-data-about-this-data-step", args={self.steps.prev})
-        if step == "summary":
-            context["summary"] = self.get_summary_context()
+        step = self.steps.current
+        self.get_base_context(context, requesting_dataset, "summary-information", step)
+
+        if step == "government_security_classification":
+            context["link_text"] = "Find out more information about security classifications"
+            context["link"] = "https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/creating-and-updating-a-catalogue-pages/set-the-security-classification-of-your-data/"
+        elif step == "special_personal_data":
+            context["link_text"] = "Find out more information about special category personal data"
+            context["link"] = "NOT SURE !!!!"
+    
         return context
 
     def done(self, form_list, **kwargs):
@@ -487,12 +461,12 @@ class RequestingDataAccessRestrictionsWizardView(RequestingDatasetBaseWizardView
         )
         step = self.steps.current
         context["stage"] = "Access Restriction"
+        self.get_base_context(context, requesting_dataset, "summary-information", step)
+
         if self.steps.current == "intended-access":
             context["backlink"] = reverse("requesting-data-tracker", args={requesting_dataset.id})
         else:
             context["backlink"] = reverse("requesting-data-access-restrictions-step", args={self.steps.prev})
-        if step == "summary":
-            context["summary"] = self.get_summary_context()
         return context
 
     def done(self, form_list, **kwargs):
