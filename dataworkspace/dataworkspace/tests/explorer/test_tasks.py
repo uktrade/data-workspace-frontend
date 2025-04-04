@@ -283,7 +283,6 @@ class TestExecuteQuery:
         res = CSVExporter(request=self.request, querylog=QueryLogFactory()).get_output(delim="|")
         assert res == "?column?|?column?\r\n1|2\r\n"
 
-    @pytest.mark.skip(reason="Async downloads are still a WIP")
     @patch("dataworkspace.apps.explorer.tasks.get_user_explorer_connection_settings")
     @patch("dataworkspace.apps.explorer.exporters.fetch_query_results")
     def test_writing_json_unicode_async(self, mock_fetch_query_results, mock_connection_settings):
@@ -298,7 +297,6 @@ class TestExecuteQuery:
         res = JSONExporter(request=self.request, querylog=QueryLogFactory()).get_output()
         assert res == json.dumps([{"a": 1, "b": None}, {"a": "Jenét", "b": "1"}])
 
-    @pytest.mark.skip(reason="Async downloads are still a WIP")
     @patch("dataworkspace.apps.explorer.tasks.get_user_explorer_connection_settings")
     @patch("dataworkspace.apps.explorer.exporters.fetch_query_results")
     def test_writing_json_datetimes_async(
@@ -311,7 +309,6 @@ class TestExecuteQuery:
         res = JSONExporter(request=self.request, querylog=QueryLogFactory()).get_output()
         assert res == json.dumps([{"a": 1, "b": date.today()}], cls=DjangoJSONEncoder)
 
-    @pytest.mark.skip(reason="Async downloads are still a WIP")
     @patch("dataworkspace.apps.explorer.tasks.get_user_explorer_connection_settings")
     @patch("dataworkspace.apps.explorer.exporters.fetch_query_results")
     def test_writing_excel_async(self, mock_fetch_query_results, mock_connection_settings):
@@ -326,7 +323,6 @@ class TestExecuteQuery:
         res = ExcelExporter(request=self.request, querylog=QueryLogFactory()).get_output()
         assert res[:2] == six.b("PK")
 
-    @pytest.mark.skip(reason="Async downloads are still a WIP")
     @patch("dataworkspace.apps.explorer.tasks.get_user_explorer_connection_settings")
     @patch("dataworkspace.apps.explorer.exporters.fetch_query_results")
     def test_writing_excel_dict_fields_async(
