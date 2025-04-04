@@ -2,7 +2,6 @@ import json
 import random
 import re
 from datetime import date, datetime, timedelta, timezone
-from urllib.parse import quote_plus
 from uuid import uuid4
 
 import faker
