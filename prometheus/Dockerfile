@@ -26,7 +26,7 @@ RUN \
 	chown -R prometheus:prometheus /prometheus && \
 	apk del .build-deps && \
 	pip3 install \
-		lowhaio==0.0.78
+		httpx==0.24.1
 
 COPY prometheus.yml /etc/prometheus/
 COPY fetch_targets.py /
