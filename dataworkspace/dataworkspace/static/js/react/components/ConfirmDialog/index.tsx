@@ -61,7 +61,11 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = (props) => {
     }
   }, [props.open]);
   return (
-    <Dialog ref={refModal} warning={props.warning}>
+    <Dialog
+      data-test="confirmation-dialog"
+      ref={refModal}
+      warning={props.warning}
+    >
       {props.warning === false ? (
         <H2 size="LARGE">{props.title}</H2>
       ) : (
