@@ -74,3 +74,25 @@ Cypress.Commands.add(
   (notificationId, lastChanceDays, endDate) =>
     updateNotificationBanner(notificationId, lastChanceDays, endDate)
 );
+
+/**
+ * Custom Cypress command to get the open confirmation dialog.
+ *
+ * This command retrieves the element with the `data-test="confirmation-dialog"` attribute,
+ * asserts that it is visible, and then asserts that it has the `open` attribute.
+ * It yields the jQuery element representing the open confirmation dialog.
+ *
+ * @example
+ * cy.getOpenDialog().within(() => {
+ *   cy.contains('Confirm').click();
+ * });
+ */
+Cypress.Commands.add('getOpenDialog', () => {
+  return cy
+    .get('[data-test="confirmation-dialog"]')
+    .should('be.visible')
+    .then(($el) => {
+      expect($el).to.have.attr('open');
+      return $el;
+    });
+});
