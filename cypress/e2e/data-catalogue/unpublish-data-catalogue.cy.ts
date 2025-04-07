@@ -1,5 +1,8 @@
 import { sourceWithTable } from '../../fixtures/datasets';
-import { assertList } from '../../support/assertions';
+import {
+  assertList,
+  assertSuccessNotification
+} from '../../support/assertions';
 
 describe('Unpublish catalogue page', () => {
   it('should display the correct markup', () => {
@@ -53,5 +56,17 @@ describe('Unpublish catalogue page', () => {
       cy.contains('button', 'Yes, unpublish catalogue page').should('exist');
       cy.contains('button', 'Close').should('exist');
     });
+  });
+
+  it('should unpublish the catalogue page', () => {
+    cy.visit(`/datasets/${sourceWithTable}/edit-dataset`);
+    cy.contains('Unpublish catalogue page').click();
+    cy.getOpenDialog().within(() => {
+      cy.contains('Yes, unpublish catalogue page').click();
+    });
+    assertSuccessNotification(
+      'Source dataset has been unpublished from Data Workspace. ' +
+        'A support ticket has been raised and the Data Workspace team will contact you with next steps.'
+    );
   });
 });
