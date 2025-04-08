@@ -10,7 +10,7 @@ import pytest
 
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
-from dataworkspace.apps.datasets.models import SensitivityType
+from dataworkspace.apps.datasets.models import RequestingDataset, SensitivityType
 from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetCommercialSensitiveForm,
     DatasetDataOriginForm,
@@ -47,6 +47,17 @@ class RequestingDataFormsTestCase(TestCase):
         )
         assert form.is_valid()
         assert expected_response in form.cleaned_data[label]
+
+    def check_for_valid_radio_conditional_form(self, form, data_input, expected_response, labels):
+        form = form(
+            {
+                labels[0]: "yes",
+                labels[1]: data_input,
+            }
+        )
+        assert form.is_valid()
+        assert "yes" in form.cleaned_data[labels[0]]
+        assert expected_response in form.cleaned_data[labels[1]]
 
     def test_valid_form_name(self):
         self.check_for_valid_form(
@@ -101,11 +112,11 @@ class RequestingDataFormsTestCase(TestCase):
         )
 
     def test_valid_form_licence(self):
-        self.check_for_valid_form(
+        self.check_for_valid_radio_conditional_form(
             form=DatasetLicenceForm,
             data_input="""["Test licence"]""",
             expected_response="Test licence",
-            label="licence",
+            labels=["licence_required", "licence"]
         )
 
     def test_valid_form_restrictions(self):
@@ -117,15 +128,14 @@ class RequestingDataFormsTestCase(TestCase):
         )
 
     def test_valid_form_usage(self):
-        self.check_for_valid_form(
+        self.check_for_valid_radio_conditional_form(
             form=DatasetUsageForm,
             data_input="""["Test usage"]""",
             expected_response="Test usage",
-            label="usage",
+            labels=["usage_required", "usage"]
         )
 
     def test_valid_form_intended_access(self):
-
         form = DatasetIntendedAccessForm(
             {
                 "intended_access": "yes",
@@ -137,27 +147,27 @@ class RequestingDataFormsTestCase(TestCase):
         assert "Test operational impact" in form.cleaned_data["operational_impact"]
 
     def test_valid_form_location_restrictions(self):
-        self.check_for_valid_form(
+        self.check_for_valid_radio_conditional_form(
             form=DatasetLocationRestrictionsForm,
             data_input="""["Test location restrictions"]""",
             expected_response="Test location restrictions",
-            label="location_restrictions",
+            labels=["location_restrictions_required", "location_restrictions"]
         )
 
     def test_valid_form_network_restrictions(self):
-        self.check_for_valid_form(
+        self.check_for_valid_radio_conditional_form(
             form=DatasetNetworkRestrictionsForm,
             data_input="""["Test network restrictions"]""",
             expected_response="Test network restrictions",
-            label="network_restrictions",
+            labels=["network_restrictions_required", "network_restrictions"]
         )
 
     def test_valid_form_user_restrictions(self):
-        self.check_for_valid_form(
+        self.check_for_valid_radio_conditional_form(
             form=DatasetUserRestrictionsForm,
             data_input="""["Test user restrictions"]""",
             expected_response="Test user restrictions",
-            label="user_restrictions",
+            labels=["user_restrictions_required", "user_restrictions"]
         )
 
     def test_valid_form_security_classification_official(self):
@@ -184,27 +194,27 @@ class RequestingDataFormsTestCase(TestCase):
         assert form.cleaned_data["government_security_classification"] == 2
 
     def test_valid_form_personal_data(self):
-        self.check_for_valid_form(
+        self.check_for_valid_radio_conditional_form(
             form=DatasetPersonalDataForm,
             data_input="""["Test personal data"]""",
             expected_response="Test personal data",
-            label="personal_data",
+            labels=["personal_data_required", "personal_data"]
         )
 
     def test_valid_form_special_personal_data(self):
-        self.check_for_valid_form(
+        self.check_for_valid_radio_conditional_form(
             form=DatasetSpecialPersonalDataForm,
             data_input="""["Test special personal data"]""",
             expected_response="Test special personal data",
-            label="special_personal_data",
+            labels=["special_personal_data_required", "special_personal_data"]
         )
 
     def test_valid_form_commercial_sensitive_form(self):
-        self.check_for_valid_form(
+        self.check_for_valid_radio_conditional_form(
             form=DatasetCommercialSensitiveForm,
             data_input="""["Test commercial personal data"]""",
             expected_response="Test commercial personal data",
-            label="commercial_sensitive",
+            labels=["commercial_sensitive_required", "commercial_sensitive"]
         )
 
     def test_valid_form_retention_period(self):
@@ -235,6 +245,10 @@ class RequestingDataViewsTestCase(TestCase):
     def setUp(self):
         self.user = factories.UserFactory.create(is_superuser=False)
         self.client = Client(**get_http_sso_data(self.user))
+        self.requesting_dataset = RequestingDataset.objects.create()
+        session = self.client.session
+        session['requesting_dataset'] = self.requesting_dataset.id
+        session.save()
 
     def check_view_response(self, stage, step, field, test="Test"):
         data = {
