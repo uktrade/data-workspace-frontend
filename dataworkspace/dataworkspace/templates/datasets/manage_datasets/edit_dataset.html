@@ -164,23 +164,26 @@
                     </button>
                 </fieldset>
             </form>
+
             {% flag UNPUBLISH_DATASET_CATALOGUE_PAGE_FLAG %}
-            <aside role="complementary" aria-labelledby="subsection-title" data-test="unpublish-catalogue-page">
-              <h2 class="govuk-heading-m" id="subsection-title">Unpublish this catalogue page</h2>
-              
-              <p class="govuk-body">
-                Only do this if you suspect a data breach, such as data being extracted or shared incorrectly.
-              </p>
-              <p class="govuk-body">
-                This action will:
-              </p>
-              <ul data-test="unpublish-list" class="govuk-list govuk-list--bullet">
-                <li>remove the catalogue page from Data Workspace</li>
-                <li>remove the data from any dashboards or data cuts</li>
-                <li>revoke access for any users</li>
-              </ul>
-            {% include "partials/react-slot-data.html" with mount_id="unpublish-catalogue-page" data=unpublish_data test_id="unpublish-catalogue-page" %}
-          </aside>
+              {% if object.information_asset_owner == request.user %}
+                <aside role="complementary" aria-labelledby="subsection-title" data-test="unpublish-catalogue-page">
+                  <h2 class="govuk-heading-m" id="subsection-title">Unpublish this catalogue page</h2>
+                  
+                  <p class="govuk-body">
+                    Only do this if you suspect a data breach, such as data being extracted or shared incorrectly.
+                  </p>
+                  <p class="govuk-body">
+                    This action will:
+                  </p>
+                  <ul data-test="unpublish-list" class="govuk-list govuk-list--bullet">
+                    <li>remove the catalogue page from Data Workspace</li>
+                    <li>remove the data from any dashboards or data cuts</li>
+                    <li>revoke access for any users</li>
+                  </ul>
+                  {% include "partials/react-slot-data.html" with mount_id="unpublish-catalogue-page" data=unpublish_data test_id="unpublish-catalogue-page" %}
+                </aside>
+              {% endif %}
           {% endflag %}
         </div>
     </div>
