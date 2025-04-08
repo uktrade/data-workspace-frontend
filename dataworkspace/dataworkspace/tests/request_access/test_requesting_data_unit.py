@@ -15,7 +15,10 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetCommercialSensitiveForm,
     DatasetDataOriginForm,
     DatasetDescriptionsForm,
+    DatasetEnquiriesContactForm,
     DatasetExistingSystemForm,
+    DatasetInformationAssetManagerForm,
+    DatasetInformationAssetOwnerForm,
     DatasetIntendedAccessForm,
     DatasetLicenceForm,
     DatasetLocationRestrictionsForm,
@@ -32,6 +35,8 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
 )
 
 
+User = get_user_model()
+
 @pytest.mark.django_db
 class RequestingDataFormsTestCase(TestCase):
 
@@ -46,7 +51,10 @@ class RequestingDataFormsTestCase(TestCase):
             }
         )
         assert form.is_valid()
-        assert expected_response in form.cleaned_data[label]
+        if type(expected_response) == User:
+            assert expected_response == form.cleaned_data[label]
+        else:
+            assert expected_response in form.cleaned_data[label]
 
     def check_for_valid_radio_conditional_form(self, form, data_input, expected_response, labels):
         form = form(
@@ -87,21 +95,34 @@ class RequestingDataFormsTestCase(TestCase):
         )
 
     @patch("django.contrib.auth.models.User.objects.get")
-    def test_valid_form_owners(self, mock_get):
-        pass
-        # mock_get.return_value = self.user
-        # form = DatasetOwnersForm(
-        #     {
-        #         "information_asset_owner": "Testy test",
-        #         "information_asset_manager": "Testy test",
-        #         "enquiries_contact": "Testy test",
-        #     }
-        # )
+    def test_valid_form_information_asset_owner(self, mock_get):
+        mock_get.return_value = self.user
+        self.check_for_valid_form(
+            form=DatasetInformationAssetOwnerForm,
+            data_input="""["Test IAO"]""",
+            expected_response=self.user,
+            label="information_asset_owner",
+        )
 
-        # assert form.is_valid()
-        # assert form.cleaned_data["information_asset_owner"] == self.user
-        # assert form.cleaned_data["information_asset_manager"] == self.user
-        # assert form.cleaned_data["enquiries_contact"] == self.user
+    @patch("django.contrib.auth.models.User.objects.get")
+    def test_valid_form_information_asset_manager(self, mock_get):
+        mock_get.return_value = self.user
+        self.check_for_valid_form(
+            form=DatasetInformationAssetManagerForm,
+            data_input="""["Test IAM"]""",
+            expected_response=self.user,
+            label="information_asset_manager",
+        )
+
+    @patch("django.contrib.auth.models.User.objects.get")
+    def test_valid_form_enquiries_contact(self, mock_get):
+        mock_get.return_value = self.user
+        self.check_for_valid_form(
+            form=DatasetEnquiriesContactForm,
+            data_input="""["Test enquiries contact"]""",
+            expected_response=self.user,
+            label="enquiries_contact",
+        )
 
     def test_valid_form_existing_system(self):
         self.check_for_valid_form(
