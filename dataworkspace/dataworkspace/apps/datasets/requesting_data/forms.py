@@ -74,7 +74,7 @@ class DatasetDataOriginForm(GOVUKDesignSystemForm):
 class DatasetInformationAssetOwnerForm(forms.Form):
     information_asset_owner = forms.CharField(
         required=True,
-        label="Name of information Asset Owner (IAO)",
+        label="Name of Information Asset Owner (IAO)",
         help_text="IAO's are responsible for ensuring information assets are handled and managed appropriately"
     )
 
@@ -89,8 +89,8 @@ class DatasetInformationAssetOwnerForm(forms.Form):
 class DatasetInformationAssetManagerForm(forms.Form):
     information_asset_manager = forms.CharField(
         required=True,
-        label="Name of information Asset Manager (IAM)",
-        help_text="IAM's have knowledge and duties associated with an asset and so often support the IAO"
+        label="Name of Information Asset Manager (IAM)",
+        help_text="IAM's have knowledge and duties associated with an asset, and so often support the IAO"
     )
 
     def clean(self):
@@ -269,7 +269,7 @@ class DatasetSpecialPersonalDataForm(GOVUKDesignSystemForm):
 
 class DatasetCommercialSensitiveForm(GOVUKDesignSystemForm):
     commercial_sensitive_required = forms.CharField(
-        label="Does it contain special category personal data?",
+        label="Does it contain commercially sensitive data?",
         required=True,
         widget=GOVUKDesignSystemTextWidget(),
     )

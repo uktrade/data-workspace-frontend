@@ -498,7 +498,7 @@ class RequestingDataAccessRestrictionsWizardView(RequestingDatasetBaseWizardView
             id=self.request.session["requesting_dataset"]
         )
         step = self.steps.current
-        context["stage"] = "Access Restriction"
+        context["stage"] = "Access Restrictions"
         self.get_base_context(context, requesting_dataset, "summary-information", step)
 
         if self.steps.current == "intended-access":
