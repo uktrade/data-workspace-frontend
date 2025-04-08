@@ -198,11 +198,6 @@ class TestRequestingData(TestCase):
             radio_options=["Constant", "Daily", "Weekly", "Other"],
         )
 
-    # def test_current_access_page(self):
-    #     self.assert_common_content_one_label_page(
-    #         stage="access-restrictions", url_name="current-access", label="Who currently has access to this dataset?"
-    #     )
-
     def test_intended_access_page(self):
         response = self.client.get(reverse("requesting-data-access-restrictions-step", args={("intended-access")}))
 

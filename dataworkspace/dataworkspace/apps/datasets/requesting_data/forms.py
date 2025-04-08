@@ -333,8 +333,12 @@ class DatasetIntendedAccessForm(GOVUKDesignSystemForm):
     intended_access = GOVUKDesignSystemRadioField(
         required=True,
         choices=[("yes", "Yes"), ("no", "No")],
-        label="Should access on Data Workspace be open to all users on request?",
-        widget=GOVUKDesignSystemRadiosWidget(heading="p", extra_label_classes="govuk-body-l"),
+        label="Should access on Data Workspace be open to all users by request?",
+        widget=GOVUKDesignSystemRadiosWidget(
+            heading="h2",
+            label_size="m",
+            label_is_heading=True,
+        ),
     )
 
     operational_impact = GOVUKDesignSystemTextareaField(
