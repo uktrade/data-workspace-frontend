@@ -136,5 +136,5 @@ class TestGitlabIsProjectOwner:
         assert is_project_owner({"id": 1}, "1") is True
 
     def test_user_is_not_project_owner(self, gitlab_mock):
-        gitlab_mock.return_value = [{"access_level": 41}]
+        gitlab_mock.return_value = [{"access_level": 39}]
         assert is_project_owner({"id": 1}, "1") is False
