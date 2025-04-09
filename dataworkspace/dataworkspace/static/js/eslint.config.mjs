@@ -40,6 +40,7 @@ export default [
     'prettier'
   ),
   {
+    files: ['**/*.{js,jsx,ts,tsx}'], // apply these settings to source files
     plugins: {
       react,
       '@typescript-eslint': typescriptEslint,
@@ -67,38 +68,30 @@ export default [
         warnOnUnsupportedTypeScriptVersion: false
       }
     },
-
     rules: {
       'prettier/prettier': 2,
       semi: ['error', 'always'],
       quotes: ['error', 'single', { avoidEscape: true }],
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'off',
-
-      'no-multiple-empty-lines': [
-        'error',
-        {
-          max: 1
-        }
-      ],
-
+      'no-multiple-empty-lines': ['error', { max: 1 }],
       'no-undef': 'error',
-
-      'no-console': [
-        'error',
-        {
-          allow: ['assert', 'info']
-        }
-      ],
-
+      'no-console': ['error', { allow: ['assert', 'info'] }],
       'simple-import-sort/imports': [
         'error',
         {
           groups: [['^react'], ['^antd'], ['^@?\\w'], ['@/(.*)'], ['^[./]']]
         }
       ],
-
       '@typescript-eslint/ban-ts-comment': 'off'
+    }
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    languageOptions: {
+      globals: {
+        JQuery: 'readonly'
+      }
     }
   }
 ];

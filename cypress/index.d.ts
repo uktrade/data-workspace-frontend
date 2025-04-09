@@ -21,5 +21,13 @@ declare namespace Cypress {
       lastChanceDays: number,
       endDate: string
     ): Chainable<Element>;
+
+    /**
+     * Gets the open confirmation dialog element.
+     * This dialog should be visible and have the 'open' attribute.
+     * @returns {Chainable<JQuery<HTMLElement>>}
+     * A chainable Cypress object representing the open confirmation dialog element.
+     */
+    getOpenDialog(): Chainable<JQuery<HTMLElement>>;
   }
 }

@@ -67,6 +67,20 @@ const assertTable = (table: assertTableType) => {
   });
 };
 
+/**
+ * Asserts that a list with a given `data-test` attribute contains the expected items.
+ *
+ * @param {string} dataTest - The `data-test` attribute of the list element.
+ * @param {string[]} items - An array of expected list items.
+ */
+const assertList = (dataTest: string, items: string[]): void => {
+  cy.get(`[data-test="${dataTest}"]`).within(() => {
+    items.forEach((item) => {
+      cy.findByText(item).should('exist');
+    });
+  });
+};
+
 const assertDataAccessNotification = (id: DataCatalogueIDType) => {
   cy.findByTestId('request-access-to-data').within(() => {
     cy.findByText(
@@ -92,6 +106,7 @@ const assertSuccessNotification = (message: string) => {
 
 export {
   assertTable,
+  assertList,
   assertTextAndLinks,
   assertDatasetTitle,
   assertLinksToManageDataset,
