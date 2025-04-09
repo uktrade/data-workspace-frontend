@@ -153,7 +153,7 @@ def gitlab_has_developer_access(user, gitlab_project_id: int) -> bool:
 
 def is_project_owner(user, gitlab_project_id: int) -> bool:
     current_gitlab_project_user = gitlab_project_member_by_id(user, gitlab_project_id)
-    return bool(current_gitlab_project_user["access_level"] == MAINTAINER_ACCESS_LEVEL)
+    return bool(current_gitlab_project_user["access_level"] >= MAINTAINER_ACCESS_LEVEL)
 
 
 def is_dataworkspace_team_member(user, gitlab_project_id) -> bool:

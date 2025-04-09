@@ -22,7 +22,7 @@ from dataworkspace.tests.common import get_http_sso_data
 @contextmanager
 def _visualisation_ui_gitlab_mocks(
     owner_access=True,
-    access_level=40,
+    access_level=50,
     project_members=None,
     user=None,
 ):
@@ -97,7 +97,7 @@ class TestDataVisualisationOwnerUIApprovalPage:
                     "name": "Ledia Luli",
                     "username": "ledia.luli",
                     "state": "active",
-                    "access_level": 40,
+                    "access_level": 50,
                 }
             ]
         ):
@@ -266,7 +266,7 @@ class TestDataVisualisationOwnerUIApprovalPage:
                     "name": "Ledia Luli",
                     "username": "ledia.luli",
                     "state": "active",
-                    "access_level": 40,
+                    "access_level": 45,
                 }
             ],
         ):
