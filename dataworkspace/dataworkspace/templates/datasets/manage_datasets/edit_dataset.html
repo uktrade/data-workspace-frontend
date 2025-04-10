@@ -164,8 +164,6 @@
                     </button>
                 </fieldset>
             </form>
-
-            {% flag UNPUBLISH_DATASET_CATALOGUE_PAGE_FLAG %}
               {% if object.information_asset_owner == request.user or object.information_asset_manager == request.user %}
                 <aside role="complementary" aria-labelledby="subsection-title" data-test="unpublish-catalogue-page">
                   <h2 class="govuk-heading-m" id="subsection-title">Unpublish this catalogue page</h2>
@@ -184,7 +182,6 @@
                   {% include "partials/react-slot-data.html" with mount_id="unpublish-catalogue-page" data=unpublish_data test_id="unpublish-catalogue-page" %}
                 </aside>
               {% endif %}
-          {% endflag %}
         </div>
     </div>
 {% endblock %}

@@ -18,7 +18,6 @@ set -e
     django-admin ensure_application_template_models
 
     django-admin waffle_flag SUGGESTED_SEARCHES_FLAG --everyone --create
-    django-admin waffle_flag UNPUBLISH_DATASET_CATALOGUE_PAGE_FLAG --everyone --create
     
     
     # nginx is configured to log to stdout/stderr, _except_ before
