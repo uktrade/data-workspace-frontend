@@ -21,7 +21,8 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views import View
 from django.views.generic import FormView
-from requests import HTTPError
+from requests import HTTPError, request
+import waffle
 
 from dataworkspace.apps.applications.models import ApplicationInstance, VisualisationTemplate
 from dataworkspace.apps.core.boto3_client import get_s3_client
@@ -213,7 +214,12 @@ class SupportView(FormView):
     def form_valid(self, form):
         cleaned = form.cleaned_data
         support_Type = cleaned["support_type"]
+
         if support_Type == form.SupportTypes.NEW_DATASET:
+            if waffle.flag_is_active(request, settings.REQUESTING_DATA):
+                return HttpResponseRedirect(
+                    reverse("requesting-data-summary-information-step", args={("name")})
+                )
             return HttpResponseRedirect(
                 f'{reverse("add-dataset-request")}?email={cleaned["email"]}'
             )

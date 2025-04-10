@@ -96,6 +96,7 @@ INSTALLED_APPS = [
     "django.contrib.redirects",
     "django.forms",
     "django_better_admin_arrayfield.apps.DjangoBetterAdminArrayfieldConfig",
+    "django_admin_inline_paginator",
     "adminsortable2",
     "waffle",
     "rest_framework",
@@ -121,7 +122,7 @@ INSTALLED_APPS = [
     "dataworkspace.apps.data_collections",
     "django_celery_results",
     "dataworkspace.apps.arangodb",
-    "django_admin_inline_paginator",
+    "formtools",
 ]
 
 MIDDLEWARE = [
@@ -767,6 +768,7 @@ CACHE_USER_TABLE_PERMISSIONS = "CACHE_USER_TABLE_PERMISSIONS"
 USE_PG_CLASS_FOR_TABLE_PERMISSIONS = "USE_PG_CLASS_FOR_TABLE_PERMISSIONS"
 INCREMENTAL_S3_IMPORT_PIPELINE_FLAG = "INCREMENTAL_S3_IMPORT_PIPELINE_FLAG"
 THIRD_APPROVER = "THIRD_APPROVER"
+REQUESTING_DATA = "REQUESTING_DATA"
 UNPUBLISH_DATASET_CATALOGUE_PAGE_FLAG = "UNPUBLISH_DATASET_CATALOGUE_PAGE_FLAG"
 
 DATASET_FINDER_SEARCH_RESULTS_PER_PAGE = 200
