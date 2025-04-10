@@ -35,6 +35,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     ApplicationInstanceDbUsers,
     ApplicationTemplate,
+    VisualisationApproval,
 )
 from dataworkspace.apps.applications.spawner import (
     _fargate_task_describe,
@@ -1965,54 +1966,17 @@ def _self_certify_renewal_email_notification():
     logger.info("_self_certify_renewal_email_notification: Stop")
 
 
-def has_all_three_approval_types(approvals: list[dict]) -> bool:
-    return all(
-        len([a for a in approvals if a["status"] == approval_type]) > 0
-        for approval_type in ["owner", "peer reviewer", "team member"]
-    )
+def is_visualisation_approved_by_all(
+    approvals: list[VisualisationApproval], third_approver_flag: bool = False
+) -> bool:
+    if third_approver_flag is True:
+        return all(
+            len([a for a in approvals if a.approval_type == approval_type]) > 0
+            for approval_type in ["owner", "peer reviewer", "team member"]
+        )
+    return approvals.count() >= 2
 
 
-def visualisation_approvals(dw_approvals, project_members):
-    def format_date(date_str: datetime) -> str:
-        formatted = date_str.strftime("%d %B %Y, %I:%M%p")
-        return formatted[:-2] + formatted[-2:].lower()
-
-    approvers = [
-        {
-            "name": a.approver.get_full_name(),
-            "date_approved": format_date(a.created_date),
-            "is_superuser": a.approver.is_superuser,
-            "status": None,
-        }
-        for a in dw_approvals
-        if a.approved
-    ]
-    # match the Django database list of approvers to their GitLab identity to
-    # get level of access with GitLab project for visualisation
-    for approver in approvers:
-        for member in project_members:
-            if approver["name"] == member["name"]:
-                approver["status"] = (
-                    "team member"
-                    if approver["is_superuser"] and member["access_level"] == 30
-                    else (
-                        "owner"
-                        if member["access_level"] >= 40
-                        else "peer reviewer" if member["access_level"] == 30 else None
-                    )
-                )
-    approver_types = {"owner": [], "peer reviewer": [], "team member": []}
-    # Split the list into all the owners, peer reviewers and team members that have approved.
-    # Sort them by the person who approved first
-    for approver in filter(lambda x: x["status"], approvers):
-        approver_types[approver["status"]].append(approver)
-
-    for approver_type in ["owner", "peer reviewer", "team member"]:
-        approver_types[approver_type].sort(key=lambda x: x["date_approved"])
-
-    project_approvals = [
-        approver_types[approver_type][0]
-        for approver_type in ["owner", "peer reviewer", "team member"]
-        if approver_types[approver_type]
-    ]
-    return project_approvals
+def format_visualisation_approval_date(timestamp: datetime) -> str:
+    formatted = timestamp.strftime("%d %B %Y, %I:%M%p")
+    return formatted[:-2] + formatted[-2:].lower()

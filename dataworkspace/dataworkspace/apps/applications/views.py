@@ -42,10 +42,10 @@ from dataworkspace.apps.applications.forms import (
 from dataworkspace.apps.applications.gitlab import (
     DEVELOPER_ACCESS_LEVEL,
     get_approver_type,
+    get_current_gitlab_user,
     gitlab_api_v4,
     gitlab_api_v4_with_status,
     gitlab_has_developer_access,
-    gitlab_project_members,
 )
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
@@ -59,9 +59,9 @@ from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import (
     application_options,
     fetch_visualisation_log_events,
+    format_visualisation_approval_date,
     get_quicksight_dashboard_name_url,
-    visualisation_approvals,
-    has_all_three_approval_types,
+    is_visualisation_approved_by_all,
     stop_spawner_and_application,
     sync_quicksight_permissions,
 )
@@ -1074,69 +1074,54 @@ def visualisation_approvals_html_view(request, gitlab_project_id):
 
 def visualisation_approvals_html_GET(request, gitlab_project):
     application_template = _application_template(gitlab_project)
-    dw_approvals = VisualisationApproval.objects.filter(
+    approvals = VisualisationApproval.objects.filter(
         visualisation=application_template, approved=True
     ).all()
-
-    if waffle.flag_is_active(request, settings.THIRD_APPROVER):
-        if settings.GITLAB_FIXTURES:
-            project_members = get_fixture("project_members_fixture.json")
-        else:
-            project_members = gitlab_project_members(gitlab_project["id"])
-
-    approval = next(filter(lambda a: a.approver == request.user, dw_approvals), None)
-
-    if settings.GITLAB_FIXTURES:
-        current_gitlab_user = get_fixture("user_fixture.json")[0]
-    else:
-        current_gitlab_user = gitlab_api_v4(
-            "GET",
-            "/users",
-            params=(
-                ("extern_uid", request.user.profile.sso_id),
-                ("provider", "oauth2_generic"),
-            ),
-        )
-        if len(current_gitlab_user) > 1:
-            return HttpResponse(status=500)
-        current_gitlab_user = current_gitlab_user[0]
-
+    current_user_approval = next(filter(lambda a: a.approver == request.user, approvals), None)
     if settings.GITLAB_FIXTURES:
         visualisation_branches = get_fixture("visualisation_branches_fixture.json")
     else:
         visualisation_branches = _visualisation_branches(gitlab_project)
     another_user_with_same_type_already_approved = None
-    current_user_type = None
-    project_approvals = dw_approvals
-    if waffle.flag_is_active(request, settings.THIRD_APPROVER):
-        current_user_type = get_approver_type(
-            gitlab_project["id"], request.user, current_gitlab_user
-        )
-
-        project_approvals = visualisation_approvals(dw_approvals, project_members)
-        is_approved_by_all = has_all_three_approval_types(project_approvals)
-        another_user_with_same_type_already_approved = (
-            len(
-                [
-                    p
-                    for p in project_approvals
-                    if p["status"] == current_user_type
-                    and p["name"] != current_gitlab_user["name"]
-                ]
-            )
-            > 0
-        )
-    is_approved_by_all = (
-        is_approved_by_all if waffle.flag_is_active(request, settings.THIRD_APPROVER) else None
+    current_user_type = (
+        current_user_approval.approval_type if current_user_approval is not None else None
     )
-
+    is_approved_by_all = is_visualisation_approved_by_all(
+        approvals, third_approver_flag=waffle.flag_is_active(request, settings.THIRD_APPROVER)
+    )
+    if waffle.flag_is_active(request, settings.THIRD_APPROVER):
+        # backwards compatibility with old system where approver_type was generated dynamically
+        # now it's saved as field in the VisualisationApproval model
+        # this is retrospectively filling in that field that was added after the model was created
+        for approval in approvals:
+            if approval.approval_type is None:
+                approval_gitlab_user = get_current_gitlab_user(approval.approver.profile.sso_id)
+                approval.approval_type = get_approver_type(
+                    gitlab_project["id"], approval.approver, approval_gitlab_user
+                )
+                approval.approval_date = format_visualisation_approval_date(approval.created_date)
+                approval.save()
+        current_gitlab_user = get_current_gitlab_user(request.user.profile.sso_id)
+        current_user_type = (
+            get_approver_type(gitlab_project["id"], request.user, current_gitlab_user)
+            if current_user_type is None
+            else current_user_type
+        )
+        another_user_with_same_type_already_approved = any(
+            (
+                a.approval_type == current_user_type and a.approver != request.user
+                for a in approvals
+            )
+        )
     form = VisualisationApprovalForm(
         third_approver_flag=waffle.flag_is_active(request, settings.THIRD_APPROVER),
-        instance=approval,
+        instance=current_user_approval,
         initial={
             "visualisation": application_template,
             "approver": request.user,
             "approved": False,
+            "approval_date": format_visualisation_approval_date(datetime.now()),
+            "approval_type": current_user_type,
         },
     )
     return _render_visualisation(
@@ -1147,16 +1132,14 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         visualisation_branches,
         current_menu_item="approvals",
         template_specific_context={
-            "approvals": (
-                project_approvals
-                if waffle.flag_is_active(request, settings.THIRD_APPROVER)
-                else dw_approvals
-            ),
             "another_user_with_same_type_already_approved": another_user_with_same_type_already_approved,
-            "current_user_already_approved": approval.approved if approval else False,
+            "approvals": approvals,
+            "current_user_already_approved": (
+                current_user_approval.approved if current_user_approval is not None else None
+            ),
             "current_user_type": current_user_type,
-            "is_approved_by_all": is_approved_by_all,
             "form": form,
+            "is_approved_by_all": is_approved_by_all,
         },
     )
 
@@ -1515,34 +1498,6 @@ def visualisation_publish_html_view(request, gitlab_project_id):
     return HttpResponse(status=405)
 
 
-def _visualisation_approvals(application_template, request, gitlab_project):
-    dw_approvals = VisualisationApproval.objects.filter(
-        visualisation=application_template, approved=True
-    ).all()
-    if waffle.flag_is_active(request, settings.THIRD_APPROVER):
-        if settings.GITLAB_FIXTURES:
-            project_members = get_fixture("project_members_fixture.json")
-        else:
-            project_members = gitlab_project_members(gitlab_project["id"])
-
-        return visualisation_approvals(dw_approvals, project_members)
-    return dw_approvals
-
-
-def _visualisation_is_approved(project_approvals, request, application_template):
-
-    if waffle.flag_is_active(request, settings.THIRD_APPROVER):
-        is_approved_by_all = has_all_three_approval_types(project_approvals)
-    else:
-        is_approved_by_all = (
-            VisualisationApproval.objects.filter(
-                visualisation=application_template, approved=True
-            ).count()
-            >= 2
-        )
-    return is_approved_by_all
-
-
 def _visualisation_is_published(application_template):
     return application_template.visible
 
@@ -1572,9 +1527,11 @@ def _render_visualisation_publish_html(request, gitlab_project, catalogue_item=N
     if not catalogue_item:
         catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
     application_template = catalogue_item.visualisation_template
-    project_approvals = _visualisation_approvals(application_template, request, gitlab_project)
-    is_approved_by_all = _visualisation_is_approved(
-        project_approvals, request, application_template
+    approvals = VisualisationApproval.objects.filter(
+        visualisation=application_template, approved=True
+    )
+    is_approved_by_all = is_visualisation_approved_by_all(
+        approvals, third_approver_flag=waffle.flag_is_active(request, settings.THIRD_APPROVER)
     )
     visualisation_published = _visualisation_is_published(application_template)
     visualisation_domain = (
@@ -1600,7 +1557,7 @@ def _render_visualisation_publish_html(request, gitlab_project, catalogue_item=N
             "catalogue_published": catalogue_item.published,
             "visualisation_published": visualisation_published,
             "approved": is_approved_by_all,
-            "project_approvals": project_approvals,
+            "approvals": approvals,
             "errors": errors,
         },
     )
@@ -1612,17 +1569,16 @@ def visualisation_publish_html_GET(request, gitlab_project):
 
 @transaction.atomic
 def _set_published_on_catalogue_item(request, gitlab_project, catalogue_item, publish):
-    project_approvals = _visualisation_approvals(
-        catalogue_item.visualisation_template, request, gitlab_project
+    approvals = VisualisationApproval.objects.filter(
+        visualisation=catalogue_item.visualisation_template, approved=True
     )
-
-    is_approved_by_all = _visualisation_is_approved(
-        project_approvals, request, catalogue_item.visualisation_template
+    is_approved_by_all = is_visualisation_approved_by_all(
+        approvals, third_approver_flag=waffle.flag_is_active(request, settings.THIRD_APPROVER)
     )
     visualisation_published = _visualisation_is_published(catalogue_item.visualisation_template)
     catalogue_item_complete = _visualisation_catalogue_item_is_complete(catalogue_item)
-    if publish is False or (
-        is_approved_by_all and visualisation_published and catalogue_item_complete
+    if publish is False or all(
+        (is_approved_by_all, visualisation_published, catalogue_item_complete)
     ):
         catalogue_item.published = publish
         catalogue_item.save()
@@ -1643,7 +1599,9 @@ def _set_published_on_catalogue_item(request, gitlab_project, catalogue_item, pu
     if is_approved_by_all is False:
         error = (
             reverse("visualisations:approvals", args=(gitlab_project["id"],)),
-            "The visualisation must be approved by two developers before it can be published.",
+            f"""The visualisation must be approved by
+            {'two developers' if settings.THIRD_APPROVER_FLAG else
+            'an Owner, Data Workspace Team Member and a Peer Reviewer'}  before it can be published.""",
         )
 
     elif visualisation_published is False:
@@ -1668,12 +1626,13 @@ def _set_published_on_catalogue_item(request, gitlab_project, catalogue_item, pu
 
 @transaction.atomic
 def _set_published_on_visualisation(request, gitlab_project, application_template, publish):
-    project_approvals = _visualisation_approvals(application_template, request, gitlab_project)
-
-    is_approved_by_all = _visualisation_is_approved(
-        project_approvals, request, application_template
+    approvals = VisualisationApproval.objects.filter(
+        visualisation=application_template, approved=True
     )
-    if publish is False or is_approved_by_all:
+    is_approved_by_all = is_visualisation_approved_by_all(
+        approvals, third_approver_flag=waffle.flag_is_active(request, settings.THIRD_APPROVER)
+    )
+    if publish is False or is_approved_by_all is True:
         application_template.visible = publish
         application_template.save()
 
@@ -1695,7 +1654,9 @@ def _set_published_on_visualisation(request, gitlab_project, application_templat
     if is_approved_by_all is False:
         error = (
             reverse("visualisations:approvals", args=(gitlab_project["id"],)),
-            "The visualisation must be approved by two developers before it can be published.",
+            f"""The visualisation must be approved by
+            {'two developers' if settings.THIRD_APPROVER_FLAG else
+            'an Owner, Data Workspace Team Member and a Peer Reviewer'}  before it can be published.""",
         )
 
     else:

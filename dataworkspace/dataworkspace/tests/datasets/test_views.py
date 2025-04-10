@@ -2,7 +2,6 @@ import json
 import random
 import re
 from datetime import date, datetime, timedelta, timezone
-from urllib.parse import quote_plus
 from uuid import uuid4
 
 import faker
@@ -849,102 +848,6 @@ def test_datasets_and_visualisations_doesnt_return_duplicate_results(access_type
         )
 
 
-@pytest.mark.skip(reason="We will be refactoring search")
-@pytest.mark.parametrize(
-    "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
-)
-def test_finding_datasets_doesnt_query_database_excessively(
-    access_type, client, django_assert_num_queries
-):
-    """
-    This test generates a random number of master datasets, datacuts, reference datasets and visualisations, and asserts
-    that the number of queries executed by the search page remains stable. This is potentially a flaky test, given
-    that the inputs are indeterminate, but it would at least highlight at some point that we have an unknown issue.
-    """
-    expected_num_queries = 13
-    source_tags = [factories.SourceTagFactory() for _ in range(10)]
-    topic_tags = [factories.TopicTagFactory() for _ in range(10)]
-
-    masters = [
-        factories.DataSetFactory(
-            type=DataSetType.MASTER,
-            published=True,
-            user_access_type=access_type,
-        )
-        for _ in range(random.randint(10, 50))
-    ]
-    for master in masters:
-        master.tags.set(
-            random.sample(source_tags, random.randint(1, 3))
-            + random.sample(topic_tags, random.randint(1, 3))
-        )
-
-    datacuts = [
-        factories.DataSetFactory(
-            type=DataSetType.DATACUT,
-            published=True,
-            user_access_type=access_type,
-        )
-        for _ in range(random.randint(10, 50))
-    ]
-    for datacut in datacuts:
-        datacut.tags.set(random.sample(source_tags, 1) + random.sample(topic_tags, 1))
-
-    references = [factories.ReferenceDatasetFactory.create(published=True) for _ in range(10)]
-    for reference in references:
-        reference.tags.set(
-            random.sample(source_tags, random.randint(1, 3))
-            + random.sample(topic_tags, random.randint(1, 3))
-        )
-
-    visualisations = [
-        factories.VisualisationCatalogueItemFactory.create(published=True)
-        for _ in range(random.randint(10, 50))
-    ]
-
-    for visualisation in visualisations:
-        factories.DataSetApplicationTemplatePermissionFactory(
-            application_template=visualisation.visualisation_template,
-            dataset=random.choice(masters),
-        )
-
-    # Log into site (triggers the queries related to setting up the user).
-    client.get(reverse("root"))
-
-    with django_assert_num_queries(expected_num_queries, exact=False):
-        response = client.get(reverse("datasets:find_datasets"), follow=True)
-        assert response.status_code == 200
-
-    with django_assert_num_queries(expected_num_queries, exact=False):
-        response = client.get(reverse("datasets:find_datasets"), {"q": "potato"})
-        assert response.status_code == 200
-
-    with django_assert_num_queries(expected_num_queries + 1, exact=False):
-        response = client.get(
-            reverse("datasets:find_datasets"),
-            {"source": [str(tag.id) for tag in random.sample(source_tags, random.randint(1, 5))]},
-        )
-        assert response.status_code == 200
-
-    with django_assert_num_queries(expected_num_queries + 1, exact=False):
-        response = client.get(
-            reverse("datasets:find_datasets"),
-            {"topic": [str(tag.id) for tag in random.sample(topic_tags, random.randint(1, 5))]},
-        )
-        assert response.status_code == 200
-
-    with django_assert_num_queries(expected_num_queries, exact=False):
-        response = client.get(
-            reverse("datasets:find_datasets"),
-            {"data_type": str(DataSetType.MASTER)},
-        )
-        assert response.status_code == 200
-
-    with django_assert_num_queries(expected_num_queries, exact=False):
-        response = client.get(reverse("datasets:find_datasets"), {"access": "yes"})
-        assert response.status_code == 200
-
-
 @pytest.mark.parametrize(
     "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
 )
@@ -1697,34 +1600,6 @@ def test_find_datasets_includes_unpublished_results_based_on_permissions(
     assert {dataset["name"] for dataset in response.context["datasets"]} == result_dataset_names
 
 
-@pytest.mark.parametrize(
-    "source_urls, show_warning",
-    (
-        (["s3://some-bucket/some-object"], False),
-        (["s3://some-bucket/some-object", "s3://some-bucket/some-other-object"], False),
-        (["http://some.data.com/download.csv"], True),
-        (["s3://some-bucket/some-object", "http://some.data.com/download.csv"], True),
-    ),
-)
-@pytest.mark.skip(reason="I believe we can remove this as we won't surface this message anymore")
-@pytest.mark.django_db
-def test_dataset_shows_external_link_warning(source_urls, show_warning):
-    ds = factories.DataSetFactory.create(published=True)
-    user = get_user_model().objects.create(email="test@example.com")
-    factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
-
-    for source_url in source_urls:
-        factories.SourceLinkFactory.create(dataset=ds, url=source_url)
-
-    client = Client(**get_http_sso_data(user))
-    response = client.get(ds.get_absolute_url())
-
-    assert response.status_code == 200
-    assert (
-        "This data set is on an external website." in response.content.decode(response.charset)
-    ) is show_warning
-
-
 class DatasetsCommon:
     def _get_database(self):
         return factories.DatabaseFactory.create(memorable_name="my_database")
@@ -1796,47 +1671,6 @@ class DatasetsCommon:
 
 
 class TestMasterDatasetDetailView(DatasetsCommon):
-    @pytest.mark.skip(
-        reason="We are moving these SQL snippets to the table view so I think this can be deleted"
-    )
-    @pytest.mark.django_db
-    def test_master_dataset_shows_code_snippets_to_tool_user(self, metadata_db, dataset_db):
-        ds = factories.DataSetFactory.create(
-            type=DataSetType.MASTER,
-            published=True,
-            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
-        )
-        user = get_user_model().objects.create(email="test@example.com", is_superuser=False)
-        factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
-        factories.SourceTableFactory.create(
-            dataset=ds,
-            schema="public",
-            table="dataset_test",
-            database=factories.DatabaseFactory.create(memorable_name="my_database"),
-        )
-
-        # User without tools access should not see code snippets
-        client = Client(**get_http_sso_data(user))
-        response = client.get(ds.get_absolute_url())
-        assert response.status_code == 200
-        assert (
-            """SELECT * FROM &quot;public&quot;.&quot;dataset_test&quot; LIMIT 50"""
-            not in response.content.decode(response.charset)
-        )
-
-        # User with tools access should see code snippets
-        user.user_permissions.add(
-            Permission.objects.get(
-                codename="start_all_applications",
-                content_type=ContentType.objects.get_for_model(ApplicationInstance),
-            )
-        )
-        response = client.get(ds.get_absolute_url())
-        assert response.status_code == 200
-        assert (
-            """SELECT * FROM &quot;public&quot;.&quot;dataset_test&quot; LIMIT 50"""
-            in response.content.decode(response.charset)
-        )
 
     @pytest.mark.django_db
     def test_master_dataset_detail_page_shows_related_data_cuts(self, staff_client, metadata_db):
@@ -1966,84 +1800,6 @@ class TestReferenceDatasetDetailView(DatasetsCommon):
 
         assert match
         assert match[0] == rds.licence_url
-
-    @pytest.mark.skip(
-        reason="We are moving these SQL snippets to the table view so I think this can be deleted"
-    )
-    @pytest.mark.django_db
-    @mock.patch("dataworkspace.apps.datasets.models.ReferenceDataset.sync_to_external_database")
-    def test_reference_dataset_shows_code_snippets(self, mock_sync):
-        user = get_user_model().objects.create(email="test@example.com", is_superuser=False)
-        rds = self._get_ref_dataset("ref_my_reference_table")
-
-        client = Client(**get_http_sso_data(user))
-        response = client.get(rds.get_absolute_url())
-
-        assert response.status_code == 200
-        assert (
-            """SELECT * FROM &quot;public&quot;.&quot;ref_my_reference_table&quot; LIMIT 50"""
-            not in response.content.decode(response.charset)
-        )
-        user.is_superuser = True
-        user.save()
-
-        client = Client(**get_http_sso_data(user))
-        response = client.get(rds.get_absolute_url())
-
-        assert response.status_code == 200
-        assert (
-            """SELECT * FROM &quot;public&quot;.&quot;ref_my_reference_table&quot; LIMIT 50"""
-            in response.content.decode(response.charset)
-        )
-
-    @pytest.mark.parametrize(
-        "request_client,published",
-        [("client", True), ("staff_client", True), ("staff_client", False)],
-        indirect=["request_client"],
-    )
-    @pytest.mark.skip(
-        reason="As we won't be showing the data structure preview I think this can be deleted"
-    )
-    @pytest.mark.django_db
-    def test_reference_dataset_shows_column_details(self, request_client, published):
-        group = factories.DataGroupingFactory.create()
-        external_db = factories.DatabaseFactory.create(memorable_name="my_database")
-        rds = factories.ReferenceDatasetFactory.create(
-            published=published,
-            group=group,
-            external_database=external_db,
-        )
-        field1 = factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=rds,
-            name="code",
-            column_name="code",
-            data_type=2,
-            is_identifier=True,
-        )
-        field2 = factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=rds, name="name", column_name="name", data_type=1
-        )
-        rds.save_record(
-            None,
-            {
-                "reference_dataset": rds,
-                field1.column_name: 1,
-                field2.column_name: "Test record",
-            },
-        )
-        rds.save_record(
-            None,
-            {
-                "reference_dataset": rds,
-                field1.column_name: 2,
-                field2.column_name: "Ánd again",
-            },
-        )
-        response = request_client.get(rds.get_absolute_url())
-
-        assert response.status_code == 200
-        assert "<strong>code</strong> (integer)" in response.content.decode(response.charset)
-        assert "<strong>name</strong> (text)" in response.content.decode(response.charset)
 
     @pytest.mark.parametrize(
         "request_client,published",
@@ -2199,95 +1955,6 @@ class TestRequestAccess(DatasetsCommon):
         url = reverse("datasets:dataset_detail", args=(ds.id,))
         response = staff_client.get(url)
         assert response.status_code == 200
-
-
-@pytest.mark.skip(reason="We are moving the snippets to the table view so I this can be deleted")
-@pytest.mark.django_db
-def test_datacut_dataset_shows_code_snippets_to_tool_user(metadata_db):
-    ds = factories.DataSetFactory.create(type=DataSetType.DATACUT, published=True)
-    user = get_user_model().objects.create(email="test@example.com", is_superuser=False)
-    factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
-    factories.CustomDatasetQueryFactory.create(
-        dataset=ds,
-        query="SELECT * FROM foo",
-        database=factories.DatabaseFactory(memorable_name="my_database"),
-    )
-
-    client = Client(**get_http_sso_data(user))
-    response = client.get(ds.get_absolute_url())
-
-    assert response.status_code == 200
-    assert """SELECT * FROM foo""" not in response.content.decode(response.charset)
-
-    user.is_superuser = True
-    user.save()
-
-    client = Client(**get_http_sso_data(user))
-    response = client.get(ds.get_absolute_url())
-
-    assert response.status_code == 200
-    assert """SELECT * FROM foo""" in response.content.decode(response.charset)
-
-
-@pytest.mark.parametrize(
-    "dataset_type, source_factory,source_type",
-    (
-        (DataSetType.MASTER, factories.SourceTableFactory, "table"),
-        (DataSetType.DATACUT, factories.CustomDatasetQueryFactory, "datacut"),
-    ),
-)
-@pytest.mark.skip(reason="As we have removed the 'View data structure' link I think this can go")
-@mock.patch("dataworkspace.apps.datasets.views.datasets_db.get_columns")
-@pytest.mark.django_db
-def test_dataset_shows_first_12_columns_of_source_table_with_link_to_the_rest(
-    get_columns_mock, dataset_type, source_factory, source_type, metadata_db
-):
-    ds = factories.DataSetFactory.create(type=dataset_type, published=True)
-    user = get_user_model().objects.create(email="test@example.com", is_superuser=False)
-    factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
-    st = source_factory.create(
-        dataset=ds,
-        database=factories.DatabaseFactory(memorable_name="my_database"),
-    )
-    get_columns_mock.return_value = [(f"column_{i}", "integer") for i in range(20)]
-
-    client = Client(**get_http_sso_data(user))
-    response = client.get(ds.get_absolute_url())
-    response_body = response.content.decode(response.charset)
-    doc = html.fromstring(response_body)
-
-    assert response.status_code == 200
-    for i in range(12):
-        assert f"<strong>column_{i}</strong> (integer)" in response_body
-
-    assert len(doc.xpath(f"//a[@href = '/datasets/{ds.id}/{source_type}/{st.id}/columns']")) == 1
-
-
-@pytest.mark.skip(
-    reason="We are moving these SQL snippets to the table view so I think this can be deleted"
-)
-@pytest.mark.django_db(transaction=True)
-def test_launch_master_dataset_in_data_explorer(metadata_db):
-    ds = factories.DataSetFactory.create(type=DataSetType.MASTER, published=True)
-    user = get_user_model().objects.create(email="test@example.com", is_superuser=True)
-    factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
-    factories.SourceTableFactory.create(
-        dataset=ds,
-        schema="public",
-        table="MY_LOVELY_TABLE",
-        database=factories.DatabaseFactory(memorable_name="my_database"),
-    )
-    expected_sql = quote_plus("""SELECT * FROM "public"."MY_LOVELY_TABLE" LIMIT 50""")
-
-    client = Client(**get_http_sso_data(user))
-    response = client.get(ds.get_absolute_url())
-    doc = html.fromstring(response.content.decode(response.charset))
-
-    assert response.status_code == 200
-    assert (
-        doc.xpath('//a[@id="launch-data-explorer"]/@href')[0]
-        == f"/data-explorer/?sql={expected_sql}"
-    )
 
 
 def get_govuk_summary_list_value(doc, key_text, selector):

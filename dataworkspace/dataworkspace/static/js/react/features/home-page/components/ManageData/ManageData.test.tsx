@@ -30,7 +30,6 @@ describe('ManagedData', () => {
       expect(
         getByRole('heading', {
           level: 2,
-          // eslint-disable-next-line quotes
           name: "You're the owner or manager of 5 datasets"
         })
       );
@@ -42,7 +41,6 @@ describe('ManagedData', () => {
       expect(
         getByRole('heading', {
           level: 2,
-          // eslint-disable-next-line quotes
           name: "You're the owner or manager of 1 dataset"
         })
       );
@@ -54,7 +52,6 @@ describe('ManagedData', () => {
       expect(
         queryByRole('heading', {
           level: 2,
-          // eslint-disable-next-line quotes
           name: "You're the owner or manager of 0 dataset"
         })
       ).not.toBeInTheDocument();
@@ -73,7 +70,6 @@ describe('ManagedData', () => {
       );
       expect(
         getByRole('link', {
-          // eslint-disable-next-line quotes
           name: "Learn how to maintain and manage data you're responsible for on Data Workspace"
         })
       ).toHaveAttribute(
@@ -87,7 +83,6 @@ describe('ManagedData', () => {
       );
       expect(
         queryByRole('link', {
-          // eslint-disable-next-line quotes
           name: "Learn how to maintain and manage data you're responsible for on Data Workspace"
         })
       ).not.toBeInTheDocument();

@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from datetime import datetime
 from unittest import mock
 
 import pytest
@@ -12,6 +13,7 @@ from freezegun import freeze_time
 from waffle.testutils import override_flag
 
 from dataworkspace.apps.applications.models import ApplicationInstance, VisualisationApproval
+from dataworkspace.apps.applications.utils import format_visualisation_approval_date
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
@@ -21,17 +23,14 @@ from dataworkspace.tests.common import get_http_sso_data
 def _visualisation_ui_gitlab_mocks(
     peer_reviewer_access=True,
     access_level=30,
-    project_members=None,
     user=None,
 ):
     with mock.patch(
         "dataworkspace.apps.applications.views._visualisation_gitlab_project"
     ) as projects_mock, mock.patch(
-        "dataworkspace.apps.applications.views.gitlab_project_members"
-    ) as project_members_mock, mock.patch(
         "dataworkspace.apps.applications.views._visualisation_branches"
     ) as branches_mock, mock.patch(
-        "dataworkspace.apps.applications.views.gitlab_api_v4"
+        "dataworkspace.apps.applications.gitlab.gitlab_api_v4"
     ) as user_mock, mock.patch(
         "dataworkspace.apps.applications.views.gitlab_has_developer_access"
     ) as access_mock, mock.patch(
@@ -50,23 +49,10 @@ def _visualisation_ui_gitlab_mocks(
                 "commit": {"committed_date": "2020-04-14T21:25:22.000+00:00"},
             }
         ]
-        project_members_mock.return_value = (
-            project_members
-            if project_members
-            else [
-                {
-                    "id": 2,
-                    "name": "Ledia Luli",
-                    "username": "ledia.luli",
-                    "state": "active",
-                    "access_level": access_level,
-                }
-            ]
-        )
         user_mock.return_value = user if user else [{"id": 3, "name": "Ledia Luli"}]
         approver_type.return_value = "peer reviewer"
 
-        yield projects_mock, branches_mock, access_mock, user_mock, project_members_mock, approver_type
+        yield projects_mock, branches_mock, access_mock, user_mock, approver_type
 
 
 class TestDataVisualisationPeerReviewerUIApprovalPage:
@@ -140,21 +126,16 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
             visualisation_template=v,
         )
         factories.VisualisationApprovalFactory.create(
-            approved=True, visualisation=v, approver=peer_reviewer
+            approved=True,
+            visualisation=v,
+            approver=peer_reviewer,
+            approval_date=format_visualisation_approval_date(datetime.now()),
+            approval_type="peer reviewer",
         )
 
         client = Client(**get_http_sso_data(user))
         with _visualisation_ui_gitlab_mocks(
             access_level=30,
-            project_members=[
-                {
-                    "id": 1,
-                    "name": "Bob Burger",
-                    "username": "bob.burger",
-                    "state": "active",
-                    "access_level": 30,
-                }
-            ],
         ):
             response = client.get(
                 reverse("visualisations:approvals", args=(1,)),
@@ -200,21 +181,16 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
             visualisation_template=v,
         )
         factories.VisualisationApprovalFactory.create(
-            approved=True, visualisation=v, approver=peer_reviewer
+            approved=True,
+            visualisation=v,
+            approver=peer_reviewer,
+            approval_date=format_visualisation_approval_date(datetime.now()),
+            approval_type="peer reviewer",
         )
 
         client = Client(**get_http_sso_data(peer_reviewer))
         with _visualisation_ui_gitlab_mocks(
             access_level=30,
-            project_members=[
-                {
-                    "id": 1,
-                    "name": "Bob Burger",
-                    "username": "bob.burger",
-                    "state": "active",
-                    "access_level": 30,
-                }
-            ],
             user=[
                 {
                     "id": 1,
@@ -259,7 +235,11 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
         user.user_permissions.add(develop_visualisations_permission)
 
         owner = factories.UserFactory.create(
-            first_name="Ledia", last_name="Luli", is_staff=False, is_superuser=False
+            first_name="Ledia",
+            last_name="Luli",
+            email="ledia.luli@digital.trade.gov.uk",
+            is_staff=False,
+            is_superuser=False,
         )
 
         v = factories.VisualisationTemplateFactory.create(gitlab_project_id=1)
@@ -269,7 +249,11 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
             visualisation_template=v,
         )
         factories.VisualisationApprovalFactory.create(
-            approved=True, visualisation=v, approver=owner
+            approved=True,
+            visualisation=v,
+            approver=owner,
+            approval_date=format_visualisation_approval_date(datetime.now()),
+            approval_type="owner",
         )
 
         client = Client(**get_http_sso_data(user))
@@ -318,7 +302,11 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
             visualisation_template=v,
         )
         factories.VisualisationApprovalFactory.create(
-            approved=True, visualisation=v, approver=team_member_reviewer
+            approved=True,
+            visualisation=v,
+            approver=team_member_reviewer,
+            approval_date=format_visualisation_approval_date(datetime.now()),
+            approval_type="team member",
         )
 
         client = Client(**get_http_sso_data(user))
@@ -377,41 +365,28 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
             visualisation_template=v,
         )
         factories.VisualisationApprovalFactory.create(
-            approved=True, visualisation=v, approver=team_member_reviewer
+            approved=True,
+            visualisation=v,
+            approver=team_member_reviewer,
+            approval_date=format_visualisation_approval_date(datetime.now()),
+            approval_type="team member",
         )
         factories.VisualisationApprovalFactory.create(
-            approved=True, visualisation=v, approver=peer_reviewer
+            approved=True,
+            visualisation=v,
+            approver=peer_reviewer,
+            approval_date=format_visualisation_approval_date(datetime.now()),
+            approval_type="peer reviewer",
         )
         factories.VisualisationApprovalFactory.create(
-            approved=True, visualisation=v, approver=owner
+            approved=True,
+            visualisation=v,
+            approver=owner,
+            approval_date=format_visualisation_approval_date(datetime.now()),
+            approval_type="owner",
         )
-
-        project_members = [
-            {
-                "id": 1,
-                "name": "Bob Burger",
-                "username": "bob.burger",
-                "state": "active",
-                "access_level": 30,
-            },
-            {
-                "id": 2,
-                "name": "Tina Belcher",
-                "username": "tina.belcher",
-                "state": "active",
-                "access_level": 40,
-            },
-            {
-                "id": 3,
-                "name": "Gene Belcher",
-                "username": "gene.belcher",
-                "state": "active",
-                "access_level": 30,
-            },
-        ]
-
         client = Client(**get_http_sso_data(second_peer_reviewer))
-        with _visualisation_ui_gitlab_mocks(project_members=project_members):
+        with _visualisation_ui_gitlab_mocks():
             response = client.get(
                 reverse("visualisations:approvals", args=(1,)),
                 follow=True,
@@ -430,7 +405,7 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
             approval_list_items[0]
             .get_text()
             .startswith(
-                "Tina Belcher (owner) approved this visualisation on 01 January 2025, 01:01am"
+                "A member of the Data Workspace team approved this visualisation on 01 January 2025, 01:01am"
             )
         )
         assert (
@@ -444,7 +419,7 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
             approval_list_items[2]
             .get_text()
             .startswith(
-                "A member of the Data Workspace team approved this visualisation on 01 January 2025, 01:01am"
+                "Tina Belcher (owner) approved this visualisation on 01 January 2025, 01:01am"
             )
         )
         assert "This visualisation has been peer-reviewed" in second_peer_reviewer_header
@@ -489,6 +464,7 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
                     "approved": "on",
                     "approver": user.id,
                     "visualisation": str(visualisation.visualisation_template.id),
+                    "approval_type": "peer reviewer",
                 },
                 follow=True,
             )
@@ -516,6 +492,7 @@ class TestDataVisualisationPeerReviewerUIApprovalPage:
             approved=True,
             approver=user,
             visualisation=vis_cat_item.visualisation_template,
+            approval_type="peer reviewer",
         )
 
         # Login to admin site

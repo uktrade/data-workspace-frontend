@@ -7,7 +7,9 @@ import styled from 'styled-components';
 type ConfirmDialogProps = {
   actionUrl: string;
   bodyText?: string;
+  bodyElement?: React.ReactNode;
   buttonTextAccept: string;
+  buttonColourAccept?: string;
   buttonTextCancel: string;
   buttonValueAccept?: string;
   csrf_token?: string;
@@ -59,17 +61,22 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = (props) => {
     }
   }, [props.open]);
   return (
-    <Dialog ref={refModal} warning={props.warning}>
+    <Dialog
+      data-test="confirmation-dialog"
+      ref={refModal}
+      warning={props.warning}
+    >
       {props.warning === false ? (
         <H2 size="LARGE">{props.title}</H2>
       ) : (
         <StyledWarning>{props.title}</StyledWarning>
       )}
-      {props.bodyText && props.bodyText.length > 0 ? (
+      {props.bodyText && props.bodyText.length > 0 && (
         <StyledParagraph>{props.bodyText}</StyledParagraph>
-      ) : (
-        <></>
       )}
+
+      {props.bodyElement}
+
       <ContainerButtonGroup>
         <StyledForm
           action={props.actionUrl}
@@ -92,6 +99,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = (props) => {
             onSubmit={closeModal}
             type={'submit'}
             value={props.buttonValueAccept ?? ''}
+            buttonColour={props.buttonColourAccept}
           >
             {props.buttonTextAccept}
           </Button>
