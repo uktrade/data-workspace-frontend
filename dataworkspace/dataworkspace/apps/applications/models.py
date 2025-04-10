@@ -177,9 +177,26 @@ class VisualisationTemplate(ApplicationTemplate):
 
 
 class VisualisationApproval(TimeStampedModel):
+    approval_type_choices = [
+        ("owner", "owner"),
+        ("peer reviewer", "peer reviewer"),
+        ("team member", "team member"),
+    ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     approved = models.BooleanField(default=True)
     approver = models.ForeignKey(get_user_model(), on_delete=models.PROTECT)
+    # field to hold formatted date from TimeStampedModel.created_date
+    approval_date = models.CharField(
+        blank=True,
+        default=None,
+        null=True,
+    )
+    approval_type = models.CharField(
+        blank=True,
+        choices=approval_type_choices,
+        default=None,
+        null=True,
+    )
     visualisation = models.ForeignKey(VisualisationTemplate, on_delete=models.CASCADE)
 
     def __init__(self, *args, **kwargs):
@@ -187,13 +204,21 @@ class VisualisationApproval(TimeStampedModel):
         self._initial_approved = self.approved
 
     @transaction.atomic
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+    def save(
+        self,
+        force_insert=False,
+        force_update=False,
+        using=None,
+        update_fields=None,
+    ):
         if self._initial_approved is False and self.approved is True:
             raise ValueError(
                 "A new record must be created for a new approval - you cannot flip a rescinded approval."
             )
-        elif self._initial_approved is self.approved and self.modified_date is not None:
-            raise ValueError("The only change that can be made to an approval is to unapprove it.")
+        if self.approval_type not in dict(self.approval_type_choices):
+            raise ValueError(
+                f"Value for approver type must be in {dict(self.approval_type_choices).keys()}"
+            )
         super().save(force_insert, force_update, using, update_fields)
 
         if self.approved:

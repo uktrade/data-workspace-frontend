@@ -173,6 +173,11 @@ urlpatterns = [
         name="edit_dataset",
     ),
     path(
+        "<uuid:pk>/edit-dataset/unpublish",
+        login_required(views.DatasetEditUnpublishView.as_view()),
+        name="unpublish_dataset",
+    ),
+    path(
         "<uuid:pk>/edit-visualisation-catalogue-item",
         login_required(views.VisualisationCatalogueItemEditView.as_view()),
         name="edit_visualisation_catalogue_item",

@@ -5,6 +5,7 @@ import requests
 from django.conf import settings
 from mohawk import Sender
 
+
 API_URL_DATA_WORKSPACE_AWS_INTERNAL = f"{settings.DATAFLOW_API_CONFIG['DATAFLOW_BASE_URL_DATA_WORKSPACE_AWS_INTERNAL']}/api/experimental/derived-dags"
 HAWK_CREDS = {
     "id": settings.DATAFLOW_API_CONFIG["DATAFLOW_HAWK_ID"],
@@ -31,7 +32,9 @@ def save_pipeline_to_dataflow(pipeline, method):
     schema_name, table_name = split_schema_table(pipeline.table_name)
     body = json.dumps(
         {
-            "schedule": pipeline.schedule,
+            "schedule": (
+                pipeline.custom_schedule if pipeline.schedule == "@custom" else pipeline.schedule
+            ),
             "schema_name": schema_name,
             "table_name": table_name,
             "type": pipeline.type,

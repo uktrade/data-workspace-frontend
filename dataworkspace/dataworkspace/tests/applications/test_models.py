@@ -13,7 +13,9 @@ class TestVisualisationApproval:
     def test_eventlog_entry_on_initial_approve(self):
         v = VisualisationTemplateFactory.create()
 
-        a = VisualisationApprovalFactory.create(approved=True, visualisation=v)
+        a = VisualisationApprovalFactory.create(
+            approved=True, visualisation=v, approval_type="owner"
+        )
 
         events = EventLog.objects.filter(
             event_type=EventLog.TYPE_VISUALISATION_APPROVED,
@@ -25,7 +27,9 @@ class TestVisualisationApproval:
     @pytest.mark.django_db
     def test_eventlog_entry_on_unapprove(self):
         v = VisualisationTemplateFactory.create()
-        a = VisualisationApprovalFactory.create(approved=True, visualisation=v)
+        a = VisualisationApprovalFactory.create(
+            approved=True, visualisation=v, approval_type="owner"
+        )
 
         a.approved = False
         a.save()
@@ -40,7 +44,9 @@ class TestVisualisationApproval:
     @pytest.mark.django_db
     def test_unapproved_record_cannot_be_reapproved(self):
         v = VisualisationTemplateFactory.create()
-        a = VisualisationApprovalFactory.create(approved=True, visualisation=v)
+        a = VisualisationApprovalFactory.create(
+            approved=True, visualisation=v, approval_type="owner"
+        )
         a.approved = False
         a.save()
 

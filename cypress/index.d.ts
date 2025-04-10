@@ -5,21 +5,29 @@ declare namespace Cypress {
      * @example cy.dataCy('greeting')
      */
     setUsersEditorAccess(
-      dataSetId: import("./fixtures/datasets").DataCatalogueIDType,
+      dataSetId: import('./fixtures/datasets').DataCatalogueIDType,
       hasEditorAccess: boolean
     ): Chainable<Element>;
 
     resetUserPermissions(
-      dataSetId: import("./fixtures/datasets").DataCatalogueIDType
+      dataSetId: import('./fixtures/datasets').DataCatalogueIDType
     ): Chainable<Element>;
 
     resetAllPermissions(
-      dataSetId: import("./fixtures/datasets").DataCatalogueIDType
+      dataSetId: import('./fixtures/datasets').DataCatalogueIDType
     ): Chainable<Element>;
     updateNotificationBanner(
       notificationId: number,
       lastChanceDays: number,
       endDate: string
     ): Chainable<Element>;
+
+    /**
+     * Gets the open confirmation dialog element.
+     * This dialog should be visible and have the 'open' attribute.
+     * @returns {Chainable<JQuery<HTMLElement>>}
+     * A chainable Cypress object representing the open confirmation dialog element.
+     */
+    getOpenDialog(): Chainable<JQuery<HTMLElement>>;
   }
 }

@@ -1,4 +1,4 @@
-""" Addition-only temporary Redis session without race conditions
+"""Addition-only temporary Redis session without race conditions
 
 The Redis storage that comes with aiohttp-session has a race condition when
 there are multiple requests, which can happen even when favicon.ico is

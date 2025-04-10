@@ -24,7 +24,7 @@ const assertErrorMessages = (messages: string[]) => {
       )
       .should('be.visible');
     cy.findByRole('group', {
-      name: 'Enter the date that\'s on your certificate'
+      name: "Enter the date that's on your certificate"
     }).within(() => cy.findByText(message).should('be.visible'));
   });
 };
@@ -46,13 +46,13 @@ describe('Tools access', () => {
         );
       });
     });
-    it("should NOT be able to access STATA", () => {
-      cy.visit("/tools");
-      cy.findByRole("alert").should("not.exist");
-      cy.findByRole("link", { name: "Request access to STATA" }).should(
-        "have.attr",
-        "href",
-        "/request-access/self-certify"
+    it('should NOT be able to access STATA', () => {
+      cy.visit('/tools');
+      cy.findByRole('alert').should('not.exist');
+      cy.findByRole('link', { name: 'Request access to STATA' }).should(
+        'have.attr',
+        'href',
+        '/request-access/self-certify'
       );
     });
     it('should be directed to the self certify form', () => {
@@ -87,10 +87,10 @@ describe('Tools access', () => {
         level: 2
       });
       cy.findByText(
-        'You need to give us the date that\'s on your Security and Data Protection certificate by entering it into the boxes below.'
+        "You need to give us the date that's on your Security and Data Protection certificate by entering it into the boxes below."
       ).should('be.visible');
       cy.findByRole('group', {
-        name: 'Enter the date that\'s on your certificate'
+        name: "Enter the date that's on your certificate"
       });
       cy.findByText('For example, 27 3 2007');
       cy.findByRole('textbox', {
@@ -107,7 +107,7 @@ describe('Tools access', () => {
       });
       cy.findByRole('heading', { name: 'Declaration', level: 2 });
       cy.findByRole('checkbox', {
-        name: 'I confirm that I\'ve completed the Security and Data Protection training and the date I\'ve entered matches my certificate.'
+        name: "I confirm that I've completed the Security and Data Protection training and the date I've entered matches my certificate."
       });
       cy.findByRole('button', { name: 'Submit' });
       cy.findByRole('link', { name: 'Cancel' });
@@ -123,7 +123,7 @@ describe('Tools access', () => {
       acceptDeclaration();
       cy.findByRole('button', { name: 'Submit' }).click();
       assertErrorMessages([
-        'Enter the date that\'s on your Security and Data Protection certificate'
+        "Enter the date that's on your Security and Data Protection certificate"
       ]);
     });
 
@@ -174,7 +174,7 @@ describe('Tools access', () => {
     it('should error when date is empty and the declaration has NOT been checked', () => {
       cy.findByRole('button', { name: 'Submit' }).click();
       assertErrorMessages([
-        'Enter the date that\'s on your Security and Data Protection certificate'
+        "Enter the date that's on your Security and Data Protection certificate"
       ]);
       cy.findByRole('link', {
         name: 'Check the box to agree with the declaration statement'
@@ -250,7 +250,7 @@ describe('Tools access', () => {
       cy.findByRole('button', { name: 'Submit' }).click();
       cy.findByRole('alert').within(() => {
         cy.findByRole('heading', {
-          name: 'You\'ve been granted tools access',
+          name: "You've been granted tools access",
           level: 3
         }).should('be.visible');
         cy.findByText(/Find out how to/).should('be.visible');
@@ -279,12 +279,12 @@ describe('Tools access', () => {
         '/tools/explorer/redirect'
       );
     });
-    it("should be able to request access to STATA", () => {
-      cy.visit("/tools/");
-      cy.findByRole("link", { name: "Request access to STATA" }).should(
-        "have.attr",
-        "href",
-        "/request-access/stata-access"
+    it('should be able to request access to STATA', () => {
+      cy.visit('/tools/');
+      cy.findByRole('link', { name: 'Request access to STATA' }).should(
+        'have.attr',
+        'href',
+        '/request-access/stata-access'
       );
     });
   });

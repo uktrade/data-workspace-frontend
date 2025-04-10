@@ -149,7 +149,7 @@ describe('Data catalogue inline feedback', () => {
       });
     });
   });
-  
+
   context('when a user resets the form', () => {
     it('should hide the addtional form', () => {
       cy.findByTestId('additional-feedback').should('not.exist');

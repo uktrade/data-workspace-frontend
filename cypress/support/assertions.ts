@@ -1,4 +1,4 @@
-import type { DataCatalogueIDType } from "../fixtures/datasets";
+import type { DataCatalogueIDType } from '../fixtures/datasets';
 
 type assertTableType = {
   headers: string[];
@@ -16,13 +16,13 @@ type assertTextandLinksType = {
 }[];
 
 const assertDatasetTitle = (subtitle: string, title: string) => {
-  cy.findAllByText(subtitle).should("exist");
-  cy.findByRole("heading", { level: 1, name: title });
+  cy.findAllByText(subtitle).should('exist');
+  cy.findByRole('heading', { level: 1, name: title });
 };
 
 const assertLinksToManageDataset = (titleAndLinks: Record<string, string>) => {
   for (const [title, href] of Object.entries(titleAndLinks)) {
-    cy.findByRole("link", { name: title });
+    cy.findByRole('link', { name: title });
   }
 };
 
@@ -33,68 +33,83 @@ const assertTextAndLinks = (
   cy.findByTestId(selector).within(() => {
     content.forEach((item) => {
       if (item.link) {
-        cy.findAllByRole("link", { name: item.text }).should(
-          "have.attr",
-          "href",
+        cy.findAllByRole('link', { name: item.text }).should(
+          'have.attr',
+          'href',
           item.link
         );
       } else {
-        cy.findByText(item.text).should("be.visible");
+        cy.findByText(item.text).should('be.visible');
       }
     });
   });
 };
 
 const assertTable = (table: assertTableType) => {
-  cy.get("table").within(() => {
+  cy.get('table').within(() => {
     const { headers, rows } = table;
 
     headers.forEach((header, index) => {
-      cy.get("th").eq(index).contains(header);
+      cy.get('th').eq(index).contains(header);
     });
 
     rows.forEach((row) => {
       row.forEach((cell, index) => {
-        cy.get("td").eq(index).contains(cell.text);
+        cy.get('td').eq(index).contains(cell.text);
         if (cell.link) {
-          cy.get("td")
+          cy.get('td')
             .eq(index)
-            .find("a")
-            .should("have.attr", "href", cell.link);
+            .find('a')
+            .should('have.attr', 'href', cell.link);
         }
       });
     });
   });
 };
 
+/**
+ * Asserts that a list with a given `data-test` attribute contains the expected items.
+ *
+ * @param {string} dataTest - The `data-test` attribute of the list element.
+ * @param {string[]} items - An array of expected list items.
+ */
+const assertList = (dataTest: string, items: string[]): void => {
+  cy.get(`[data-test="${dataTest}"]`).within(() => {
+    items.forEach((item) => {
+      cy.findByText(item).should('exist');
+    });
+  });
+};
+
 const assertDataAccessNotification = (id: DataCatalogueIDType) => {
-  cy.findByTestId("request-access-to-data").within(() => {
+  cy.findByTestId('request-access-to-data').within(() => {
     cy.findByText(
-      "Access to this data is restricted. To find out why check the usage restrictions. You can view the table structure but not the data itself."
+      'Access to this data is restricted. To find out why check the usage restrictions. You can view the table structure but not the data itself.'
     );
   });
-  cy.findByRole("link", { name: "Request access to data" }).should(
-    "have.attr",
-    "href",
+  cy.findByRole('link', { name: 'Request access to data' }).should(
+    'have.attr',
+    'href',
     `/request-access/${id}`
   );
 };
 
 const assertSuccessNotification = (message: string) => {
-  cy.findByRole("heading", {
-    name: "Success",
-    level: 2,
-  }).should("be.visible");
-  cy.findByRole("alert").within(() => {
-    cy.findByText(message).should("be.visible");
+  cy.findByRole('heading', {
+    name: 'Success',
+    level: 2
+  }).should('be.visible');
+  cy.findByRole('alert').within(() => {
+    cy.findByText(message).should('be.visible');
   });
 };
 
 export {
   assertTable,
+  assertList,
   assertTextAndLinks,
   assertDatasetTitle,
   assertLinksToManageDataset,
   assertDataAccessNotification,
-  assertSuccessNotification,
+  assertSuccessNotification
 };
