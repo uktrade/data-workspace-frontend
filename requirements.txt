@@ -95,7 +95,6 @@ django==4.2.20
     #   django-db-connection-pool
     #   django-dynamic-models-readonly
     #   django-extensions
-    #   django-formtools
     #   django-js-asset
     #   django-redis
     #   django-staff-sso-client
@@ -125,8 +124,6 @@ django-dynamic-models-readonly==0.1.1
 django-environ==0.4.5
     # via -r requirements.in
 django-extensions==3.2.3
-    # via -r requirements.in
-django-formtools==2.5.1
     # via -r requirements.in
 django-js-asset==2.2.0
     # via django-ckeditor
