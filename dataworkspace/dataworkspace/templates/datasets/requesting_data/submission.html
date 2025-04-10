@@ -1,0 +1,30 @@
+{% extends '_main.html' %}
+
+{% load waffle_tags %}
+
+{% block breadcrumbs %}
+<a href="{% url 'support' %}" class="govuk-back-link">Back</a>
+{% endblock %}
+
+{% load i18n %}
+
+{% block content %}
+
+<div class="govuk-panel govuk-panel--confirmation govuk-!-margin-bottom-6">
+  <h1 class="govuk-panel__title">We have received your request</h1>
+  <div class="govuk-panel__body">
+    Your reference number<br><strong>XXXXXXX</strong>
+  </div>
+</div>
+<p class="govuk-body">We have sent you a confirmation email.</p>
+<h2 class="govuk-heading-m">What happens next?</h2>
+<p class="govuk-body">This is going to be reviewed by our team within the next 5 working days</p>
+<p class="govuk-body">
+  You will be emailed once we have resolved the issue, or if we have any further questions.
+</p>
+
+{% endblock %}
+
+
+
+
