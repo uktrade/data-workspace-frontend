@@ -560,6 +560,101 @@ class DataSet(DeletableTimestampedUserModel):
         )
 
 
+class RequestingDataset(DeletableTimestampedUserModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.TextField(null=True, blank=True, max_length=128)
+    name = models.TextField(null=True, blank=True, max_length=128)
+    short_description = models.TextField(null=True, blank=True, max_length=255)
+    description = RichTextField(null=False, blank=False)
+    type = models.IntegerField(
+        default=DataSetType.MASTER,
+    )
+    slug = models.SlugField(max_length=50, db_index=True, null=True, blank=True)
+    grouping = models.ForeignKey(DataGrouping, null=True, on_delete=models.CASCADE)
+    notes = RichTextField(null=True, blank=True)
+    acronyms = models.CharField(blank=True, default="", max_length=255)
+    enquiries_contact = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
+    )
+    licence = models.CharField(
+        null=True, blank=True, max_length=256, help_text="Licence description"
+    )
+    licence_url = models.CharField(
+        null=True, blank=True, max_length=1024, help_text="Link to license (optional)"
+    )
+    retention_policy = models.TextField(null=True, blank=True)
+    personal_data = models.TextField(null=True, blank=True, max_length=128)
+    restrictions_on_usage = RichLinkField(null=True, blank=True)
+    user_access_type = models.CharField(
+        max_length=64,
+        choices=UserAccessType.choices,
+        default=UserAccessType.REQUIRES_AUTHORIZATION,
+    )
+    published = models.BooleanField(default=False)
+    published_at = models.DateField(null=True, blank=True)
+    dictionary_published = models.BooleanField(default=True)
+    eligibility_criteria = ArrayField(models.CharField(max_length=256), null=True)
+    number_of_downloads = models.PositiveIntegerField(default=0)
+    tags = models.ManyToManyField(Tag, related_name="+", blank=True)
+    information_asset_owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="requesting_data_iao",
+        null=True,
+        blank=True,
+    )
+    information_asset_manager = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="requesting_data_iam",
+        null=True,
+        blank=True,
+    )
+    data_catalogue_editors = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name="requesting_data_ce",
+        blank=True,
+    )
+    reference_code = models.ForeignKey(
+        DatasetReferenceCode, null=True, blank=True, on_delete=models.SET_NULL
+    )
+    events = GenericRelation(EventLog)
+    authorized_email_domains = ArrayField(
+        models.CharField(max_length=256),
+        blank=True,
+        default=list,
+        help_text="Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk",
+    )
+    request_approvers = ArrayField(models.CharField(max_length=256), null=True)
+    search_vector_english = SearchVectorField(null=True, blank=True)
+    search_vector_english_name = SearchVectorField(null=True, blank=True)
+    search_vector_english_short_description = SearchVectorField(null=True, blank=True)
+    search_vector_english_tags = SearchVectorField(null=True, blank=True)
+    search_vector_english_description = SearchVectorField(null=True, blank=True)
+
+    subscriptions = GenericRelation(DataSetSubscription)
+
+    average_unique_users_daily = models.FloatField(default=0)
+    government_security_classification = models.IntegerField(
+        choices=SecurityClassificationAndHandlingInstructionType.choices,
+        null=True,
+        blank=True,
+    )
+    sensitivity = models.ManyToManyField(
+        SensitivityType,
+        null=True,
+        blank=True,
+    )
+    esda = models.BooleanField(
+        default=False,
+        verbose_name="Make this an ESDA (Essential Shared Data Asset) \
+          and share metadata on this data asset with other departments.",
+    )
+    stage_one_complete = models.BooleanField(default=False)
+    stage_two_complete = models.BooleanField(default=False)
+    stage_three_complete = models.BooleanField(default=False)
+
+
 class DataSetUserPermission(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
