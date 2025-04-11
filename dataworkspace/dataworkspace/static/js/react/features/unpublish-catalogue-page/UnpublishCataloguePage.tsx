@@ -56,7 +56,7 @@ const UnpublishCataloguePage = ({
         >
           <>
             <StyledParagraph>
-              By clicking the 'Yes' button below you're confirmimg:
+              By clicking the 'Yes' button below you're confirming:
             </StyledParagraph>
             <UnorderedList>
               <ListItem>
