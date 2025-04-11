@@ -60,16 +60,12 @@ const UnpublishCataloguePage = ({
             </StyledParagraph>
             <UnorderedList>
               <ListItem>
-                <Paragraph>
-                  this catalogue page needs to be unpublished because of a
-                  potential data breach
-                </Paragraph>
+                this catalogue page needs to be unpublished because of a
+                potential data breach
               </ListItem>
               <ListItem>
-                <Paragraph>
-                  you understand that any data linked to this catalogue page
-                  will also be removed
-                </Paragraph>
+                you understand that any data linked to this catalogue page will
+                also be removed
               </ListItem>
             </UnorderedList>
           </>
