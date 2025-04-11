@@ -1,8 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 
 import { SPACING_POINTS } from '@govuk-react/constants';
-import { Button, H2, Link, Paragraph, WarningText } from 'govuk-react';
+import { Button, H2, Link, Paragraph } from 'govuk-react';
 import styled from 'styled-components';
+
+import WarningText from '../WarningText';
 
 type ConfirmDialogProps = {
   actionUrl: string;
