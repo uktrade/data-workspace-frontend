@@ -44,27 +44,6 @@ const UnpublishCataloguePage = ({
       {isOpen && (
         <ConfirmDialog
           actionUrl={data.unpublish_url}
-          bodyElement={
-            <>
-              <StyledParagraph>
-                By clicking the 'Yes' button below you're confirmimg:
-              </StyledParagraph>
-              <UnorderedList>
-                <ListItem>
-                  <Paragraph>
-                    this catalogue page needs to be unpublished because of a
-                    potential data breach
-                  </Paragraph>
-                </ListItem>
-                <ListItem>
-                  <Paragraph>
-                    you understand that any data linked to this catalogue page
-                    will also be removed
-                  </Paragraph>
-                </ListItem>
-              </UnorderedList>
-            </>
-          }
           csrf_token={csrf_token}
           title="Final review before unpublishing"
           open={isOpen}
@@ -74,7 +53,27 @@ const UnpublishCataloguePage = ({
           buttonTextCancel={'Close'}
           buttonValueAccept="unpublish-catalogue"
           warning={true}
-        ></ConfirmDialog>
+        >
+          <>
+            <StyledParagraph>
+              By clicking the 'Yes' button below you're confirmimg:
+            </StyledParagraph>
+            <UnorderedList>
+              <ListItem>
+                <Paragraph>
+                  this catalogue page needs to be unpublished because of a
+                  potential data breach
+                </Paragraph>
+              </ListItem>
+              <ListItem>
+                <Paragraph>
+                  you understand that any data linked to this catalogue page
+                  will also be removed
+                </Paragraph>
+              </ListItem>
+            </UnorderedList>
+          </>
+        </ConfirmDialog>
       )}
     </>
   );

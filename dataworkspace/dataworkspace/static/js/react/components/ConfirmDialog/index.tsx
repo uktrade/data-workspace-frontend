@@ -7,7 +7,7 @@ import styled from 'styled-components';
 type ConfirmDialogProps = {
   actionUrl: string;
   bodyText?: string;
-  bodyElement?: React.ReactNode;
+  children?: React.ReactNode;
   buttonTextAccept: string;
   buttonColourAccept?: string;
   buttonTextCancel: string;
@@ -66,16 +66,16 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = (props) => {
       ref={refModal}
       warning={props.warning}
     >
-      {props.warning === false ? (
-        <H2 size="LARGE">{props.title}</H2>
-      ) : (
+      {props.warning ? (
         <StyledWarning>{props.title}</StyledWarning>
+      ) : (
+        <H2 size="LARGE">{props.title}</H2>
       )}
       {props.bodyText && props.bodyText.length > 0 && (
         <StyledParagraph>{props.bodyText}</StyledParagraph>
       )}
 
-      {props.bodyElement}
+      {props.children}
 
       <ContainerButtonGroup>
         <StyledForm
