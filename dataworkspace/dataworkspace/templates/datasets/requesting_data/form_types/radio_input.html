@@ -44,6 +44,12 @@
             <div class="govuk-label govuk-label--m govuk-!-static-margin-0">
               {{radio_label}}
             </div>
+            <div class="govuk-hint">
+              {{radio_help_text}}
+            </div>
+            <p class="govuk-body">
+              <a href="{{ link }}" class="govuk-link">{{ link_text }}</a>
+            </p>
             <div class="govuk-radios" data-module="govuk-radios">
               <div class="govuk-radios__item">
                 <input class="govuk-radios__input" id="{{radio_field}}-yes" type="radio" name="{{radio_field}}-radio" value="yes">

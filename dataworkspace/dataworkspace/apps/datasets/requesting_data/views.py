@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.forms import model_to_dict
+from django.forms import ValidationError, model_to_dict
 from django.shortcuts import render
 from django.views import View
 from django.views.generic import FormView, TemplateView
@@ -18,25 +18,18 @@ from formtools.wizard.views import NamedUrlSessionWizardView  # pylint: disable=
 
 from dataworkspace.apps.datasets.models import DataSet, RequestingDataset
 from dataworkspace.apps.datasets.requesting_data.forms import (
-    DatasetCommercialSensitiveForm,
     DatasetEnquiriesContactForm,
     DatasetInformationAssetManagerForm,
     DatasetInformationAssetOwnerForm,
     DatasetIntendedAccessForm,
-    DatasetLocationRestrictionsForm,
     DatasetNameForm,
     DatasetDescriptionsForm,
-    DatasetDataOriginForm,
-    DatasetExistingSystemForm,
     DatasetLicenceForm,
-    DatasetNetworkRestrictionsForm,
     DatasetPersonalDataForm,
-    DatasetRestrictionsForm,
     DatasetRetentionPeriodForm,
     DatasetSecurityClassificationForm,
     DatasetSpecialPersonalDataForm,
     DatasetUpdateFrequencyForm,
-    DatasetUsageForm,
     DatasetUserRestrictionsForm,
     SummaryPageForm,
     TrackerPageForm,
@@ -132,15 +125,7 @@ class RequestingDataTrackerView(FormView):
             context["backlink"] = reverse("adding-data")
         if "/requesting-data/adding-data" in self.request.META["HTTP_REFERER"]:
             context["backlink"] = reverse("adding-data")
-
-        # if step before was the last step of the section:
-        #     context["backlink"] = "last step of the section"
         return context
-
-    # def get(self, request, requesting_dataset_id):
-    #     previous_page = request.META["HTTP_REFERER"]
-    #     print("previous_page::::", previous_page)
-    #     return render(request, "datasets/requesting_data/tracker.html")
 
     def form_valid(self, form):
         requesting_dataset = RequestingDataset.objects.get(
@@ -172,16 +157,16 @@ class RequestingDataTrackerView(FormView):
 
         RequestingDataset.objects.filter(id=requesting_dataset.id).delete()
 
-        # zendesk_ticket_id = create_support_request(
-        #     self.request.user,
-        #     User.objects.get(id=requesting_dataset.user).email,
-        #     ["A new dataset has been requested."],
-        # )
+        zendesk_ticket_id = create_support_request(
+            self.request.user,
+            User.objects.get(id=requesting_dataset.user).email,
+            ["A new dataset has been requested."],
+        )
 
         return HttpResponseRedirect(
             reverse(
                 "requesting-data-submission",
-                # kwargs={"zendesk_ticket_id": zendesk_ticket_id},
+                kwargs={"zendesk_ticket_id": zendesk_ticket_id},
             )
         )
 
@@ -196,7 +181,6 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
 
     radio_input_pages = [
         "licence",
-        "usage",
         "personal-data",
         "special-personal-data",
         "commercial-sensitive",
@@ -205,7 +189,7 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
         "user-restrictions",
     ]
 
-    def add_fields(self, form_list, requesting_dataset, notes_fields):
+    def add_fields(self, form_list, requesting_dataset, notes_fields=[]):
         for form in form_list:
             for field in form.cleaned_data:
                 if field in notes_fields and form.cleaned_data.get(field):
@@ -216,10 +200,6 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
                     else:
                         requesting_dataset.notes = (
                             f"{form[field].label}\n{form.cleaned_data.get(field)}\n"
-                        )
-                    if field == "enquiries_contact":
-                        requesting_dataset.enquiries_contact = User.objects.get(
-                            id=form.cleaned_data.get(field).id
                         )
                 if field == "sensitivity":
                     requesting_dataset.sensitivity.set(form.cleaned_data.get("sensitivity"))
@@ -271,6 +251,9 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
         context["field"] = step.replace("-", "_")
         try:
             search_query = self.request.GET.dict()["search"]
+            if search_query == "":
+                print("IN HERE")
+                raise ValidationError("HELLO")
             context["search_query"] = search_query
             if search_query:
                 context["search_results"] = self.get_users(search_query=search_query.strip())
@@ -287,11 +270,13 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
             for key, value in self.get_cleaned_data_for_step(step).items():
                 if key == "sensitivity":
                     continue
+                if key.replace("_", "-") in self.radio_input_pages and value == "":
+                    continue
                 if key == "government_security_classification":
                     if value == 1:
-                        value = "Offiical"
+                        value = "Official"
                     if value == 2:
-                        value = "Offiical-Sensitive"
+                        value = "Official-Sensitive"
                 summary_list.append(
                     {
                         step: {"question": questions[key], "answer": value},
@@ -312,8 +297,10 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
             input_field = list(current_form.fields.keys())[1]
             context["radio_field"] = radio_field
             context["radio_label"] = current_form.fields[radio_field].label
+            context["radio_help_text"] = current_form.fields[radio_field].help_text
             context["input_field"] = input_field
             context["input_label"] = current_form.fields[input_field].label
+
         elif step == "summary":
             context["summary"] = self.get_summary_context()
 
@@ -331,14 +318,10 @@ class RequestingDataSummaryInformationWizardView(RequestingDatasetBaseWizardView
     form_list = [
         ("name", DatasetNameForm),
         ("descriptions", DatasetDescriptionsForm),
-        ("origin", DatasetDataOriginForm),
         ("information-asset-owner", DatasetInformationAssetOwnerForm),
         ("information-asset-manager", DatasetInformationAssetManagerForm),
         ("enquiries-contact", DatasetEnquiriesContactForm),
-        ("existing-system", DatasetExistingSystemForm),
         ("licence", DatasetLicenceForm),
-        ("restrictions", DatasetRestrictionsForm),
-        ("usage", DatasetUsageForm),
         ("summary", SummaryPageForm),
     ]
 
@@ -346,19 +329,10 @@ class RequestingDataSummaryInformationWizardView(RequestingDatasetBaseWizardView
         "name",
         "short_description",
         "description",
-        "origin",
         "information_asset_owner",
         "information_asset_manager",
         "enquiries_contact",
-        "existing_system",
         "licence",
-        "restrictions",
-        "usage",
-    ]
-
-    notes_fields = [
-        "origin",
-        "existing-system",
     ]
 
     def get_template_names(self):
@@ -377,7 +351,7 @@ class RequestingDataSummaryInformationWizardView(RequestingDatasetBaseWizardView
             context["link_text"] = "Find out the best practice for writing descriptions."
             context["link"] = "https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/creating-and-updating-a-catalogue-pages/data-descriptions/"
         elif step in self.user_search_pages:
-            context["link_text"] = "Find out more information about Security roles and responsibilities"
+            context["link_text"] = "Find out more information about data owner roles and responsibilities"
             context["link"] = "https://data-services-help.trade.gov.uk/data-workspace/how-to/data-owner-basics/managing-data-key-tasks-and-responsibilities/"
 
         return context
@@ -388,7 +362,7 @@ class RequestingDataSummaryInformationWizardView(RequestingDatasetBaseWizardView
         )
         requesting_dataset.user = self.request.user.id
         requesting_dataset.stage_one_complete = True
-        requesting_dataset = self.add_fields(form_list, requesting_dataset, self.notes_fields)
+        requesting_dataset = self.add_fields(form_list, requesting_dataset)
         requesting_dataset.save()
 
         return HttpResponseRedirect(
@@ -405,7 +379,6 @@ class RequestingDataAboutThisDataWizardView(RequestingDatasetBaseWizardView):
         ("security-classification", DatasetSecurityClassificationForm),
         ("personal-data", DatasetPersonalDataForm),
         ("special-personal-data", DatasetSpecialPersonalDataForm),
-        ("commercial-sensitive", DatasetCommercialSensitiveForm),
         ("retention-period", DatasetRetentionPeriodForm),
         ("update-frequency", DatasetUpdateFrequencyForm),
         ("summary", SummaryPageForm),
@@ -437,13 +410,9 @@ class RequestingDataAboutThisDataWizardView(RequestingDatasetBaseWizardView):
         context["stage"] = "About This Data"
         step = self.steps.current
         self.get_base_context(context, requesting_dataset, "summary-information", step)
-
-        if step == "government_security_classification":
-            context["link_text"] = "Find out more information about security classifications"
-            context["link"] = "https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/creating-and-updating-a-catalogue-pages/set-the-security-classification-of-your-data/"
-        elif step == "special_personal_data":
+        if step == "special-personal-data":
             context["link_text"] = "Find out more information about special category personal data"
-            context["link"] = "NOT SURE !!!!"
+            context["link"] = "#"
 
         return context
 
@@ -467,8 +436,6 @@ class RequestingDataAccessRestrictionsWizardView(RequestingDatasetBaseWizardView
 
     form_list = [
         ("intended-access", DatasetIntendedAccessForm),
-        ("location-restrictions", DatasetLocationRestrictionsForm),
-        ("network-restrictions", DatasetNetworkRestrictionsForm),
         ("user-restrictions", DatasetUserRestrictionsForm),
         ("summary", SummaryPageForm),
     ]
@@ -477,15 +444,12 @@ class RequestingDataAccessRestrictionsWizardView(RequestingDatasetBaseWizardView
         "intended_access",
         "operational_impact",
         "location_restrictions",
-        "network_restrictions",
         "user_restrictions",
     ]
 
     notes_fields = [
         "intended_access",
         "operational_impact",
-        "location_restrictions",
-        "network_restrictions",
         "user_restrictions",
     ]
 

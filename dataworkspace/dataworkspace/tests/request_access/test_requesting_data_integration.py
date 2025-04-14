@@ -98,11 +98,6 @@ class TestRequestingData(TestCase):
         assert "Summarise this dataset" in labels[0].contents[0]
         assert "Describe this dataset" in labels[1].contents[0]
 
-    def test_origin_page(self):
-        self.assert_common_content_one_label_page(
-            stage="summary-information", url_name="origin", label="Where does the data come from?"
-        )
-
     def test_information_asset_owner_page(self):
         self.assert_common_content_user_search_page(
             stage="summary-information",
@@ -127,32 +122,11 @@ class TestRequestingData(TestCase):
             hint="Description of contact person",
         )
 
-    def test_existing_system_page(self):
-        self.assert_common_content_one_label_page(
-            stage="summary-information",
-            url_name="existing-system",
-            label="Which system is the data set currently stored on?",
-        )
-
     def test_licence_page(self):
         self.assert_common_content_conditional_radio_buttons_page(
             stage="summary-information",
             url_name="licence",
             radio_label="Do you need/have a licence for this data?",
-        )
-
-    def test_restrictions_page(self):
-        self.assert_common_content_one_label_page(
-            stage="summary-information",
-            url_name="restrictions",
-            label="What are the usage restrictions?",
-        )
-
-    def test_usage_page(self):
-        self.assert_common_content_conditional_radio_buttons_page(
-            stage="summary-information",
-            url_name="usage",
-            radio_label="Are there any restrictions on usage?",
         )
 
     def test_security_classification_page(self):
@@ -180,11 +154,6 @@ class TestRequestingData(TestCase):
             radio_label="Does it contain special category personal data?",
         )
 
-    def test_commercial_sensitive_page(self):
-        self.assert_common_content_conditional_radio_buttons_page(
-            stage="about-this-data", url_name="commercial-sensitive", radio_label="Does it contain commercially sensitive data?"
-        )
-
     def test_retention_period_page(self):
         self.assert_common_content_one_label_page(
             stage="about-this-data", url_name="retention-period", label="What is the retention period?"
@@ -207,20 +176,6 @@ class TestRequestingData(TestCase):
         assert response.status_code == 200
         assert "Should access on Data Workspace be open to all users by request?" in header
         assert "Will this change of access have any operational impact?" in labels[2].contents[0]
-
-    def test_location_restrictions(self):
-        self.assert_common_content_conditional_radio_buttons_page(
-            stage="access-restrictions",
-            url_name="location-restrictions",
-            radio_label="Should there be any location restrictions for access to this data set?",
-        )
-
-    def test_network_restrictions(self):
-        self.assert_common_content_conditional_radio_buttons_page(
-            stage="access-restrictions",
-            url_name="network-restrictions",
-            radio_label="Should access be limited based on device types and networks?",
-        )
 
     def test_user_restrictions_page(self):
         self.assert_common_content_conditional_radio_buttons_page(

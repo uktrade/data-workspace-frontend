@@ -6,10 +6,7 @@ from django.forms import ValidationError
 from dataworkspace.apps.datasets.models import RequestingDataset, SensitivityType
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
-    GOVUKDesignSystemDateField,
-    GOVUKDesignSystemDateWidget,
     GOVUKDesignSystemForm,
-    GOVUKDesignSystemTextCharCountWidget,
     GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextareaWidget,
     GOVUKDesignSystemRadiosWidget,
@@ -48,7 +45,8 @@ class DatasetDescriptionsForm(GOVUKDesignSystemForm):
 
     description = GOVUKDesignSystemTextareaField(
         label="Describe this dataset",
-        help_text="Please ensure this contains enough detail to ensure non-experts viewing the Data Workspace catalogue can understand it's contents. Minimum 30 words",  # pylint: disable=line-too-long
+        help_text="This must contain enough detail to ensure non - experts can understand it's contents. Minimum 30 words.",
+        # pylint: disable=line-too-long
         required=True,
         widget=GOVUKDesignSystemTextareaWidget(
             heading="h2",
@@ -59,23 +57,21 @@ class DatasetDescriptionsForm(GOVUKDesignSystemForm):
         ),
     )
 
-
-class DatasetDataOriginForm(GOVUKDesignSystemForm):
-    origin = GOVUKDesignSystemCharField(
-        label="Where does the data come from?",
-        required=True,
-        widget=GOVUKDesignSystemTextWidget(
-            label_is_heading=True,
-            label_size="m",
-        ),
-    )
+    def clean(self):
+        cleaned_data = super().clean()
+        description = cleaned_data["description"]
+        if len(description.split(" ")) < 30:
+            raise ValidationError("The description must be minimum 30 words")
+        else:
+            return cleaned_data
 
 
 class DatasetInformationAssetOwnerForm(forms.Form):
-    information_asset_owner = forms.CharField(
-        required=True,
+    information_asset_owner = GOVUKDesignSystemTextareaField(
         label="Name of Information Asset Owner (IAO)",
-        help_text="IAO's are responsible for ensuring information assets are handled and managed appropriately"
+        help_text="IAOs are senior civil servants accountable for information in their business area and associated risks.",
+        required=True,
+        error_messages={"required": "You must provide a search term."},
     )
 
     def clean(self):
@@ -90,7 +86,7 @@ class DatasetInformationAssetManagerForm(forms.Form):
     information_asset_manager = forms.CharField(
         required=True,
         label="Name of Information Asset Manager (IAM)",
-        help_text="IAM's have knowledge and duties associated with an asset, and so often support the IAO"
+        help_text="IAMs have overall responsibility for managing the data, access requests and any changes."
     )
 
     def clean(self):
@@ -105,7 +101,7 @@ class DatasetEnquiriesContactForm(forms.Form):
     enquiries_contact = forms.CharField(
         required=True,
         label="Contact person",
-        help_text="Description of contact person"
+        help_text="They should be the person who can best answer questions about the data. If anyone uses the ‘Report an issue’ link on a catalogue page they will get an email."  # pylint: disable=line-too-long
     )
 
     def clean(self):
@@ -114,20 +110,6 @@ class DatasetEnquiriesContactForm(forms.Form):
         user_id = cleaned_data["enquiries_contact"]
         cleaned_data["enquiries_contact"] = User.objects.get(id=user_id)
         return cleaned_data
-
-
-class DatasetExistingSystemForm(GOVUKDesignSystemForm):
-    existing_system = GOVUKDesignSystemTextareaField(
-        label="Which system is the data set currently stored on?",
-        required=True,
-        widget=GOVUKDesignSystemTextareaWidget(
-            heading="h2",
-            label_size="m",
-            label_is_heading=True,
-            attrs={"rows": 5},
-            extra_label_classes="govuk-!-static-margin-0",
-        ),
-    )
 
 
 class DatasetLicenceForm(GOVUKDesignSystemForm):
@@ -155,44 +137,6 @@ class DatasetLicenceForm(GOVUKDesignSystemForm):
         return cleaned_data
 
 
-class DatasetRestrictionsForm(GOVUKDesignSystemForm):
-    restrictions = GOVUKDesignSystemTextareaField(
-        label="What are the usage restrictions?",
-        required=False,
-        widget=GOVUKDesignSystemTextareaWidget(
-            heading="h2",
-            label_size="m",
-            label_is_heading=True,
-            attrs={"rows": 5},
-            extra_label_classes="govuk-!-static-margin-0",
-        ),
-    )
-
-
-class DatasetUsageForm(GOVUKDesignSystemForm):
-    usage_required = forms.CharField(
-        label="Are there any restrictions on usage?",
-        required=True,
-        widget=GOVUKDesignSystemTextWidget(),
-    )
-
-    usage = GOVUKDesignSystemCharField(
-        label="What will the data be used for on Data Workspace?",
-        required=False,
-        widget=GOVUKDesignSystemTextWidget(
-            label_is_heading=True,
-            label_size="m",
-        ),
-    )
-
-    def clean(self):
-        cleaned_data = super().clean()
-        usage_required = cleaned_data.get("usage_required", None)
-        if usage_required == "yes" and cleaned_data["usage"] == "":
-            raise ValidationError("Please enter the usage restrictions")
-        return cleaned_data
-
-
 class DatasetSecurityClassificationForm(GOVUKDesignSystemModelForm):
     sensitivity = forms.ModelMultipleChoiceField(
         queryset=SensitivityType.objects.all(), widget=forms.CheckboxSelectMultiple, required=False
@@ -214,6 +158,10 @@ class DatasetSecurityClassificationForm(GOVUKDesignSystemModelForm):
 class DatasetPersonalDataForm(GOVUKDesignSystemForm):
     personal_data_required = forms.CharField(
         label="Does it contain personal data?",
+        help_text="Personal data means any information relating to an identified or identifiable living individual.\n"
+        "“Identifiable living individual” means a living individual who can be identified, directly or indirectly, in particular by reference to either: \n"
+        "An identifier such as a name, an identification number, location data or an online identifier \n"
+        "One or more factors specific to the physical, physiological, genetic, mental, economic, cultural or social identity of the individual.",
         required=True,
         widget=GOVUKDesignSystemTextWidget(),
     )
@@ -242,6 +190,7 @@ class DatasetPersonalDataForm(GOVUKDesignSystemForm):
 class DatasetSpecialPersonalDataForm(GOVUKDesignSystemForm):
     special_personal_data_required = forms.CharField(
         label="Does it contain special category personal data?",
+        help_text="Special category data is personal data which the GDPR says is more sensitive, and so needs more protection.",
         required=True,
         widget=GOVUKDesignSystemTextWidget(),
     )
@@ -267,43 +216,14 @@ class DatasetSpecialPersonalDataForm(GOVUKDesignSystemForm):
         return cleaned_data
 
 
-class DatasetCommercialSensitiveForm(GOVUKDesignSystemForm):
-    commercial_sensitive_required = forms.CharField(
-        label="Does it contain commercially sensitive data?",
-        required=True,
-        widget=GOVUKDesignSystemTextWidget(),
-    )
-
-    commercial_sensitive = GOVUKDesignSystemCharField(
-        label="What commercially sensitive data does it contain?",
-        required=False,
-        help_text="Commercially sensitive information is information that if disclosed, could prejudice a supplier's commercial interests e.g. trade secrets, profit margins or new ideas. This type of information is protected through Confidentiality Agreements.",
-        widget=GOVUKDesignSystemTextareaWidget(
-            heading="h2",
-            label_size="m",
-            label_is_heading=True,
-            attrs={"rows": 5},
-            extra_label_classes="govuk-!-static-margin-0",
-        ),
-    )
-
-    def clean(self):
-        cleaned_data = super().clean()
-        commercial_sensitive_required = cleaned_data.get("commercial_sensitive_required", None)
-        if commercial_sensitive_required == "yes" and cleaned_data["commercial_sensitive"] == "":
-            raise ValidationError("Please enter what commercially sensitive data it contains")
-        return cleaned_data
-
-
 class DatasetRetentionPeriodForm(GOVUKDesignSystemForm):
     retention_policy = GOVUKDesignSystemCharField(
-        label="What is the retention period?",
-        required=True,
+        label="What is the retention period? (Optional)",
+        required=False,
         widget=GOVUKDesignSystemTextWidget(
             label_is_heading=True,
             label_size="m",
         ),
-        error_messages={"required": "Enter a retention period."},
     )
 
 
@@ -352,60 +272,6 @@ class DatasetIntendedAccessForm(GOVUKDesignSystemForm):
             extra_label_classes="govuk-!-static-margin-0",
         ),
     )
-
-
-class DatasetLocationRestrictionsForm(GOVUKDesignSystemForm):
-    location_restrictions_required = forms.CharField(
-        label="Should there be any location restrictions for access to this data set?",
-        required=True,
-        widget=GOVUKDesignSystemTextWidget(),
-    )
-
-    location_restrictions = GOVUKDesignSystemCharField(
-        label="Provide brief information about this",
-        required=False,
-        widget=GOVUKDesignSystemTextareaWidget(
-            heading="h2",
-            label_size="m",
-            label_is_heading=True,
-            attrs={"rows": 5},
-            extra_label_classes="govuk-!-static-margin-0",
-        ),
-    )
-
-    def clean(self):
-        cleaned_data = super().clean()
-        location_restrictions_required = cleaned_data.get("location_restrictions_required", None)
-        if location_restrictions_required == "yes" and cleaned_data["location_restrictions"] == "":
-            raise ValidationError("Please provide information on the location restrictions")
-        return cleaned_data
-
-
-class DatasetNetworkRestrictionsForm(GOVUKDesignSystemForm):
-    network_restrictions_required = forms.CharField(
-        label="Should access be limited based on device types and networks?",
-        required=True,
-        widget=GOVUKDesignSystemTextWidget(),
-    )
-
-    network_restrictions = GOVUKDesignSystemCharField(
-        label="Please provide some brief information about this",
-        required=False,
-        widget=GOVUKDesignSystemTextareaWidget(
-            heading="h2",
-            label_size="m",
-            label_is_heading=True,
-            attrs={"rows": 5},
-            extra_label_classes="govuk-!-static-margin-0",
-        ),
-    )
-
-    def clean(self):
-        cleaned_data = super().clean()
-        network_restrictions_required = cleaned_data.get("network_restrictions_required", None)
-        if network_restrictions_required == "yes" and cleaned_data["network_restrictions"] == "":
-            raise ValidationError("Please provide information on the network restrictions")
-        return cleaned_data
 
 
 class DatasetUserRestrictionsForm(GOVUKDesignSystemForm):
