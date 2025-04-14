@@ -29,10 +29,9 @@ class EventLogAdmin(admin.ModelAdmin):
 
     def user_link(self, obj):
         return format_html(
-            '<a href="{}">{}</a>'.format(
-                reverse("admin:auth_user_change", args=(obj.user.id,)),
-                obj.user.get_full_name(),
-            )
+            '<a href="{}">{}</a>',
+            reverse("admin:auth_user_change", args=(obj.user.id,)),
+            obj.user.get_full_name(),
         )
 
     user_link.short_description = "User"
@@ -52,7 +51,7 @@ class EventLogAdmin(admin.ModelAdmin):
         except NoReverseMatch:
             return str(obj.related_object)
         else:
-            return format_html(f'<a href="{url}">{obj.related_object}</a>')
+            return format_html('<a href="{}">{}</a>', url, obj.related_object)
 
     related_object_link.short_description = "Related Object"
 
@@ -126,7 +125,7 @@ class SystemStatLogAdmin(admin.ModelAdmin):
         except NoReverseMatch:
             return str(obj.related_object)
         else:
-            return format_html(f'<a href="{url}">{obj.related_object}</a>')
+            return format_html('<a href="{}">{}</a>', url, obj.related_object)
 
     related_object_link.short_description = "Related Object"
 
