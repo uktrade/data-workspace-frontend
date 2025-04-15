@@ -178,7 +178,7 @@ def healthcheck_view(request):
     if request.method != "GET":
         return HttpResponseNotAllowed(["GET"])
     if check_db("default"):
-        respone = HttpResponse("OK")
+        response = HttpResponse("OK")
         response["Server"] = ""
         return response
     return HttpResponseServerError("Database not available")
