@@ -32,9 +32,9 @@
 {% block content %}
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-          {% if access_request.data_access_status == 'confirmed'}
+          {% if access_request.data_access_status == 'confirmed' %}
             <p class="govuk-body">This access request has already been actioned by another request approver.</p>
-            <a class="govuk-link" href="{% url 'datasets:edit_permissions_summary' obj.id summary.id %}">View and manage who has access to this dataset</a>
+            <a class="govuk-link" href="{% url 'datasets:edit_permissions' obj.id %}">View and manage who has access to this dataset</a>
           {% else %}
             {% include 'design_system/error_summary.html' with form=form %}
               <h1 class="govuk-heading-xl">Review {{full_name}}'s access to {{obj.name}}</h1>
