@@ -1,2 +1,1 @@
-# Run lint-staged using the npm script
 npx lint-staged
