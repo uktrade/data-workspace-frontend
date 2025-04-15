@@ -45,7 +45,7 @@ describe('Unpublish catalogue page', () => {
     cy.getOpenDialog().within(() => {
       cy.contains('strong', 'Final review before unpublishing').should('exist');
       cy.contains(
-        "By clicking the 'Yes' button below you're confirmimg:"
+        "By clicking the 'Yes' button below you're confirming:"
       ).should('exist');
       cy.contains(
         'this catalogue page needs to be unpublished because of a potential data breach'
