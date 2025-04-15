@@ -18,7 +18,7 @@ class TestRequestingData(TestCase):
         self.client = Client(**get_http_sso_data(self.user))
 
     def assert_common_content_one_label_page(self, stage, url_name, label):
-        response = self.client.get(reverse(f"requesting-data-{stage}-step", args={(url_name)}))
+        response = self.client.get(reverse(f"requesting-data-{stage}-step", args={url_name}))
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         header = soup.find("h1").contents[0]
@@ -29,7 +29,7 @@ class TestRequestingData(TestCase):
         assert label in input_label
 
     def assert_common_content_radio_buttons_page(self, stage, url_name, label, radio_options):
-        response = self.client.get(reverse(f"requesting-data-{stage}-step", args={(url_name)}))
+        response = self.client.get(reverse(f"requesting-data-{stage}-step", args={url_name}))
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         header = soup.find("h1").contents[0]
@@ -45,7 +45,7 @@ class TestRequestingData(TestCase):
             assert option.lower() in radio_names
 
     def assert_common_content_user_search_page(self, stage, url_name, label, hint):
-        response = self.client.get(reverse(f"requesting-data-{stage}-step", args={(url_name)}))
+        response = self.client.get(reverse(f"requesting-data-{stage}-step", args={url_name}))
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         header = soup.find("h1").contents[0]
@@ -64,7 +64,7 @@ class TestRequestingData(TestCase):
 
     def test_descriptions_page(self):
         response = self.client.get(
-            reverse("requesting-data-summary-information-step", args={("descriptions")})
+            reverse("requesting-data-summary-information-step", args={"descriptions"})
         )
 
         soup = BeautifulSoup(response.content.decode(response.charset))
