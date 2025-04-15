@@ -15,7 +15,7 @@ async def async_main(port, url):
                 return web.Response(text=response, headers={"Server": ""})
 
     async def handle_healthcheck_alb(_):
-        return web.Response(text="OK")
+        return web.Response(text="OK", headers={"Server": ""})
 
     app = web.Application()
     app.add_routes(
