@@ -12,7 +12,7 @@ async def async_main(port, url):
         async with aiohttp.ClientSession() as client_session:
             async with client_session.get(url) as response:
                 response = await response.text()
-                return web.Response(text=response)
+                return web.Response(text=response, headers={"Server": ""})
 
     async def handle_healthcheck_alb(_):
         return web.Response(text="OK")
