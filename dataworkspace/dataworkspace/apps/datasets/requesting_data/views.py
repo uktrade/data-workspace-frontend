@@ -182,7 +182,7 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
     ]
 
     def add_fields(self, form_list, requesting_dataset, notes_fields=None):
-        if notes_fields == None:
+        if notes_fields is None:
             notes_fields = []
         for form in form_list:
             for field in form.cleaned_data:
