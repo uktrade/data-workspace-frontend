@@ -7,10 +7,10 @@ from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
-from dataworkspace.zendesk import create_support_request
 from formtools.preview import FormPreview  # pylint: disable=import-error
 from formtools.wizard.views import NamedUrlSessionWizardView  # pylint: disable=import-error
 
+from dataworkspace.zendesk import create_support_request
 from dataworkspace.apps.datasets.models import DataSet, RequestingDataset
 from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetEnquiriesContactForm,
@@ -63,7 +63,7 @@ class AddingData(TemplateView):
 class AddNewDataset(TemplateView):
     template_name = "datasets/requesting_data/add_new_dataset.html"
 
-    def get(self, request):
+    def get(self, request):  # pylint: disable=arguments-differ
         previous_page = request.META["HTTP_REFERER"]
         if "/requesting-data/tracker/" in previous_page:
             RequestingDataset.objects.filter(
@@ -98,7 +98,6 @@ class RequestingDataTrackerView(FormView):
         self.request.session["requesting_dataset"] = requesting_dataset.id
         context["requesting_dataset_id"] = requesting_dataset.id
 
-        # TODO refactor
         stage_one_complete = requesting_dataset.stage_one_complete
         stage_two_complete = requesting_dataset.stage_two_complete
         stage_three_complete = requesting_dataset.stage_three_complete
@@ -136,7 +135,6 @@ class RequestingDataTrackerView(FormView):
                 "stage_three_complete",
             ],
         )
-        # TODO refactor
         data_dict["enquiries_contact"] = requesting_dataset.enquiries_contact
         data_dict["information_asset_manager"] = requesting_dataset.information_asset_manager
         data_dict["information_asset_owner"] = requesting_dataset.information_asset_owner
@@ -246,13 +244,13 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
         try:
             search_query = self.request.GET.dict()["search"]
             if search_query == "":
-                print("IN HERE")
                 raise ValidationError("HELLO")
             context["search_query"] = search_query
             if search_query:
                 context["search_results"] = self.get_users(search_query=search_query.strip())
         except Exception:  # pylint: disable=broad-except
-            return context
+            return
+        return context
 
     def get_summary_context(self):
         summary_list = []
@@ -344,14 +342,14 @@ class RequestingDataSummaryInformationWizardView(RequestingDatasetBaseWizardView
         if step == "descriptions":
             context["link_text"] = "Find out the best practice for writing descriptions."
             context["link"] = (
-                "https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/creating-and-updating-a-catalogue-pages/data-descriptions/"
+                "https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/creating-and-updating-a-catalogue-pages/data-descriptions/"  # pylint: disable=line-too-long
             )
         elif step in self.user_search_pages:
             context["link_text"] = (
                 "Find out more information about data owner roles and responsibilities"
             )
             context["link"] = (
-                "https://data-services-help.trade.gov.uk/data-workspace/how-to/data-owner-basics/managing-data-key-tasks-and-responsibilities/"
+                "https://data-services-help.trade.gov.uk/data-workspace/how-to/data-owner-basics/managing-data-key-tasks-and-responsibilities/"  # pylint: disable=line-too-long
             )
 
         return context

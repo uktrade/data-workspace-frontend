@@ -45,7 +45,7 @@ class RequestingDataFormsTestCase(TestCase):
             }
         )
         assert form.is_valid()
-        if type(expected_response) == User:
+        if isinstance(expected_response) == User:
             assert expected_response == form.cleaned_data[label]
         else:
             assert expected_response in form.cleaned_data[label]
@@ -73,13 +73,13 @@ class RequestingDataFormsTestCase(TestCase):
         form = DatasetDescriptionsForm(
             {
                 "short_description": "Test short description",
-                "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam porta nunc erat, ut ultricies lorem rutrum ut. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.",
+                "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam porta nunc erat, ut ultricies lorem rutrum ut. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.",  # pylint: disable=line-too-long
             }
         )
         assert form.is_valid()
         assert "Test short description" in form.cleaned_data["short_description"]
         assert (
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam porta nunc erat, ut ultricies lorem rutrum ut. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas."
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam porta nunc erat, ut ultricies lorem rutrum ut. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas."  # pylint: disable=line-too-long
             in form.cleaned_data["description"]
         )
 

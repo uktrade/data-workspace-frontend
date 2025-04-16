@@ -160,9 +160,9 @@ class DatasetPersonalDataForm(GOVUKDesignSystemForm):
     personal_data_required = forms.CharField(
         label="Does it contain personal data?",
         help_text="Personal data means any information relating to an identified or identifiable living individual.\n"
-        "“Identifiable living individual” means a living individual who can be identified, directly or indirectly, in particular by reference to either: \n"
+        "“Identifiable living individual” means a living individual who can be identified, directly or indirectly, in particular by reference to either: \n"  # pylint: disable=line-too-long
         "An identifier such as a name, an identification number, location data or an online identifier \n"
-        "One or more factors specific to the physical, physiological, genetic, mental, economic, cultural or social identity of the individual.",
+        "One or more factors specific to the physical, physiological, genetic, mental, economic, cultural or social identity of the individual.",  # pylint: disable=line-too-long
         required=True,
         widget=GOVUKDesignSystemTextWidget(),
     )
@@ -191,7 +191,7 @@ class DatasetPersonalDataForm(GOVUKDesignSystemForm):
 class DatasetSpecialPersonalDataForm(GOVUKDesignSystemForm):
     special_personal_data_required = forms.CharField(
         label="Does it contain special category personal data?",
-        help_text="Special category data is personal data which the GDPR says is more sensitive, and so needs more protection.",
+        help_text="Special category data is personal data which the GDPR says is more sensitive, and so needs more protection.",  # pylint: disable=line-too-long
         required=True,
         widget=GOVUKDesignSystemTextWidget(),
     )
@@ -199,7 +199,7 @@ class DatasetSpecialPersonalDataForm(GOVUKDesignSystemForm):
     special_personal_data = GOVUKDesignSystemCharField(
         label="Does it contain special category personal data?",
         required=False,
-        help_text="Special category data is personal data which the GDPR says is more sensitive, and so needs more protection.",
+        help_text="Special category data is personal data which the GDPR says is more sensitive, and so needs more protection.",  # pylint: disable=line-too-long
         widget=GOVUKDesignSystemTextareaWidget(
             heading="h2",
             label_size="m",

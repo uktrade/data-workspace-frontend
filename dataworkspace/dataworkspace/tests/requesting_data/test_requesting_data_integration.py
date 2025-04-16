@@ -1,13 +1,12 @@
 from unittest import TestCase
-
-from dataworkspace.apps.datasets.models import RequestingDataset
-from dataworkspace.apps.datasets.constants import SecurityClassificationAndHandlingInstructionType
-
 import pytest
 from bs4 import BeautifulSoup
+
 from django.test import Client
 from django.urls import reverse
 
+from dataworkspace.apps.datasets.models import RequestingDataset
+from dataworkspace.apps.datasets.constants import SecurityClassificationAndHandlingInstructionType
 
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
