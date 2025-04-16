@@ -33,8 +33,11 @@
 <h2 class="govuk-heading-m">What is the security classification for this data?</h2>
 
 
-<p class="govuk-body">The Government Classifications policy identifies the value of the information. That value is then used to determine how the information must be protected. The higher the value classification, the greater the damage likely to occur if that information is lost, stolen or inadvertently released.</p>
+<p class="govuk-hint">The Government Classifications policy identifies the value of the information. That value is then used to determine how the information must be protected. The higher the value classification, the greater the damage likely to occur if that information is lost, stolen or inadvertently released.</p>
 
+    <p class="govuk-body">
+      <a href="https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/creating-and-updating-a-catalogue-pages/set-the-security-classification-of-your-data/" class="govuk-link">Find out more information about security classifications</a>
+    </p>
 <form action="" method="post" novalidate>
   {% csrf_token %}
       {{ wizard.management_form }}

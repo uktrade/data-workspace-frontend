@@ -11,11 +11,34 @@
 {{ wizard.form.media }}
 {% endblock %}
 {% block content %}
+
+  {% if form.errors %}
+    <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
+      <h2 class="govuk-error-summary__title" id="error-summary-title">
+        There is a problem
+      </h2>
+      <div class="govuk-error-summary__body">
+        <ul class="govuk-list govuk-error-summary__list">
+        {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+                <li>
+                <a href="#id_{{ field }}">{{ error }}</a>
+                </li>
+            {% endfor %}
+        {% endfor %}
+        </ul>
+      </div>
+    </div>
+  {% endif %}
+  
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-l">Summary Information</h1>
       <p class="govuk-body">Step {{ wizard.steps.index|add:1 }} of {{ wizard.steps.count }}</p>
-        <label class="govuk-label govuk-label--m ">{{label}}</label>
+          <p class="govuk-body">
+          <a href="{{ link }}" class="govuk-link">{{ link_text }}</a>
+        </p>
+        <h2 class="govuk-label govuk-label--m">{{label}}</h2>
           <div id="id_descriptions-short_description-hint" class="govuk-hint">{{help_text}}</div>
             <div class="govuk-grid-row">
               <div class="govuk-grid-column-two-thirds">

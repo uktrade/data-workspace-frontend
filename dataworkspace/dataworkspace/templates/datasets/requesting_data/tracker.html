@@ -8,9 +8,11 @@
 {% load i18n %}
 
 {% block content %}
-<myComponent data="{{data}}"></myComponent>
-
-<h1 class="govuk-heading-l">Request data</h1>
+{% if requesting_dataset.name %}
+<h1 class="govuk-heading-l">{{ requesting_dataset.name }} progress </h1>
+{% else %}
+<h1 class="govuk-heading-l">Request progress </h1>
+{% endif %}
 
 <h2 class="govuk-heading-m">Request data process</h2>
 <div class="govuk-hint">To request data, you need to complete the following process:</div>

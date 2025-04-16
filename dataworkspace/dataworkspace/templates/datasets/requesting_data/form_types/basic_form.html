@@ -27,7 +27,10 @@
 {% endif %}
 
 <h1 class="govuk-heading-l">{{ stage }}</h1>
-<p class="govuk-body">Step {{ wizard.steps.index|add:1 }} of {{ wizard.steps.count }}</p>
+  <p class="govuk-body">Step {{ wizard.steps.index|add:1 }} of {{ wizard.steps.count }}</p>
+    <p class="govuk-body">
+      <a href="{{ link }}" class="govuk-link">{{ link_text }}</a>
+    </p>
   <form method="post" novalidate>
     {% csrf_token %}
             {{ wizard.management_form }}
@@ -40,9 +43,7 @@
     </button>
   </form>
 
-<p class="govuk-body">
-  <a href="{{ link }}" class="govuk-link">{{ link_text }}</a>
-</p>
+
  
   <!-- <script nonce="{{ request.csp_nonce }}">
 
