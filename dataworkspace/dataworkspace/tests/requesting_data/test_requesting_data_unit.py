@@ -45,7 +45,7 @@ class RequestingDataFormsTestCase(TestCase):
             }
         )
         assert form.is_valid()
-        if isinstance(expected_response) == User:
+        if isinstance(expected_response, User) :
             assert expected_response == form.cleaned_data[label]
         else:
             assert expected_response in form.cleaned_data[label]
