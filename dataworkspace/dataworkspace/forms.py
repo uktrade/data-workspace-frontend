@@ -32,7 +32,6 @@ class GOVUKDesignSystemWidgetMixin:
         suffix=None,
         character_limit="200",
         extra_input_classes="",
-        id=None,
         **kwargs,
     ):
         super().__init__(**kwargs)
