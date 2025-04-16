@@ -486,7 +486,6 @@ class RequestingDataAccessRestrictionsWizardView(RequestingDatasetBaseWizardView
                 kwargs={"requesting_dataset_id": requesting_dataset.id},
             )
         )
-CDFXXPASWZ[43-X
 
 class RequestingDatasetSubmission(TemplateView):
     template_name = "datasets/requesting_data/submission.html"
