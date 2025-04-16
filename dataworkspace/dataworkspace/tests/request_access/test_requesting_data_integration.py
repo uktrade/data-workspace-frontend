@@ -52,18 +52,16 @@ class TestRequestingData(TestCase):
         for option in radio_options:
             assert option.lower() in radio_names
 
-    def assert_common_content_user_search_page(self, stage, url_name, label, hint):
+    def assert_common_content_user_search_page(self, stage, url_name, label):
         response = self.client.get(reverse(f"requesting-data-{stage}-step", args={(url_name)}))
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         header = soup.find("h1").contents[0]
-        input_label = soup.find("label").contents[0]
-        hint_text = soup.find("div", class_="govuk-hint")
+        input_label = soup.find("h2").contents[0]
 
         assert response.status_code == 200
         assert " ".join(stage.split("-")).title() in header
         assert label in input_label
-        assert hint in hint_text
 
     def assert_common_content_conditional_radio_buttons_page(self, stage, url_name, radio_label):
         response = self.client.get(reverse(f"requesting-data-{stage}-step", args={(url_name)}))
@@ -104,7 +102,6 @@ class TestRequestingData(TestCase):
             stage="summary-information",
             url_name="information-asset-owner",
             label="Name of Information Asset Owner",
-            hint="IAO's are responsible for ensuring information assets are handled and managed appropriately",
         )
 
     def test_information_asset_manager_page(self):
@@ -112,7 +109,6 @@ class TestRequestingData(TestCase):
             stage="summary-information",
             url_name="information-asset-manager",
             label="Name of Information Asset Manager",
-            hint="IAM's have knowledge and duties associated with an asset, and so often support the IAO",
         )
 
     def test_enquiries_contact_page(self):
@@ -120,7 +116,6 @@ class TestRequestingData(TestCase):
             stage="summary-information",
             url_name="enquiries-contact",
             label="Contact person",
-            hint="Description of contact person",
         )
 
     def test_licence_page(self):
