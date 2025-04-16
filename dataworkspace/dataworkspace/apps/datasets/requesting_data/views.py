@@ -244,13 +244,13 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
         try:
             search_query = self.request.GET.dict()["search"]
             if search_query == "":
-                raise ValidationError("HELLO")
+                raise ValidationError("Please enter a search query.")
             context["search_query"] = search_query
             if search_query:
                 context["search_results"] = self.get_users(search_query=search_query.strip())
         except Exception:  # pylint: disable=broad-except
-            return
-        return context
+            return context
+        return None
 
     def get_summary_context(self):
         summary_list = []
