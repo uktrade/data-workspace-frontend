@@ -7,8 +7,6 @@ from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
-from csp.decorators import csp_update
-
 from dataworkspace.zendesk import create_support_request
 from formtools.preview import FormPreview  # pylint: disable=import-error
 from formtools.wizard.views import NamedUrlSessionWizardView  # pylint: disable=import-error
@@ -183,7 +181,9 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
         "user-restrictions",
     ]
 
-    def add_fields(self, form_list, requesting_dataset, notes_fields=[]):
+    def add_fields(self, form_list, requesting_dataset, notes_fields=None):
+        if notes_fields == None:
+            notes_fields = []
         for form in form_list:
             for field in form.cleaned_data:
                 if field in notes_fields and form.cleaned_data.get(field):
