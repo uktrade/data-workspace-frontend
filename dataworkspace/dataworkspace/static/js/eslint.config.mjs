@@ -83,7 +83,20 @@ export default [
           groups: [['^react'], ['^antd'], ['^@?\\w'], ['@/(.*)'], ['^[./]']]
         }
       ],
-      '@typescript-eslint/ban-ts-comment': 'off'
+      '@typescript-eslint/ban-ts-comment': 'off',
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'govuk-react',
+              importNames: ['WarningText'],
+              message:
+                "Do not import 'WarningText' from 'govuk-react'. Use '../components/WarningText' instead."
+            }
+          ]
+        }
+      ]
     }
   },
   {
