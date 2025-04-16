@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.forms import ValidationError, model_to_dict
 from django.shortcuts import render
 from django.views import View
@@ -10,8 +9,6 @@ from django.urls import reverse
 
 from csp.decorators import csp_update
 
-from dataworkspace.apps.datasets.constants import SecurityClassificationAndHandlingInstructionType
-from dataworkspace.apps.datasets.views import EditBaseView
 from dataworkspace.zendesk import create_support_request
 from formtools.preview import FormPreview  # pylint: disable=import-error
 from formtools.wizard.views import NamedUrlSessionWizardView  # pylint: disable=import-error
