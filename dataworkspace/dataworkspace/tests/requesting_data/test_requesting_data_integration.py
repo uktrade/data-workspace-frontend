@@ -21,7 +21,7 @@ class TestRequestingData(TestCase):
         self.client = Client(**get_http_sso_data(self.user))
         self.requesting_dataset = RequestingDataset.objects.create()
         session = self.client.session
-        session['requesting_dataset'] = self.requesting_dataset.id
+        session["requesting_dataset"] = self.requesting_dataset.id
         session.save()
 
     def assert_common_content_one_label_page(self, stage, url_name, label):
@@ -152,7 +152,9 @@ class TestRequestingData(TestCase):
 
     def test_retention_period_page(self):
         self.assert_common_content_one_label_page(
-            stage="about-this-data", url_name="retention-period", label="What is the retention period?"
+            stage="about-this-data",
+            url_name="retention-period",
+            label="What is the retention period?",
         )
 
     def test_update_frequency_page(self):
@@ -164,7 +166,9 @@ class TestRequestingData(TestCase):
         )
 
     def test_intended_access_page(self):
-        response = self.client.get(reverse("requesting-data-access-restrictions-step", args={("intended-access")}))
+        response = self.client.get(
+            reverse("requesting-data-access-restrictions-step", args={("intended-access")})
+        )
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         header = soup.find("h2").contents[0]

@@ -85,7 +85,7 @@ class DatasetInformationAssetManagerForm(forms.Form):
     information_asset_manager = forms.CharField(
         required=True,
         label="Name of Information Asset Manager (IAM)",
-        help_text="IAMs have overall responsibility for managing the data, access requests and any changes."
+        help_text="IAMs have overall responsibility for managing the data, access requests and any changes.",
     )
 
     def clean(self):
@@ -100,7 +100,7 @@ class DatasetEnquiriesContactForm(forms.Form):
     enquiries_contact = forms.CharField(
         required=True,
         label="Contact person",
-        help_text="They should be the person who can best answer questions about the data. If anyone uses the ‘Report an issue’ link on a catalogue page they will get an email."  # pylint: disable=line-too-long
+        help_text="They should be the person who can best answer questions about the data. If anyone uses the ‘Report an issue’ link on a catalogue page they will get an email.",  # pylint: disable=line-too-long
     )
 
     def clean(self):
@@ -115,8 +115,10 @@ class DatasetLicenceForm(GOVUKDesignSystemForm):
     licence_required = forms.CharField(
         label="Do you need/have a licence for this data?",
         required=True,
-        widget=GOVUKDesignSystemTextWidget(label_is_heading=True,
-                                           label_size="m",),
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=True,
+            label_size="m",
+        ),
     )
 
     licence = GOVUKDesignSystemCharField(

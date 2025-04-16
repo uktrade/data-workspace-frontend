@@ -159,7 +159,6 @@ urlpatterns = [
         DeleteRequestingDatasetJourney.as_view(),
         name="delete-requesting-dataset-journey",
     ),
-
     path(
         "requesting-data/summary-information/<str:step>",
         RequestingDataSummaryInformationWizardView.as_view(

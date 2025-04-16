@@ -30,6 +30,7 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
 
 User = get_user_model()
 
+
 @pytest.mark.django_db
 class RequestingDataFormsTestCase(TestCase):
 
@@ -77,7 +78,10 @@ class RequestingDataFormsTestCase(TestCase):
         )
         assert form.is_valid()
         assert "Test short description" in form.cleaned_data["short_description"]
-        assert "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam porta nunc erat, ut ultricies lorem rutrum ut. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas." in form.cleaned_data["description"]
+        assert (
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam porta nunc erat, ut ultricies lorem rutrum ut. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas."
+            in form.cleaned_data["description"]
+        )
 
     @patch("django.contrib.auth.models.User.objects.get")
     def test_valid_form_information_asset_owner(self, mock_get):
@@ -114,7 +118,7 @@ class RequestingDataFormsTestCase(TestCase):
             form=DatasetLicenceForm,
             data_input="""["Test licence"]""",
             expected_response="Test licence",
-            labels=["licence_required", "licence"]
+            labels=["licence_required", "licence"],
         )
 
     def test_valid_form_intended_access(self):
@@ -133,7 +137,7 @@ class RequestingDataFormsTestCase(TestCase):
             form=DatasetUserRestrictionsForm,
             data_input="""["Test user restrictions"]""",
             expected_response="Test user restrictions",
-            labels=["user_restrictions_required", "user_restrictions"]
+            labels=["user_restrictions_required", "user_restrictions"],
         )
 
     def test_valid_form_security_classification_official(self):
@@ -164,7 +168,7 @@ class RequestingDataFormsTestCase(TestCase):
             form=DatasetPersonalDataForm,
             data_input="""["Test personal data"]""",
             expected_response="Test personal data",
-            labels=["personal_data_required", "personal_data"]
+            labels=["personal_data_required", "personal_data"],
         )
 
     def test_valid_form_special_personal_data(self):
@@ -172,7 +176,7 @@ class RequestingDataFormsTestCase(TestCase):
             form=DatasetSpecialPersonalDataForm,
             data_input="""["Test special personal data"]""",
             expected_response="Test special personal data",
-            labels=["special_personal_data_required", "special_personal_data"]
+            labels=["special_personal_data_required", "special_personal_data"],
         )
 
     def test_valid_form_retention_period(self):
@@ -205,7 +209,7 @@ class RequestingDataViewsTestCase(TestCase):
         self.client = Client(**get_http_sso_data(self.user))
         self.requesting_dataset = RequestingDataset.objects.create()
         session = self.client.session
-        session['requesting_dataset'] = self.requesting_dataset.id
+        session["requesting_dataset"] = self.requesting_dataset.id
         session.save()
 
     def check_view_response(self, stage, step, field, test="Test"):
@@ -368,5 +372,7 @@ class RequestingDataDeleteTestCase(TestCase):
         client = Client(**get_http_sso_data(user))
         requesting_dataset = RequestingDataset.objects.create()
 
-        response = client.get(reverse("delete-requesting-dataset-journey", args=[requesting_dataset.id]))
+        response = client.get(
+            reverse("delete-requesting-dataset-journey", args=[requesting_dataset.id])
+        )
         assert response.status_code == 302

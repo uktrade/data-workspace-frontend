@@ -1,4 +1,3 @@
-
 from django.conf import settings
 from django.forms import ValidationError, model_to_dict
 from django.shortcuts import render
@@ -71,8 +70,10 @@ class AddNewDataset(TemplateView):
 
     def get(self, request):
         previous_page = request.META["HTTP_REFERER"]
-        if '/requesting-data/tracker/' in previous_page:
-            RequestingDataset.objects.filter(id=self.request.session["requesting_dataset"]).delete()
+        if "/requesting-data/tracker/" in previous_page:
+            RequestingDataset.objects.filter(
+                id=self.request.session["requesting_dataset"]
+            ).delete()
         return render(request, "datasets/requesting_data/add_new_dataset.html")
 
     def post(self, request, *args, **kwargs):
@@ -89,10 +90,7 @@ class AddNewDataset(TemplateView):
 class DeleteRequestingDatasetJourney(View):
     def get(self, request, requesting_dataset_id):
         RequestingDataset.objects.filter(id=requesting_dataset_id).delete()
-        return HttpResponseRedirect(
-            reverse(
-                "adding-data"
-            ))
+        return HttpResponseRedirect(reverse("adding-data"))
 
 
 class RequestingDataTrackerView(FormView):
@@ -101,9 +99,7 @@ class RequestingDataTrackerView(FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        requesting_dataset = RequestingDataset.objects.get(
-            id=self.kwargs["requesting_dataset_id"]
-        )
+        requesting_dataset = RequestingDataset.objects.get(id=self.kwargs["requesting_dataset_id"])
         self.request.session["requesting_dataset"] = requesting_dataset.id
         context["requesting_dataset_id"] = requesting_dataset.id
 
@@ -350,10 +346,16 @@ class RequestingDataSummaryInformationWizardView(RequestingDatasetBaseWizardView
 
         if step == "descriptions":
             context["link_text"] = "Find out the best practice for writing descriptions."
-            context["link"] = "https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/creating-and-updating-a-catalogue-pages/data-descriptions/"
+            context["link"] = (
+                "https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/creating-and-updating-a-catalogue-pages/data-descriptions/"
+            )
         elif step in self.user_search_pages:
-            context["link_text"] = "Find out more information about data owner roles and responsibilities"
-            context["link"] = "https://data-services-help.trade.gov.uk/data-workspace/how-to/data-owner-basics/managing-data-key-tasks-and-responsibilities/"
+            context["link_text"] = (
+                "Find out more information about data owner roles and responsibilities"
+            )
+            context["link"] = (
+                "https://data-services-help.trade.gov.uk/data-workspace/how-to/data-owner-basics/managing-data-key-tasks-and-responsibilities/"
+            )
 
         return context
 
@@ -469,7 +471,9 @@ class RequestingDataAccessRestrictionsWizardView(RequestingDatasetBaseWizardView
         if self.steps.current == "intended-access":
             context["backlink"] = reverse("requesting-data-tracker", args={requesting_dataset.id})
         else:
-            context["backlink"] = reverse("requesting-data-access-restrictions-step", args={self.steps.prev})
+            context["backlink"] = reverse(
+                "requesting-data-access-restrictions-step", args={self.steps.prev}
+            )
         return context
 
     def done(self, form_list, **kwargs):
@@ -486,6 +490,7 @@ class RequestingDataAccessRestrictionsWizardView(RequestingDatasetBaseWizardView
                 kwargs={"requesting_dataset_id": requesting_dataset.id},
             )
         )
+
 
 class RequestingDatasetSubmission(TemplateView):
     template_name = "datasets/requesting_data/submission.html"

@@ -1,6 +1,3 @@
-/* eslint-disable no-undef */
-/* eslint-disable prettier/prettier */
-
 const expectedSummaryAnswers = {
   'What is the name of the dataset?': 'Name',
   'Summarise this dataset': 'Test summarise this dataset',
