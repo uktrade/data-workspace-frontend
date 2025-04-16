@@ -379,7 +379,7 @@ class RequestingDataAboutThisDataWizardView(RequestingDatasetBaseWizardView):
     form_list = [
         ("security-classification", DatasetSecurityClassificationForm),
         ("personal-data", DatasetPersonalDataForm),
-        ("special-personal-data", DatasetSpecialPersonalDataForm),re
+        ("special-personal-data", DatasetSpecialPersonalDataForm),
         ("retention-period", DatasetRetentionPeriodForm),
         ("update-frequency", DatasetUpdateFrequencyForm),
         ("summary", SummaryPageForm),
