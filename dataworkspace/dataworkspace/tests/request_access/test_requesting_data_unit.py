@@ -30,7 +30,6 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
 
 User = get_user_model()
 
-
 @pytest.mark.django_db
 class RequestingDataFormsTestCase(TestCase):
 
