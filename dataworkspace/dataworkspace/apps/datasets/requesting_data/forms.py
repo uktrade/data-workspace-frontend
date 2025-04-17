@@ -134,7 +134,7 @@ class DatasetLicenceForm(GOVUKDesignSystemForm):
         cleaned_data = super().clean()
         licence_required = cleaned_data.get("licence_required", None)
         if licence_required == "yes" and cleaned_data["licence"] == "":
-            raise ValidationError("Please enter a URL")
+            raise ValidationError("Please enter a valid URL")
         return cleaned_data
 
 
