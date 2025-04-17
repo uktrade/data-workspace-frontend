@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.forms import ValidationError
-
+import validators
 
 from dataworkspace.apps.datasets.models import RequestingDataset, SensitivityType
 from dataworkspace.forms import (
@@ -134,6 +134,8 @@ class DatasetLicenceForm(GOVUKDesignSystemForm):
         cleaned_data = super().clean()
         licence_required = cleaned_data.get("licence_required", None)
         if licence_required == "yes" and cleaned_data["licence"] == "":
+            raise ValidationError("Please enter a URL")
+        if not validators.url(cleaned_data["licence"]):
             raise ValidationError("Please enter a valid URL")
         return cleaned_data
 
