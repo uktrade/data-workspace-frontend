@@ -14,10 +14,10 @@ from dataworkspace.apps.core.storage import ClamAVResponse
 from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.request_access.models import AccessRequest
 from dataworkspace.apps.request_access.views import StataAccessView
+from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
 from dataworkspace.tests.datasets.test_views import DatasetsCommon
 from dataworkspace.tests.factories import DataSetFactory
-from dataworkspace.tests.request_access import factories
 
 
 class TestDatasetAccessOnly:

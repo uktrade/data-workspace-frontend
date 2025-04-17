@@ -1,0 +1,94 @@
+{% extends '_main.html' %}
+
+{% load waffle_tags %}
+
+{% block breadcrumbs %}
+<a href="{% url 'support' %}" class="govuk-back-link">Back</a>
+{% endblock %}
+
+{% load i18n %}
+{% block head %}
+{{ wizard.form.media }}
+{% endblock %}
+{% block content %}
+
+  {% if form.errors %}
+    <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
+      <h2 class="govuk-error-summary__title" id="error-summary-title">
+        There is a problem
+      </h2>
+      <div class="govuk-error-summary__body">
+        <ul class="govuk-list govuk-error-summary__list">
+        {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+                <li>
+                <a href="#id_{{ field }}">{{ error }}</a>
+                </li>
+            {% endfor %}
+        {% endfor %}
+        </ul>
+      </div>
+    </div>
+  {% endif %}
+  
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">Summary Information</h1>
+      <p class="govuk-body">Step {{ wizard.steps.index|add:1 }} of {{ wizard.steps.count }}</p>
+          <p class="govuk-body">
+          <a href="{{ link }}" class="govuk-link">{{ link_text }}</a>
+        </p>
+        <h2 class="govuk-label govuk-label--m">{{label}}</h2>
+          <div id="id_descriptions-short_description-hint" class="govuk-hint">{{help_text}}</div>
+            <div class="govuk-grid-row">
+              <div class="govuk-grid-column-two-thirds">
+                {% include 'design_system/error_summary.html' with form=form %}
+                  <form action="" method="get" enctype="multipart/form-data" novalidate>
+                    <fieldset class="govuk-fieldset">
+                      <div class="govuk-form-group">
+                        <label class="govuk-label  govuk-!-font-weight-bold" for="id_search">
+                          Search by email address or name
+                        </label>
+                        <input class="govuk-input" type="text" name="search" id="id_search" value="{{ search_query }}">
+                      </div>
+                      <button type="submit" class="govuk-button" data-prevent-double-click="true">Search</button>
+                    </fieldset>
+                  </form>
+                  {% if non_matches %}
+                    <h1 class="govuk-heading-l">Unable to match {{non_matches|length}}{% if non_matches|length == 1 %} email address to a user{% else %} email addresses to users{% endif %}</h1>
+                    <ul class="govuk-list govuk-!-margin-bottom-6">
+                      {% for non_match in non_matches %}
+                        <li class="govuk-body">
+                          {{ non_match }}
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  {% endif %}
+                  {% if search_results %}
+                    <form action="" method="post" novalidate>
+                      {% csrf_token %}
+                        {{ wizard.management_form }}
+                          <table class="govuk-table">
+                            <caption class="govuk-table__caption govuk-table__caption--m">Found {{ search_results.count }} matching user{% if search_results.count > 1 %}s{% else %} for {{ search_query }}{% endif %}</caption>
+                            <tbody class="govuk-table__body">
+                              {% for result in search_results %}
+                                <tr class="govuk-table__row">
+                                    <td class="govuk-table__cell">{{ result.first_name }} {{ result.last_name }}</td>
+                                    <td class="govuk-table__cell">{{ result.email }}</td>
+                                    <input type="hidden" id="{{form_page}}" name="{{form_page}}-{{field}}" value="{{result.id}}">
+                                    <td class="govuk-table__cell"><button type="submit" class="govuk-button">Add</button></td>
+                                  </tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                    </form>
+                  {% else %}
+                    {% if search_query and not non_matches %}
+                      <h2 class="govuk-heading-m">Found 0 results</h2>
+                    {% endif %}
+                  {% endif %}
+              </div>
+            </div>
+    </div>
+  </div>
+{% endblock %}

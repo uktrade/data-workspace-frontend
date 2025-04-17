@@ -19,12 +19,14 @@ set -e
 
     django-admin waffle_flag SUGGESTED_SEARCHES_FLAG --everyone --create
     django-admin waffle_flag UNPUBLISH_DATASET_CATALOGUE_PAGE_FLAG --everyone --create
+    django-admin waffle_flag REQUESTING_DATA --everyone --create
+
     
     
     # nginx is configured to log to stdout/stderr, _except_ before
     # it manages to read its config file. To avoid errors on startup,
     # we configure its prefix to be a writable location
-    mkdir -p /home/django/logs
+    mkdir -p /home/django/logs~
 
     # Start nginx, proxy and application
     echo "Starting celery beat, nginx, proxy and django application..."

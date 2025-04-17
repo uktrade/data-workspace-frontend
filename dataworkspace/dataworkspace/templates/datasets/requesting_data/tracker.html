@@ -1,15 +1,18 @@
 {% extends '_main.html' %}
-
 {% load waffle_tags %}
 
 {% block breadcrumbs %}
-<a href="{% url 'support' %}" class="govuk-back-link">Back</a>
+<a href="{{ backlink }}" class="govuk-back-link">Back</a>
 {% endblock %}
 
 {% load i18n %}
 
 {% block content %}
-<h1 class="govuk-heading-l">Request data</h1>
+{% if requesting_dataset.name %}
+<h1 class="govuk-heading-l">{{ requesting_dataset.name }} progress </h1>
+{% else %}
+<h1 class="govuk-heading-l">Request progress </h1>
+{% endif %}
 
 <h2 class="govuk-heading-m">Request data process</h2>
 <div class="govuk-hint">To request data, you need to complete the following process:</div>
@@ -76,7 +79,7 @@
 
   <form action="" method="post">
     {% csrf_token %}
-      <input name="requesting_dataset" value="{{requesting_dataset_id}}">
+      <input type="hidden" name="requesting_dataset" value="{{requesting_dataset_id}}">
       <button type="submit" class="govuk-button" data-module="govuk-button">
         Submit
       </button>
