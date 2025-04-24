@@ -151,6 +151,7 @@ class RequestingDataTrackerView(FormView):
             self.request.user,
             User.objects.get(id=requesting_dataset.user).email,
             ["A new dataset has been requested."],
+            tag="data_request",
         )
 
         return HttpResponseRedirect(
