@@ -2083,7 +2083,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 "headerName": field.name,
                 "field": column_name,
                 "sortable": True,
-                "filter": "agTextColumnFilter"
+                "filter": "agTextColumnFilter",
             }
             if data_type in [
                 field.DATA_TYPE_INT,
