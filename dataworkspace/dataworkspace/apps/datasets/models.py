@@ -923,6 +923,7 @@ class SourceTable(BaseSource):
                 {
                     "field": column[0],
                     "filter": True,
+                    "filterParams": {"trimInput": True, "debounceMs": 1000},
                     "sortable": True,
                     "dataType": GRID_DATA_TYPE_MAP.get(column[1], column[1]),
                 }
@@ -2082,7 +2083,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 "headerName": field.name,
                 "field": column_name,
                 "sortable": True,
-                "filter": "agTextColumnFilter",
+                "filter": "agTextColumnFilter"
             }
             if data_type in [
                 field.DATA_TYPE_INT,
