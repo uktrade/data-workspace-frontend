@@ -653,6 +653,8 @@ class RequestingDataset(DeletableTimestampedUserModel):
     stage_one_complete = models.BooleanField(default=False)
     stage_two_complete = models.BooleanField(default=False)
     stage_three_complete = models.BooleanField(default=False)
+    stage_four_complete = models.BooleanField(default=False)
+
 
 
 class DataSetUserPermission(models.Model):

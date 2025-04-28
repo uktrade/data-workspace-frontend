@@ -32,7 +32,7 @@ User = get_user_model()
 
 
 @pytest.mark.django_db
-class RequestingDataFormsTestCase(TestCase):
+class RequestingCataloguePageFormsTestCase(TestCase):
 
     def setUp(self):
         self.user = factories.UserFactory.create(is_superuser=False)
@@ -202,14 +202,14 @@ class RequestingDataFormsTestCase(TestCase):
 
 
 @pytest.mark.django_db
-class RequestingDataViewsTestCase(TestCase):
+class RequestingCataloguePageViewsTestCase(TestCase):
 
     def setUp(self):
         self.user = factories.UserFactory.create(is_superuser=False)
         self.client = Client(**get_http_sso_data(self.user))
-        self.requesting_dataset = RequestingDataset.objects.create()
+        self.requesting_catalogue_page = RequestingDataset.objects.create()
         session = self.client.session
-        session["requesting_dataset"] = self.requesting_dataset.id
+        session["requesting_catalogue_page"] = self.requesting_catalogue_page.id
         session.save()
 
     def check_view_response(self, stage, step, field, test="Test"):
@@ -244,7 +244,7 @@ class RequestingDataViewsTestCase(TestCase):
 
         response = self.client.post(
             reverse(
-                "requesting-data-summary-information-step",
+                "requesting-data-title-and-description-step",
                 args=["descriptions"],
             ),
             data=data,
@@ -370,9 +370,9 @@ class RequestingDataDeleteTestCase(TestCase):
     def test_delete_modal(self):
         user = factories.UserFactory.create(is_superuser=False)
         client = Client(**get_http_sso_data(user))
-        requesting_dataset = RequestingDataset.objects.create()
+        requesting_catalogue_page = RequestingDataset.objects.create()
 
         response = client.get(
-            reverse("delete-requesting-dataset-journey", args=[requesting_dataset.id])
+            reverse("delete-requesting-catalogue_page-journey", args=[requesting_catalogue_page.id])
         )
         assert response.status_code == 302

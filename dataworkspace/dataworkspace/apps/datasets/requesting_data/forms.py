@@ -19,7 +19,8 @@ from dataworkspace.apps.core.forms import ConditionalSupportTypeRadioWidget
 
 class DatasetNameForm(GOVUKDesignSystemForm):
     name = GOVUKDesignSystemCharField(
-        label="What is the name of the dataset?",
+        label="What is the catalogue page's title?",
+        help_text="Use key words that will help other users who are not familiar with the data understand what it contains and find it.",
         required=True,
         widget=GOVUKDesignSystemTextWidget(
             label_is_heading=True,
@@ -30,8 +31,8 @@ class DatasetNameForm(GOVUKDesignSystemForm):
 
 class DatasetDescriptionsForm(GOVUKDesignSystemForm):
     short_description = GOVUKDesignSystemTextareaField(
-        label="Summarise this dataset",
-        help_text="Please provide a brief description of what it contains.",
+        label="Enter a short description of the data",
+        help_text="This will be shown on the search page.",
         required=True,
         widget=GOVUKDesignSystemTextareaWidget(
             heading="h2",
@@ -40,11 +41,12 @@ class DatasetDescriptionsForm(GOVUKDesignSystemForm):
             attrs={"rows": 5},
             extra_label_classes="govuk-!-static-margin-0",
         ),
+        error_messages={"required": "This field is required."},
     )
 
     description = GOVUKDesignSystemTextareaField(
-        label="Describe this dataset",
-        help_text="This must contain enough detail to ensure non - experts can understand it's contents. Minimum 30 words.",
+        label="Enter a long description of the data",
+        help_text="This will be on the catalogue page. It must contain enough detail to ensure non-experts can understand its contents. Minimum 30 words.",
         required=True,
         widget=GOVUKDesignSystemTextareaWidget(
             heading="h2",
@@ -53,15 +55,17 @@ class DatasetDescriptionsForm(GOVUKDesignSystemForm):
             attrs={"rows": 5},
             extra_label_classes="govuk-!-static-margin-0",
         ),
+        error_messages={"required": "This field is required."},
     )
 
     def clean(self):
         cleaned_data = super().clean()
-        description = cleaned_data["description"]
-        if len(description.split(" ")) < 30:
-            raise ValidationError("The description must be minimum 30 words")
-        else:
-            return cleaned_data
+        if cleaned_data:
+            description = cleaned_data["description"]
+            if len(description.split(" ")) < 30:
+                raise ValidationError("The description must be minimum 30 words")
+            else:
+                return cleaned_data
 
 
 class DatasetInformationAssetOwnerForm(forms.Form):
@@ -261,18 +265,6 @@ class DatasetIntendedAccessForm(GOVUKDesignSystemForm):
         ),
     )
 
-    operational_impact = GOVUKDesignSystemTextareaField(
-        label="Will this change of access have any operational impact?",
-        required=False,
-        widget=GOVUKDesignSystemTextareaWidget(
-            heading="h2",
-            label_size="m",
-            label_is_heading=True,
-            attrs={"rows": 5},
-            extra_label_classes="govuk-!-static-margin-0",
-        ),
-    )
-
 
 class DatasetUserRestrictionsForm(GOVUKDesignSystemForm):
     user_restrictions_required = forms.CharField(
@@ -306,6 +298,6 @@ class SummaryPageForm(GOVUKDesignSystemForm):
 
 
 class TrackerPageForm(forms.Form):
-    requesting_dataset = forms.CharField(
+    requesting_catalogue_page = forms.CharField(
         required=True,
     )

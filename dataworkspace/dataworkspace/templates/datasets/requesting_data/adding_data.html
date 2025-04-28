@@ -8,10 +8,24 @@
 {% endblock %}
 {% block content %}
 
-<h1 class="govuk-heading-l">Adding data</h1>
+<h1 class="govuk-heading-l">Your catalogue pages</h1>
+{% if deleted == True %}
+  <div class="govuk-notification-banner govuk-notification-banner--success" role="alert" aria-labelledby="govuk-notification-banner-title" data-module="govuk-notification-banner">
+    <div class="govuk-notification-banner__header">
+      <h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">
+        Success
+      </h2>
+    </div>
+    <div class="govuk-notification-banner__content">
+      <h3 class="govuk-notification-banner__heading">
+        You dataset has been deleted.
+      </h3>
+    </div>
+  </div>
+{% endif %}
     <h2 class="govuk-heading-m">Add a new catalogue item</h2>
     <p class="govuk-body">Publish a new catalogue item to Data Workspace. </p>
-    <a href="{% url 'add-new-dataset' %}" role="button" draggable="false" class="govuk-button govuk-button--start" data-module="govuk-button">
+    <a href="{% url 'add-new-catalogue-page' %}" role="button" draggable="false" class="govuk-button govuk-button--start" data-module="govuk-button">
     Add new catalogue item
     </a>    
     <h2 class="govuk-heading-m">Catalogue items in progress</h2>
@@ -43,7 +57,7 @@
             confirmBtn.addEventListener("click", (event) => {
             event.preventDefault()
             favDialog.close()
-            location.href = `requesting-data/delete-requesting-dataset-journey/${dialogId}`
+            location.href = `requesting-data/delete-requesting-catalogue_page-journey/${dialogId}`
         })         
         }) 
     })

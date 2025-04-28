@@ -34,7 +34,7 @@ from dataworkspace.apps.datasets.requesting_data.forms import (
 User = get_user_model()
 
 
-class AddingData(TemplateView):
+class AddingCataloguePage(TemplateView):
     template_name = "datasets/requesting_data/adding_data.html"
 
     def get_context_data(self, **kwargs):
@@ -56,74 +56,83 @@ class AddingData(TemplateView):
                 "progress": progress,
                 "uuid": request.id,
             }
+
+        previous_page = self.request.META["HTTP_REFERER"]
+        if "/requesting-data/adding-catalogue-page" in previous_page:
+            context["deleted"] = True
         context["requests"] = requests
         return context
 
 
-class AddNewDataset(TemplateView):
+class AddNewCataloguePage(TemplateView):
+
     template_name = "datasets/requesting_data/add_new_dataset.html"
 
     def get(self, request):  # pylint: disable=arguments-differ
         previous_page = request.META["HTTP_REFERER"]
         if "/requesting-data/tracker/" in previous_page:
             RequestingDataset.objects.filter(
-                id=self.request.session["requesting_dataset"]
+                id=self.request.session["requesting_catalogue_page"]
             ).delete()
         return render(request, "datasets/requesting_data/add_new_dataset.html")
 
     def post(self, request, *args, **kwargs):
-        requesting_dataset = RequestingDataset.objects.create()
-        self.kwargs["requesting_dataset_id"] = requesting_dataset.id
+        requesting_catalogue_page = RequestingDataset.objects.create()
+        self.kwargs["requesting_catalogue_page_id"] = requesting_catalogue_page.id
         return HttpResponseRedirect(
             reverse(
                 "requesting-data-tracker",
-                kwargs={"requesting_dataset_id": requesting_dataset.id},
+                kwargs={"requesting_catalogue_page_id": requesting_catalogue_page.id},
             )
         )
 
 
-class DeleteRequestingDatasetJourney(View):
-    def get(self, request, requesting_dataset_id):
-        RequestingDataset.objects.filter(id=requesting_dataset_id).delete()
-        return HttpResponseRedirect(reverse("adding-data"))
+class DeleteRequestingCataloguePageJourney(View):
+    def get(self, request, requesting_catalogue_page_id):
+        dataset = RequestingDataset.objects.filter(id=requesting_catalogue_page_id)
+        dataset.delete()
+        return HttpResponseRedirect(reverse("adding-catalogue-page"))
 
 
-class RequestingDataTrackerView(FormView):
+class RequestingCataloguePageTrackerView(FormView):
     form_class = TrackerPageForm
     template_name = "datasets/requesting_data/tracker.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        requesting_dataset = RequestingDataset.objects.get(id=self.kwargs["requesting_dataset_id"])
-        self.request.session["requesting_dataset"] = requesting_dataset.id
-        context["requesting_dataset_id"] = requesting_dataset.id
+        requesting_catalogue_page = RequestingDataset.objects.get(id=self.kwargs["requesting_catalogue_page_id"])
+        self.request.session["requesting_catalogue_page"] = requesting_catalogue_page.id
+        context["requesting_catalogue_page_id"] = requesting_catalogue_page.id
 
-        stage_one_complete = requesting_dataset.stage_one_complete
-        stage_two_complete = requesting_dataset.stage_two_complete
-        stage_three_complete = requesting_dataset.stage_three_complete
+        stage_one_complete = requesting_catalogue_page.stage_one_complete
+        stage_two_complete = requesting_catalogue_page.stage_two_complete
+        stage_three_complete = requesting_catalogue_page.stage_three_complete
+        stage_four_complete = requesting_catalogue_page.stage_four_complete
         context["stage_one_complete"] = stage_one_complete
         context["stage_two_complete"] = stage_two_complete
         context["stage_three_complete"] = stage_three_complete
-        if stage_one_complete and stage_two_complete and stage_three_complete:
+        context["stage_four_complete"] = stage_four_complete
+
+        if stage_one_complete and stage_two_complete and stage_three_complete and stage_four_complete:
             context["all_stages_complete"] = True
-        if not stage_one_complete and not stage_two_complete and not stage_three_complete:
-            context["backlink"] = reverse("add-new-dataset")
-        if "/requesting-data/summary-information/summary" in self.request.META["HTTP_REFERER"]:
-            context["backlink"] = reverse("adding-data")
+        if not stage_one_complete and not stage_two_complete and not stage_three_complete and not stage_four_complete:
+            context["backlink"] = reverse("add-new-catalogue-page")
+        if "/requesting-data/title-and-description/summary" in self.request.META["HTTP_REFERER"]:
+            context["backlink"] = reverse("adding-catalogue-page")
         if "/requesting-data/about-this-data/summary" in self.request.META["HTTP_REFERER"]:
-            context["backlink"] = reverse("adding-data")
+            context["backlink"] = reverse("adding-catalogue-page")
         if "/requesting-data/access-restrictions/summary" in self.request.META["HTTP_REFERER"]:
-            context["backlink"] = reverse("adding-data")
-        if "/requesting-data/adding-data" in self.request.META["HTTP_REFERER"]:
-            context["backlink"] = reverse("adding-data")
+            context["backlink"] = reverse("adding-catalogue-page")
+        if "/requesting-data/adding-catalogue-page" in self.request.META["HTTP_REFERER"]:
+            context["backlink"] = reverse("adding-catalogue-page")
         return context
 
     def form_valid(self, form):
-        requesting_dataset = RequestingDataset.objects.get(
-            id=form.cleaned_data["requesting_dataset"]
+        requesting_catalogue_page = RequestingDataset.objects.get(
+            id=form.cleaned_data["requesting_catalogue_page"]
         )
         data_dict = model_to_dict(
-            requesting_dataset,
+            requesting_catalogue_page,
             exclude=[
                 "id",
                 "tags",
@@ -133,23 +142,24 @@ class RequestingDataTrackerView(FormView):
                 "stage_one_complete",
                 "stage_two_complete",
                 "stage_three_complete",
+                "stage_four_complete"
             ],
         )
-        data_dict["enquiries_contact"] = requesting_dataset.enquiries_contact
-        data_dict["information_asset_manager"] = requesting_dataset.information_asset_manager
-        data_dict["information_asset_owner"] = requesting_dataset.information_asset_owner
-        data_dict["slug"] = requesting_dataset.name.lower().replace(" ", "-")
+        data_dict["enquiries_contact"] = requesting_catalogue_page.enquiries_contact
+        data_dict["information_asset_manager"] = requesting_catalogue_page.information_asset_manager
+        data_dict["information_asset_owner"] = requesting_catalogue_page.information_asset_owner
+        data_dict["slug"] = requesting_catalogue_page.name.lower().replace(" ", "-")
 
         dataset = DataSet.objects.create(**data_dict)
-        dataset.data_catalogue_editors.set(requesting_dataset.data_catalogue_editors.all())
-        dataset.sensitivity.set(requesting_dataset.sensitivity.all())
+        dataset.data_catalogue_editors.set(requesting_catalogue_page.data_catalogue_editors.all())
+        dataset.sensitivity.set(requesting_catalogue_page.sensitivity.all())
         dataset.save()
 
-        RequestingDataset.objects.filter(id=requesting_dataset.id).delete()
+        RequestingDataset.objects.filter(id=requesting_catalogue_page.id).delete()
 
         zendesk_ticket_id = create_support_request(
             self.request.user,
-            User.objects.get(id=requesting_dataset.user).email,
+            User.objects.get(id=requesting_catalogue_page.user).email,
             ["A new dataset has been requested."],
             tag="data_request",
         )
@@ -162,7 +172,7 @@ class RequestingDataTrackerView(FormView):
         )
 
 
-class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
+class RequestingCataloguePageBaseWizardView(NamedUrlSessionWizardView, FormPreview):
 
     user_search_pages = [
         "information-asset-owner",
@@ -180,26 +190,26 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
         "user-restrictions",
     ]
 
-    def add_fields(self, form_list, requesting_dataset, notes_fields=None):
+    def add_fields(self, form_list, requesting_catalogue_page, notes_fields=None):
         if notes_fields is None:
             notes_fields = []
         for form in form_list:
             for field in form.cleaned_data:
                 if field in notes_fields and form.cleaned_data.get(field):
-                    if requesting_dataset.notes:
-                        requesting_dataset.notes += (
+                    if requesting_catalogue_page.notes:
+                        requesting_catalogue_page.notes += (
                             f"{form[field].label}\n{form.cleaned_data.get(field)}\n"
                         )
                     else:
-                        requesting_dataset.notes = (
+                        requesting_catalogue_page.notes = (
                             f"{form[field].label}\n{form.cleaned_data.get(field)}\n"
                         )
                 if field == "sensitivity":
-                    requesting_dataset.sensitivity.set(form.cleaned_data.get("sensitivity"))
+                    requesting_catalogue_page.sensitivity.set(form.cleaned_data.get("sensitivity"))
                 else:
-                    setattr(requesting_dataset, field, form.cleaned_data.get(field))
-            requesting_dataset.save()
-        return requesting_dataset
+                    setattr(requesting_catalogue_page, field, form.cleaned_data.get(field))
+            requesting_catalogue_page.save()
+        return requesting_catalogue_page
 
     def get_users(self, search_query):
         email_filter = Q(email__icontains=search_query)
@@ -277,9 +287,9 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
                 )
         return summary_list
 
-    def get_base_context(self, context, requesting_dataset, stage, step):
+    def get_base_context(self, context, requesting_catalogue_page, stage, step):
         if step in ["name", "security-classification", "intended-access"]:
-            context["backlink"] = reverse("requesting-data-tracker", args={requesting_dataset.id})
+            context["backlink"] = reverse("requesting-data-tracker", args={requesting_catalogue_page.id})
         else:
             context["backlink"] = reverse(f"requesting-data-{stage}-step", args={self.steps.prev})
 
@@ -307,14 +317,10 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
         return context
 
 
-class RequestingDataSummaryInformationWizardView(RequestingDatasetBaseWizardView):
+class RequestingCataloguePageTitleAndDescriptionWizardView(RequestingCataloguePageBaseWizardView):
     form_list = [
         ("name", DatasetNameForm),
         ("descriptions", DatasetDescriptionsForm),
-        ("information-asset-owner", DatasetInformationAssetOwnerForm),
-        ("information-asset-manager", DatasetInformationAssetManagerForm),
-        ("enquiries-contact", DatasetEnquiriesContactForm),
-        ("licence", DatasetLicenceForm),
         ("summary", SummaryPageForm),
     ]
 
@@ -322,10 +328,6 @@ class RequestingDataSummaryInformationWizardView(RequestingDatasetBaseWizardView
         "name",
         "short_description",
         "description",
-        "information_asset_owner",
-        "information_asset_manager",
-        "enquiries_contact",
-        "licence",
     ]
 
     def get_template_names(self):
@@ -333,12 +335,12 @@ class RequestingDataSummaryInformationWizardView(RequestingDatasetBaseWizardView
 
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form=form, **kwargs)
-        requesting_dataset = RequestingDataset.objects.get(
-            id=self.request.session["requesting_dataset"]
+        requesting_catalogue_page = RequestingDataset.objects.get(
+            id=self.request.session["requesting_catalogue_page"]
         )
-        context["stage"] = "Summary Information"
+        context["stage"] = "Title and Description"
         step = self.steps.current
-        self.get_base_context(context, requesting_dataset, "summary-information", step)
+        self.get_base_context(context, requesting_catalogue_page, "title-and-description", step)
 
         if step == "descriptions":
             context["link_text"] = "Find out the best practice for writing descriptions."
@@ -356,82 +358,23 @@ class RequestingDataSummaryInformationWizardView(RequestingDatasetBaseWizardView
         return context
 
     def done(self, form_list, **kwargs):
-        requesting_dataset = RequestingDataset.objects.get(
-            id=self.request.session["requesting_dataset"]
+        requesting_catalogue_page = RequestingDataset.objects.get(
+            id=self.request.session["requesting_catalogue_page"]
         )
-        requesting_dataset.user = self.request.user.id
-        requesting_dataset.stage_one_complete = True
-        requesting_dataset = self.add_fields(form_list, requesting_dataset)
-        requesting_dataset.save()
+        requesting_catalogue_page.user = self.request.user.id
+        requesting_catalogue_page.stage_one_complete = True
+        requesting_catalogue_page = self.add_fields(form_list, requesting_catalogue_page)
+        requesting_catalogue_page.save()
 
         return HttpResponseRedirect(
             reverse(
                 "requesting-data-tracker",
-                kwargs={"requesting_dataset_id": requesting_dataset.id},
+                kwargs={"requesting_catalogue_page_id": requesting_catalogue_page.id},
             )
         )
 
 
-class RequestingDataAboutThisDataWizardView(RequestingDatasetBaseWizardView):
-
-    form_list = [
-        ("security-classification", DatasetSecurityClassificationForm),
-        ("personal-data", DatasetPersonalDataForm),
-        ("special-personal-data", DatasetSpecialPersonalDataForm),
-        ("retention-period", DatasetRetentionPeriodForm),
-        ("update-frequency", DatasetUpdateFrequencyForm),
-        ("summary", SummaryPageForm),
-    ]
-
-    all_params = [
-        "government_security_classification",
-        "personal_data",
-        "special_personal_data",
-        "commercial_sensitive",
-        "retention_policy",
-        "update_frequency",
-    ]
-
-    notes_fields = [
-        "special-personal-data",
-        "commercial-sensitive",
-        "update-frequency",
-    ]
-
-    def get_template_names(self):
-        return self.get_template(self.steps.current)
-
-    def get_context_data(self, form, **kwargs):
-        context = super().get_context_data(form=form, **kwargs)
-        requesting_dataset = RequestingDataset.objects.get(
-            id=self.request.session["requesting_dataset"]
-        )
-        context["stage"] = "About This Data"
-        step = self.steps.current
-        self.get_base_context(context, requesting_dataset, "summary-information", step)
-        if step == "special-personal-data":
-            context["link_text"] = "Find out more information about special category personal data"
-            context["link"] = "#"
-
-        return context
-
-    def done(self, form_list, **kwargs):
-        requesting_dataset = RequestingDataset.objects.get(
-            id=self.request.session["requesting_dataset"]
-        )
-        requesting_dataset = self.add_fields(form_list, requesting_dataset, self.notes_fields)
-        requesting_dataset.stage_two_complete = True
-        requesting_dataset.save()
-
-        return HttpResponseRedirect(
-            reverse(
-                "requesting-data-tracker",
-                kwargs={"requesting_dataset_id": requesting_dataset.id},
-            )
-        )
-
-
-class RequestingDataAccessRestrictionsWizardView(RequestingDatasetBaseWizardView):
+class RequestingCataloguePageAccessRestrictionsWizardView(RequestingCataloguePageBaseWizardView):
 
     form_list = [
         ("intended-access", DatasetIntendedAccessForm),
@@ -441,14 +384,11 @@ class RequestingDataAccessRestrictionsWizardView(RequestingDatasetBaseWizardView
 
     all_params = [
         "intended_access",
-        "operational_impact",
-        "location_restrictions",
         "user_restrictions",
     ]
 
     notes_fields = [
         "intended_access",
-        "operational_impact",
         "user_restrictions",
     ]
 
@@ -457,15 +397,15 @@ class RequestingDataAccessRestrictionsWizardView(RequestingDatasetBaseWizardView
 
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form=form, **kwargs)
-        requesting_dataset = RequestingDataset.objects.get(
-            id=self.request.session["requesting_dataset"]
+        requesting_catalogue_page = RequestingDataset.objects.get(
+            id=self.request.session["requesting_catalogue_page"]
         )
         step = self.steps.current
         context["stage"] = "Access Restrictions"
-        self.get_base_context(context, requesting_dataset, "summary-information", step)
+        self.get_base_context(context, requesting_catalogue_page, "title-and-description", step)
 
         if self.steps.current == "intended-access":
-            context["backlink"] = reverse("requesting-data-tracker", args={requesting_dataset.id})
+            context["backlink"] = reverse("requesting-data-tracker", args={requesting_catalogue_page.id})
         else:
             context["backlink"] = reverse(
                 "requesting-data-access-restrictions-step", args={self.steps.prev}
@@ -473,20 +413,136 @@ class RequestingDataAccessRestrictionsWizardView(RequestingDatasetBaseWizardView
         return context
 
     def done(self, form_list, **kwargs):
-        requesting_dataset = RequestingDataset.objects.get(
-            id=self.request.session["requesting_dataset"]
+        requesting_catalogue_page = RequestingDataset.objects.get(
+            id=self.request.session["requesting_catalogue_page"]
         )
-        requesting_dataset = self.add_fields(form_list, requesting_dataset, self.notes_fields)
-        requesting_dataset.stage_three_complete = True
-        requesting_dataset.save()
+        requesting_catalogue_page = self.add_fields(form_list, requesting_catalogue_page, self.notes_fields)
+        requesting_catalogue_page.stage_three_complete = True
+        requesting_catalogue_page.save()
 
         return HttpResponseRedirect(
             reverse(
                 "requesting-data-tracker",
-                kwargs={"requesting_dataset_id": requesting_dataset.id},
+                kwargs={"requesting_catalogue_page_id": requesting_catalogue_page.id},
             )
         )
 
 
-class RequestingDatasetSubmission(TemplateView):
+class RequestingCataloguePageGovernanceWizardView(RequestingCataloguePageBaseWizardView):
+
+    form_list = [
+        ("information-asset-owner", DatasetInformationAssetOwnerForm),
+        ("information-asset-manager", DatasetInformationAssetManagerForm),
+        ("enquiries-contact", DatasetEnquiriesContactForm),
+        ("licence", DatasetLicenceForm),
+        ("retention-period", DatasetRetentionPeriodForm),
+        # ("catalogue-editors", DatasetCatalogueEditorsForm),
+
+        ("summary", SummaryPageForm),
+    ]
+
+    all_params = [
+        "intended_access",
+        "location_restrictions",
+        "user_restrictions",
+        "retention_policy",
+
+    ]
+
+    notes_fields = [
+        "intended_access",
+        "user_restrictions",
+    ]
+
+    def get_template_names(self):
+        return self.get_template(self.steps.current)
+
+    def get_context_data(self, form, **kwargs):
+        context = super().get_context_data(form=form, **kwargs)
+        requesting_catalogue_page = RequestingDataset.objects.get(
+            id=self.request.session["requesting_catalogue_page"]
+        )
+        step = self.steps.current
+        context["stage"] = "Access Restrictions"
+        self.get_base_context(context, requesting_catalogue_page, "title-and-description", step)
+
+        if self.steps.current == "intended-access":
+            context["backlink"] = reverse("requesting-data-tracker", args={requesting_catalogue_page.id})
+        else:
+            context["backlink"] = reverse(
+                "requesting-data-access-restrictions-step", args={self.steps.prev}
+            )
+        return context
+
+    def done(self, form_list, **kwargs):
+        requesting_catalogue_page = RequestingDataset.objects.get(
+            id=self.request.session["requesting_catalogue_page"]
+        )
+        requesting_catalogue_page = self.add_fields(form_list, requesting_catalogue_page, self.notes_fields)
+        requesting_catalogue_page.stage_three_complete = True
+        requesting_catalogue_page.save()
+
+        return HttpResponseRedirect(
+            reverse(
+                "requesting-data-tracker",
+                kwargs={"requesting_catalogue_page_id": requesting_catalogue_page.id},
+            )
+        )
+
+
+class RequestingCataloguePageAboutThisDataWizardView(RequestingCataloguePageBaseWizardView):
+
+    form_list = [
+        # ("type", DatasetTypeForm),
+        ("security-classification", DatasetSecurityClassificationForm),
+        ("personal-data", DatasetPersonalDataForm),
+        ("special-personal-data", DatasetSpecialPersonalDataForm),
+
+        ("summary", SummaryPageForm),
+    ]
+
+    all_params = [
+        "government_security_classification",
+        "personal_data",
+        "special_personal_data",
+    ]
+
+    notes_fields = [
+        "special-personal-data",
+    ]
+
+    def get_template_names(self):
+        return self.get_template(self.steps.current)
+
+    def get_context_data(self, form, **kwargs):
+        context = super().get_context_data(form=form, **kwargs)
+        requesting_catalogue_page = RequestingDataset.objects.get(
+            id=self.request.session["requesting_catalogue_page"]
+        )
+        context["stage"] = "About This Data"
+        step = self.steps.current
+        self.get_base_context(context, requesting_catalogue_page, "title-and-description", step)
+        if step == "special-personal-data":
+            context["link_text"] = "Find out more information about special category personal data"
+            context["link"] = "#"
+
+        return context
+
+    def done(self, form_list, **kwargs):
+        requesting_catalogue_page = RequestingDataset.objects.get(
+            id=self.request.session["requesting_catalogue_page"]
+        )
+        requesting_catalogue_page = self.add_fields(form_list, requesting_catalogue_page, self.notes_fields)
+        requesting_catalogue_page.stage_two_complete = True
+        requesting_catalogue_page.save()
+
+        return HttpResponseRedirect(
+            reverse(
+                "requesting-data-tracker",
+                kwargs={"requesting_catalogue_page_id": requesting_catalogue_page.id},
+            )
+        )
+
+
+class RequestingCataloguePageSubmission(TemplateView):
     template_name = "datasets/requesting_data/submission.html"
