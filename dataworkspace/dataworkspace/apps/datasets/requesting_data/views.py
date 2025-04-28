@@ -519,6 +519,7 @@ class RequestingCataloguePageAboutThisDataWizardView(RequestingCataloguePageBase
         ("security-classification", DatasetSecurityClassificationForm),
         ("personal-data", DatasetPersonalDataForm),
         ("special-personal-data", DatasetSpecialPersonalDataForm),
+        ("supdate-frequency", DatasetUpdateFrequencyForm),
         ("summary", SummaryPageForm),
     ]
 
