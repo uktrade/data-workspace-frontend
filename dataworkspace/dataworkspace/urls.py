@@ -40,14 +40,15 @@ from dataworkspace.apps.core.views import (
 )
 
 from dataworkspace.apps.datasets.requesting_data.views import (
-    AddNewDataset,
-    AddingData,
-    DeleteRequestingDatasetJourney,
-    RequestingDataAboutThisDataWizardView,
-    RequestingDataAccessRestrictionsWizardView,
-    RequestingDataSummaryInformationWizardView,
-    RequestingDataTrackerView,
-    RequestingDatasetSubmission,
+    AddNewCataloguePage,
+    AddingCataloguePage,
+    DeleteRequestingCataloguePageJourney,
+    RequestingCataloguePageAboutThisDataWizardView,
+    RequestingCataloguePageAccessRestrictionsWizardView,
+    RequestingCataloguePageGovernanceWizardView,
+    RequestingCataloguePageTitleAndDescriptionWizardView,
+    RequestingCataloguePageTrackerView,
+    RequestingCataloguePageSubmission,
 )
 from dataworkspace.apps.datasets.views import home_view
 
@@ -145,49 +146,63 @@ urlpatterns = [
         name="add-dataset-request",
     ),
     path(
-        "requesting-data/adding-data",
-        AddingData.as_view(),
-        name="adding-data",
+        "requesting-data/adding-catalogue-page",
+        AddingCataloguePage.as_view(),
+        name="adding-catalogue-page",
     ),
     path(
-        "requesting-data/add-new-dataset",
-        AddNewDataset.as_view(),
-        name="add-new-dataset",
+        "requesting-data/add-new-catalogue-page",
+        AddNewCataloguePage.as_view(),
+        name="add-new-catalogue-page",
     ),
     path(
-        "requesting-data/delete-requesting-dataset-journey/<uuid:requesting_dataset_id>",
-        DeleteRequestingDatasetJourney.as_view(),
-        name="delete-requesting-dataset-journey",
+        "requesting-data/delete-requesting-catalogue_page-journey/<uuid:requesting_catalogue_page_id>",
+        DeleteRequestingCataloguePageJourney.as_view(),
+        name="delete-requesting-catalogue_page-journey",
     ),
     path(
-        "requesting-data/summary-information/<str:step>",
-        RequestingDataSummaryInformationWizardView.as_view(
-            url_name="requesting-data-summary-information-step"
+        "requesting-data/title-and-description/<str:step>",
+        RequestingCataloguePageTitleAndDescriptionWizardView.as_view(
+            url_name="requesting-data-title-and-description-step"
         ),
-        name="requesting-data-summary-information-step",
-    ),
-    path(
-        "requesting-data/about-this-data/<str:step>",
-        RequestingDataAboutThisDataWizardView.as_view(
-            url_name="requesting-data-about-this-data-step"
-        ),
-        name="requesting-data-about-this-data-step",
+        name="requesting-data-title-and-description-step",
     ),
     path(
         "requesting-data/access-restrictions/<str:step>",
-        RequestingDataAccessRestrictionsWizardView.as_view(
+        RequestingCataloguePageAccessRestrictionsWizardView.as_view(
             url_name="requesting-data-access-restrictions-step"
         ),
         name="requesting-data-access-restrictions-step",
     ),
     path(
-        "requesting-data/tracker/<uuid:requesting_dataset_id>",
-        RequestingDataTrackerView.as_view(),
+        "requesting-data/governance/<str:step>",
+        RequestingCataloguePageGovernanceWizardView.as_view(
+            url_name="requesting-data-governance-step"
+        ),
+        name="requesting-data-governance-step",
+    ),
+    path(
+        "requesting-data/about-this-data/<str:step>",
+        RequestingCataloguePageAboutThisDataWizardView.as_view(
+            url_name="requesting-data-about-this-data-step"
+        ),
+        name="requesting-data-about-this-data-step",
+    ),
+    path(
+        "requesting-data/governance/<str:step>",
+        RequestingCataloguePageGovernanceWizardView.as_view(
+            url_name="requesting-data-governance-step"
+        ),
+        name="requesting-data-governance-step",
+    ),
+    path(
+        "requesting-data/tracker/<uuid:requesting_catalogue_page_id>",
+        RequestingCataloguePageTrackerView.as_view(),
         name="requesting-data-tracker",
     ),
     path(
         "requesting-data/submission/",
-        RequestingDatasetSubmission.as_view(),
+        RequestingCataloguePageSubmission.as_view(),
         name="requesting-data-submission",
     ),
     path(

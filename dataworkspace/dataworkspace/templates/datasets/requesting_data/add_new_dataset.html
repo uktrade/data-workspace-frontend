@@ -2,32 +2,32 @@
 
 {% load waffle_tags %}
 
-{% block page_title %}Request a new dataset - {{ block.super }}{% endblock page_title %}
+{% block page_title %}Add a new catalogue page - {{ block.super }}{% endblock page_title %}
 {% block breadcrumbs %}
-<a href="{% url 'adding-data' %}" class="govuk-back-link">Back</a>
+<a href="{% url 'adding-catalogue-page' %}" class="govuk-back-link">Back</a>
 {% endblock %}
 {% block content %}
 
-<h1 class="govuk-heading-l">Add a new dataset</h1>
+<h1 class="govuk-heading-l">Add a new catalogue page</h1>
     <h2 class="govuk-heading-m">When to use this service</h2>
-        <ul class="govuk-list govuk-list--bullet">
-            <li>tell us about data you'd like to publish</li>
-            <li>request your data be published</li>
-        </ul>
-    <h2 class="govuk-heading-m">Before you start</h2>
-    <p class="govuk-body">Enter as much detail as you can. You do not need to complete all the information if you do not know it.</p>
-    <p class="govuk-body">We will ask for:</p>
+    <p class="govuk-body">Use this service to publish a new catalogue page on Data Workspace. This new page could be for:</p>
     <ul class="govuk-list govuk-list--bullet">
-        <li>a description of the data</li>
-        <li>what the data will be used for</li>
-        <li>the security classification of the data</li>
-        <li>where it is currently held</li>
-        <li>the information asset owner or information asset manager.</li>
-        <li>licensing details</li>
+        <li>a source dataset</li>
+        <li>a reference dataset</li>
+        <li>a dashboard</li>
+        <li>a data cut</li>
     </ul>
 
-    <h2 class="govuk-heading-m">How long it takes</h2>
-        <p class="govuk-body">Completing this form takes about 5 minutes. We will respond to you within 5 working days.</p>
+    <h3 class="govuk-heading-s">If you want to add a table to an existing source dataset</h3>
+<p class="govuk-body"> You must use the <a href="https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/adding-data/add-a-new-table-to-a-catalogue-page/" class="govuk-link">add a new table</a> process.</p>
+
+    <h4 class="govuk-heading-s">If you want to publish a custom visualisation and need it reviewed by our team</h4>
+<p class="govuk-body"> You can <a href="https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/adding-data/add-a-new-table-to-a-catalogue-page/" class="govuk-link">start the review process here.</a></p>
+
+
+  <h5 class="govuk-heading-m">How long it takes</h5>
+<p class="govuk-body"> Our Service Level Agreement (SLA) commits us to respond within 5 days. However, we are usually much faster.</p>
+
   <form method="post" novalidate>
     {% csrf_token %}
             {{ wizard.management_form }}
@@ -41,7 +41,7 @@
   </form>
 
 
-<hr class="govuk-section-break govuk-section-break--xl govuk-section-break--visible">
+<hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
 <p class="govuk-body-l">Contact</p>
 
 <p class="govuk-body"><a href="https://data.trade.gov.uk/contact-us/" class="govuk-link">Contact us</a> if you have any questions or issues with this process.</p>

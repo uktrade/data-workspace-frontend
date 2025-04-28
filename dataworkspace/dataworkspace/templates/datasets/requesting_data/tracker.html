@@ -8,19 +8,15 @@
 {% load i18n %}
 
 {% block content %}
-{% if requesting_dataset.name %}
-<h1 class="govuk-heading-l">{{ requesting_dataset.name }} progress </h1>
-{% else %}
-<h1 class="govuk-heading-l">Request progress </h1>
-{% endif %}
+<h1 class="govuk-heading-l">Your progress</h1>
+<p class="govuk-body">To add a new catalogue page, complete the following steps:</p>
+<p class="govuk-body"><a href="https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/adding-data/add-a-new-table-to-a-catalogue-page/" class="govuk-link">Contact us</a> if you need any help.</p>
 
-<h2 class="govuk-heading-m">Request data process</h2>
-<div class="govuk-hint">To request data, you need to complete the following process:</div>
 <ul class="govuk-task-list">
   <li class="govuk-task-list__item govuk-task-list__item--with-link">
     <div class="govuk-task-list__name-and-hint">
-      <a class="govuk-link govuk-task-list__link" href="{% url 'requesting-data-summary-information-step' 'name' %}" aria-describedby="company-details-1-status">
-        Summary information
+      <a class="govuk-link govuk-task-list__link" href="{% url 'requesting-data-title-and-description-step' 'name' %}" aria-describedby="company-details-1-status">
+        Title and Description
       </a>
     </div>
     {% if stage_one_complete %}
@@ -35,24 +31,7 @@
       </div>
     {% endif %}
   </li>
-  <li class="govuk-task-list__item govuk-task-list__item--with-link">
-    <div class="govuk-task-list__name-and-hint">
-      <a class="govuk-link govuk-task-list__link" href="{% url 'requesting-data-about-this-data-step' 'security-classification' %}" aria-describedby="company-details-2-status">
-        About the data
-      </a>
-    </div>
-    {% if stage_two_complete %}
-      <div class="govuk-task-list__status" id="company-details-1-status">
-        Completed
-      </div>
-    {% else %}
-      <div class="govuk-task-list__status" id="company-details-2-status">
-        <strong class="govuk-tag govuk-tag--blue">
-          Incomplete
-        </strong>
-      </div>
-    {% endif %}
-  </li>
+
   <li class="govuk-task-list__item govuk-task-list__item--with-link">
     <div class="govuk-task-list__name-and-hint">
       <a class="govuk-link govuk-task-list__link" href="{% url 'requesting-data-access-restrictions-step' 'intended-access' %}" aria-describedby="company-details-3-hint company-details-3-status">
@@ -71,6 +50,45 @@
       </div>
     {% endif %}
   </li>
+
+  <li class="govuk-task-list__item govuk-task-list__item--with-link">
+    <div class="govuk-task-list__name-and-hint">
+      <a class="govuk-link govuk-task-list__link" href="{% url 'requesting-data-governance-step' 'information-asset-owner' %}" aria-describedby="company-details-3-hint company-details-3-status">
+        Governance
+      </a>
+    </div>
+    {% if stage_three_complete %}
+      <div class="govuk-task-list__status" id="company-details-1-status">
+        Completed
+      </div>
+    {% else %}
+      <div class="govuk-task-list__status" id="company-details-2-status">
+        <strong class="govuk-tag govuk-tag--blue">
+          Incomplete
+        </strong>
+      </div>
+    {% endif %}
+  </li>
+
+  <li class="govuk-task-list__item govuk-task-list__item--with-link">
+    <div class="govuk-task-list__name-and-hint">
+      <a class="govuk-link govuk-task-list__link" href="{% url 'requesting-data-about-this-data-step' 'security-classification' %}" aria-describedby="company-details-2-status">
+        About the data
+      </a>
+    </div>
+    {% if stage_two_complete %}
+      <div class="govuk-task-list__status" id="company-details-1-status">
+        Completed
+      </div>
+    {% else %}
+      <div class="govuk-task-list__status" id="company-details-2-status">
+        <strong class="govuk-tag govuk-tag--blue">
+          Incomplete
+        </strong>
+      </div>
+    {% endif %}
+  </li>
+  
 </ul>
 
 {% if all_stages_complete %}
@@ -79,7 +97,7 @@
 
   <form action="" method="post">
     {% csrf_token %}
-      <input type="hidden" name="requesting_dataset" value="{{requesting_dataset_id}}">
+      <input type="hidden" name="requesting_catalogue_page" value="{{requesting_catalogue_page_id}}">
       <button type="submit" class="govuk-button" data-module="govuk-button">
         Submit
       </button>

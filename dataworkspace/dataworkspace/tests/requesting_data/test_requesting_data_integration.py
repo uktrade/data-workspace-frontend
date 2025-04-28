@@ -13,14 +13,14 @@ from dataworkspace.tests.common import get_http_sso_data
 
 
 @pytest.mark.django_db
-class TestRequestingData(TestCase):
+class TestRequestingCataloguePage(TestCase):
 
     def setUp(self):
         self.user = factories.UserFactory.create(is_superuser=False)
         self.client = Client(**get_http_sso_data(self.user))
-        self.requesting_dataset = RequestingDataset.objects.create()
+        self.requesting_catalogue_page = RequestingDataset.objects.create()
         session = self.client.session
-        session["requesting_dataset"] = self.requesting_dataset.id
+        session["requesting_catalogue_page"] = self.requesting_catalogue_page.id
         session.save()
 
     def assert_common_content_one_label_page(self, stage, url_name, label):
@@ -79,12 +79,14 @@ class TestRequestingData(TestCase):
 
     def test_name_page(self):
         self.assert_common_content_one_label_page(
-            stage="summary-information", url_name="name", label="What is the name of the dataset?"
+            stage="title-and-description",
+            url_name="name",
+            label="What is the name of the dataset?",
         )
 
     def test_descriptions_page(self):
         response = self.client.get(
-            reverse("requesting-data-summary-information-step", args={("descriptions")})
+            reverse("requesting-data-title-and-description-step", args={("descriptions")})
         )
 
         soup = BeautifulSoup(response.content.decode(response.charset))
@@ -98,28 +100,28 @@ class TestRequestingData(TestCase):
 
     def test_information_asset_owner_page(self):
         self.assert_common_content_user_search_page(
-            stage="summary-information",
+            stage="title-and-description",
             url_name="information-asset-owner",
             label="Name of Information Asset Owner",
         )
 
     def test_information_asset_manager_page(self):
         self.assert_common_content_user_search_page(
-            stage="summary-information",
+            stage="title-and-description",
             url_name="information-asset-manager",
             label="Name of Information Asset Manager",
         )
 
     def test_enquiries_contact_page(self):
         self.assert_common_content_user_search_page(
-            stage="summary-information",
+            stage="title-and-description",
             url_name="enquiries-contact",
             label="Contact person",
         )
 
     def test_licence_page(self):
         self.assert_common_content_conditional_radio_buttons_page(
-            stage="summary-information",
+            stage="title-and-description",
             url_name="licence",
             radio_label="Do you need/have a licence for this data?",
         )
