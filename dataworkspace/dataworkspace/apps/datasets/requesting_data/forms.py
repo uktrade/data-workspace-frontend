@@ -20,7 +20,7 @@ from dataworkspace.apps.core.forms import ConditionalSupportTypeRadioWidget
 class DatasetNameForm(GOVUKDesignSystemForm):
     name = GOVUKDesignSystemCharField(
         label="What is the catalogue page's title?",
-        help_text="Use key words that will help other users who are not familiar with the data understand what it contains and find it.",
+        help_text="Use key words that will help other users who are not familiar with the data understand what it contains and find it.",  # pylint: disable=line-too-long
         required=True,
         widget=GOVUKDesignSystemTextWidget(
             label_is_heading=True,
@@ -46,7 +46,7 @@ class DatasetDescriptionsForm(GOVUKDesignSystemForm):
 
     description = GOVUKDesignSystemTextareaField(
         label="Enter a long description of the data",
-        help_text="This will be on the catalogue page. It must contain enough detail to ensure non-experts can understand its contents. Minimum 30 words.",
+        help_text="This will be on the catalogue page. It must contain enough detail to ensure non-experts can understand its contents. Minimum 30 words.",  # pylint: disable=line-too-long
         required=True,
         widget=GOVUKDesignSystemTextareaWidget(
             heading="h2",
@@ -64,8 +64,7 @@ class DatasetDescriptionsForm(GOVUKDesignSystemForm):
             description = cleaned_data["description"]
             if len(description.split(" ")) < 30:
                 raise ValidationError("The description must be minimum 30 words")
-            else:
-                return cleaned_data
+        return cleaned_data
 
 
 class DatasetInformationAssetOwnerForm(forms.Form):
