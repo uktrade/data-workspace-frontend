@@ -388,7 +388,7 @@ class CollectionUsersView(FormView):
             with transaction.atomic():
                 membership = CollectionUserMembership.objects.create(
                     collection=collection,
-                    user=get_user_model().objects.get(email=form.cleaned_data["email"]),
+                    user=get_user_model().objects.get(email=form.cleaned_data["email"], is_active=True),
                     created_by=self.request.user,
                 )
                 log_event(
