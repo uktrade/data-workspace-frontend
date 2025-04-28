@@ -656,7 +656,6 @@ class RequestingDataset(DeletableTimestampedUserModel):
     stage_four_complete = models.BooleanField(default=False)
 
 
-
 class DataSetUserPermission(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)

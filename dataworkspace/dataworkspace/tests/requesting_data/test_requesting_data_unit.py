@@ -373,6 +373,8 @@ class RequestingDataDeleteTestCase(TestCase):
         requesting_catalogue_page = RequestingDataset.objects.create()
 
         response = client.get(
-            reverse("delete-requesting-catalogue_page-journey", args=[requesting_catalogue_page.id])
+            reverse(
+                "delete-requesting-catalogue_page-journey", args=[requesting_catalogue_page.id]
+            )
         )
         assert response.status_code == 302

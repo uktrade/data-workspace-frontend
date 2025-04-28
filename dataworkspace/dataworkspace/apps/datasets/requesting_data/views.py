@@ -100,7 +100,9 @@ class RequestingCataloguePageTrackerView(FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        requesting_catalogue_page = RequestingDataset.objects.get(id=self.kwargs["requesting_catalogue_page_id"])
+        requesting_catalogue_page = RequestingDataset.objects.get(
+            id=self.kwargs["requesting_catalogue_page_id"]
+        )
         self.request.session["requesting_catalogue_page"] = requesting_catalogue_page.id
         context["requesting_catalogue_page_id"] = requesting_catalogue_page.id
 
@@ -113,9 +115,19 @@ class RequestingCataloguePageTrackerView(FormView):
         context["stage_three_complete"] = stage_three_complete
         context["stage_four_complete"] = stage_four_complete
 
-        if stage_one_complete and stage_two_complete and stage_three_complete and stage_four_complete:
+        if (
+            stage_one_complete
+            and stage_two_complete
+            and stage_three_complete
+            and stage_four_complete
+        ):
             context["all_stages_complete"] = True
-        if not stage_one_complete and not stage_two_complete and not stage_three_complete and not stage_four_complete:
+        if (
+            not stage_one_complete
+            and not stage_two_complete
+            and not stage_three_complete
+            and not stage_four_complete
+        ):
             context["backlink"] = reverse("add-new-catalogue-page")
         if "/requesting-data/title-and-description/summary" in self.request.META["HTTP_REFERER"]:
             context["backlink"] = reverse("adding-catalogue-page")
@@ -142,11 +154,13 @@ class RequestingCataloguePageTrackerView(FormView):
                 "stage_one_complete",
                 "stage_two_complete",
                 "stage_three_complete",
-                "stage_four_complete"
+                "stage_four_complete",
             ],
         )
         data_dict["enquiries_contact"] = requesting_catalogue_page.enquiries_contact
-        data_dict["information_asset_manager"] = requesting_catalogue_page.information_asset_manager
+        data_dict["information_asset_manager"] = (
+            requesting_catalogue_page.information_asset_manager
+        )
         data_dict["information_asset_owner"] = requesting_catalogue_page.information_asset_owner
         data_dict["slug"] = requesting_catalogue_page.name.lower().replace(" ", "-")
 
@@ -289,7 +303,9 @@ class RequestingCataloguePageBaseWizardView(NamedUrlSessionWizardView, FormPrevi
 
     def get_base_context(self, context, requesting_catalogue_page, stage, step):
         if step in ["name", "security-classification", "intended-access"]:
-            context["backlink"] = reverse("requesting-data-tracker", args={requesting_catalogue_page.id})
+            context["backlink"] = reverse(
+                "requesting-data-tracker", args={requesting_catalogue_page.id}
+            )
         else:
             context["backlink"] = reverse(f"requesting-data-{stage}-step", args={self.steps.prev})
 
@@ -405,7 +421,9 @@ class RequestingCataloguePageAccessRestrictionsWizardView(RequestingCataloguePag
         self.get_base_context(context, requesting_catalogue_page, "title-and-description", step)
 
         if self.steps.current == "intended-access":
-            context["backlink"] = reverse("requesting-data-tracker", args={requesting_catalogue_page.id})
+            context["backlink"] = reverse(
+                "requesting-data-tracker", args={requesting_catalogue_page.id}
+            )
         else:
             context["backlink"] = reverse(
                 "requesting-data-access-restrictions-step", args={self.steps.prev}
@@ -416,7 +434,9 @@ class RequestingCataloguePageAccessRestrictionsWizardView(RequestingCataloguePag
         requesting_catalogue_page = RequestingDataset.objects.get(
             id=self.request.session["requesting_catalogue_page"]
         )
-        requesting_catalogue_page = self.add_fields(form_list, requesting_catalogue_page, self.notes_fields)
+        requesting_catalogue_page = self.add_fields(
+            form_list, requesting_catalogue_page, self.notes_fields
+        )
         requesting_catalogue_page.stage_three_complete = True
         requesting_catalogue_page.save()
 
@@ -437,7 +457,6 @@ class RequestingCataloguePageGovernanceWizardView(RequestingCataloguePageBaseWiz
         ("licence", DatasetLicenceForm),
         ("retention-period", DatasetRetentionPeriodForm),
         # ("catalogue-editors", DatasetCatalogueEditorsForm),
-
         ("summary", SummaryPageForm),
     ]
 
@@ -446,7 +465,6 @@ class RequestingCataloguePageGovernanceWizardView(RequestingCataloguePageBaseWiz
         "location_restrictions",
         "user_restrictions",
         "retention_policy",
-
     ]
 
     notes_fields = [
@@ -467,7 +485,9 @@ class RequestingCataloguePageGovernanceWizardView(RequestingCataloguePageBaseWiz
         self.get_base_context(context, requesting_catalogue_page, "title-and-description", step)
 
         if self.steps.current == "intended-access":
-            context["backlink"] = reverse("requesting-data-tracker", args={requesting_catalogue_page.id})
+            context["backlink"] = reverse(
+                "requesting-data-tracker", args={requesting_catalogue_page.id}
+            )
         else:
             context["backlink"] = reverse(
                 "requesting-data-access-restrictions-step", args={self.steps.prev}
@@ -478,7 +498,9 @@ class RequestingCataloguePageGovernanceWizardView(RequestingCataloguePageBaseWiz
         requesting_catalogue_page = RequestingDataset.objects.get(
             id=self.request.session["requesting_catalogue_page"]
         )
-        requesting_catalogue_page = self.add_fields(form_list, requesting_catalogue_page, self.notes_fields)
+        requesting_catalogue_page = self.add_fields(
+            form_list, requesting_catalogue_page, self.notes_fields
+        )
         requesting_catalogue_page.stage_three_complete = True
         requesting_catalogue_page.save()
 
@@ -497,7 +519,6 @@ class RequestingCataloguePageAboutThisDataWizardView(RequestingCataloguePageBase
         ("security-classification", DatasetSecurityClassificationForm),
         ("personal-data", DatasetPersonalDataForm),
         ("special-personal-data", DatasetSpecialPersonalDataForm),
-
         ("summary", SummaryPageForm),
     ]
 
@@ -532,7 +553,9 @@ class RequestingCataloguePageAboutThisDataWizardView(RequestingCataloguePageBase
         requesting_catalogue_page = RequestingDataset.objects.get(
             id=self.request.session["requesting_catalogue_page"]
         )
-        requesting_catalogue_page = self.add_fields(form_list, requesting_catalogue_page, self.notes_fields)
+        requesting_catalogue_page = self.add_fields(
+            form_list, requesting_catalogue_page, self.notes_fields
+        )
         requesting_catalogue_page.stage_two_complete = True
         requesting_catalogue_page.save()
 

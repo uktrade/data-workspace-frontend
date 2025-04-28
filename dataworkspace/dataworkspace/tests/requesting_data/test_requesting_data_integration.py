@@ -79,7 +79,9 @@ class TestRequestingCataloguePage(TestCase):
 
     def test_name_page(self):
         self.assert_common_content_one_label_page(
-            stage="title-and-description", url_name="name", label="What is the name of the dataset?"
+            stage="title-and-description",
+            url_name="name",
+            label="What is the name of the dataset?",
         )
 
     def test_descriptions_page(self):
