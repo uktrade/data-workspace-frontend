@@ -2,7 +2,6 @@ import logging
 
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
-from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -13,7 +12,7 @@ from django.views.generic.list import ListView
 from requests import RequestException
 
 from dataworkspace.apps.core.errors import PipelineBuilderPermissionDeniedError
-from dataworkspace.apps.datasets.models import Pipeline
+from dataworkspace.apps.datasets.models import Pipeline, SourceTable
 from dataworkspace.apps.datasets.pipelines.forms import PipelineTypeForm, SQLPipelineEditForm
 from dataworkspace.apps.datasets.pipelines.utils import (
     delete_pipeline_from_dataflow,
@@ -131,11 +130,15 @@ class PipelineListView(ListView):
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        # If the pipelines is not a superuser, make the queryset of pipeliens completely empty.
-        # This is expected to become more complex in later changes, e.g. to only show pipelines
-        # that the current user has specific permissions for
         if not self.request.user.is_superuser:
-            queryset = queryset.filter(Q(pk__in=[]))
+            # Find all the table names that the user is catalogue editor for...
+            source_datasets = self.request.user.data_catalogue_edit_datasets.all()
+            source_tables = SourceTable.objects.filter(dataset__in=source_datasets)
+            pipeline_table_names = [
+                f"{source_table.schema}.{source_table.table}" for source_table in source_tables
+            ]
+            # ... and filter for pipelines that populate those tables
+            queryset = queryset.filter(table_name__in=pipeline_table_names, type="sharepoint")
 
         return queryset
 
@@ -145,7 +148,7 @@ class PipelineListView(ListView):
         if not context["object_list"].exists():
             return context
 
-        context["can_add_pipeline"] = self.request.user.is_superuser
+        context["can_edit"] = self.request.user.is_superuser
         derived_dags = {}
         try:
             derived_dags = list_pipelines()

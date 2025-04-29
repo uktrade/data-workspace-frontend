@@ -17,7 +17,7 @@
         <div class="govuk-grid-column-full">
             <h1 class="govuk-heading-xl">Pipelines</h1>
             <dl class="govuk-summary-list">
-                {% if can_add_pipeline %}
+                {% if can_edit %}
                 <div class="govuk-summary-list__row">
                     <dt class="govuk-summary-list__value">
                     <a class="govuk-link" href="{% url 'pipelines:create' %}">Add new pipeline</a>
@@ -48,24 +48,28 @@
                             <p>This pipeline is currently running</p>
                           {% endif %}
                         {% endwith %}
-                        <a class="govuk-link" href="{{ object.get_absolute_url }}">Edit</a>&nbsp;
-                        <a class="govuk-link" href="{% url 'pipelines:delete' object.id %}">Delete</a>&nbsp;
-                        <a class="govuk-link" href="{{ object.dataflow_grid_view_url }}">View pipeline in data-flow</a>
+                        {% if can_edit %}
+                          <a class="govuk-link" href="{{ object.get_absolute_url }}">Edit</a>&nbsp;
+                          <a class="govuk-link" href="{% url 'pipelines:delete' object.id %}">Delete</a>&nbsp;
+                          <a class="govuk-link" href="{{ object.dataflow_grid_view_url }}">View pipeline in data-flow</a>
+                        {% endif %}
                     </dt>
                     <dd class="govuk-summary-list__actions">
-                      {% with object.dag_details.last_run.state as state %}
-                        {% if state == "queued" or state == "running" %}
-                          <form action="{% url 'pipelines:stop' object.id %}" method="POST">
-                            {% csrf_token %}
-                            <button class="govuk-button govuk-button--warning" data-module="govuk-button" type="submit">Stop</button>
-                          </form>
-                        {% else %}
-                          <form action="{% url 'pipelines:run' object.id %}" method="POST">
-                            {% csrf_token %}
-                            <button class="govuk-button" data-module="govuk-button" type="submit">Run</button>
-                          </form>
-                        {% endif %}
-                      {% endwith %}
+                      {% if can_edit %}
+                        {% with object.dag_details.last_run.state as state %}
+                          {% if state == "queued" or state == "running" %}
+                            <form action="{% url 'pipelines:stop' object.id %}" method="POST">
+                              {% csrf_token %}
+                              <button class="govuk-button govuk-button--warning" data-module="govuk-button" type="submit">Stop</button>
+                            </form>
+                          {% else %}
+                            <form action="{% url 'pipelines:run' object.id %}" method="POST">
+                              {% csrf_token %}
+                              <button class="govuk-button" data-module="govuk-button" type="submit">Run</button>
+                            </form>
+                          {% endif %}
+                        {% endwith %}
+                      {% endif %}
                       <strong class="govuk-tag govuk-tag--grey" style="font-size: 0.7em" title="{{ object.get_schedule_display }}">
                         {{ object.schedule }}
                       </strong>

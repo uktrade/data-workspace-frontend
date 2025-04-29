@@ -390,3 +390,39 @@ def test_non_superuser_cannot_see_pipelines():
     assert "Add new pipeline" not in content
     assert pipeline_1.table_name not in content
     assert pipeline_2.table_name not in content
+
+
+@pytest.mark.django_db
+def test_catalogue_editor_can_only_see_their_own_sharepoint_pipelines(metadata_db):
+    pipeline_1 = factories.PipelineFactory.create(type="sharepoint", table_name="schema.table_1")
+    pipeline_2 = factories.PipelineFactory.create(type="sharepoint", table_name="schema.table_2")
+    pipeline_3 = factories.PipelineFactory.create(type="sql", table_name="schema.table_3")
+    pipeline_4 = factories.PipelineFactory.create(type="sql", table_name="schema.table_4")
+
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+
+    source_dataset = factories.MasterDataSetFactory.create()
+    factories.SourceTableFactory(
+        dataset=source_dataset, database=metadata_db, schema="schema", table="table_1"
+    )
+    factories.SourceTableFactory(
+        dataset=source_dataset, database=metadata_db, schema="schema", table="table_3"
+    )
+    source_dataset.data_catalogue_editors.add(user)
+
+    resp = client.get(reverse("pipelines:index"))
+    assert resp.status_code == 200
+
+    content = resp.content.decode(resp.charset)
+    assert "You do not have access to any pipelines." not in content
+    assert "Add new pipeline" not in content
+    assert pipeline_1.table_name in content
+    assert pipeline_2.table_name not in content
+    assert pipeline_3.table_name not in content
+    assert pipeline_4.table_name not in content
+
+    assert "Edit" not in content
+    assert "Delete" not in content
+    assert "View pipeline " not in content
+    assert ">Run" not in content
