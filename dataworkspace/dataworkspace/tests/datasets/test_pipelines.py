@@ -425,4 +425,70 @@ def test_catalogue_editor_can_only_see_their_own_sharepoint_pipelines(metadata_d
     assert "Edit" not in content
     assert "Delete" not in content
     assert "View pipeline " not in content
-    assert ">Run" not in content
+    assert ">Run" in content
+
+
+@pytest.mark.django_db
+@mock.patch("dataworkspace.apps.datasets.pipelines.views.run_pipeline")
+def test_catalogue_editor_can_run_their_own_sharepoint_pipelines(mock_run, metadata_db):
+    pipeline_1 = factories.PipelineFactory.create(type="sharepoint", table_name="schema.table_1")
+    pipeline_2 = factories.PipelineFactory.create(type="sharepoint", table_name="schema.table_2")
+    pipeline_3 = factories.PipelineFactory.create(type="sql", table_name="schema.table_3")
+    pipeline_4 = factories.PipelineFactory.create(type="sql", table_name="schema.table_4")
+
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+
+    source_dataset = factories.MasterDataSetFactory.create()
+    factories.SourceTableFactory(
+        dataset=source_dataset, database=metadata_db, schema="schema", table="table_1"
+    )
+    factories.SourceTableFactory(
+        dataset=source_dataset, database=metadata_db, schema="schema", table="table_3"
+    )
+    source_dataset.data_catalogue_editors.add(user)
+
+    resp_1 = client.post(reverse("pipelines:run", args=(pipeline_1.id,)), follow=True)
+    assert "Pipeline triggered successfully" in resp_1.content.decode(resp_1.charset)
+
+    resp_2 = client.post(reverse("pipelines:run", args=(pipeline_2.id,)), follow=True)
+    assert "Pipeline triggered successfully" not in resp_2.content.decode(resp_2.charset)
+
+    resp_3 = client.post(reverse("pipelines:run", args=(pipeline_3.id,)), follow=True)
+    assert "Pipeline triggered successfully" not in resp_3.content.decode(resp_3.charset)
+
+    resp_4 = client.post(reverse("pipelines:run", args=(pipeline_4.id,)), follow=True)
+    assert "Pipeline triggered successfully" not in resp_4.content.decode(resp_4.charset)
+
+
+@pytest.mark.django_db
+@mock.patch("dataworkspace.apps.datasets.pipelines.views.stop_pipeline")
+def test_catalogue_editor_can_stop_their_own_sharepoint_pipelines(mock_stop, metadata_db):
+    pipeline_1 = factories.PipelineFactory.create(type="sharepoint", table_name="schema.table_1")
+    pipeline_2 = factories.PipelineFactory.create(type="sharepoint", table_name="schema.table_2")
+    pipeline_3 = factories.PipelineFactory.create(type="sql", table_name="schema.table_3")
+    pipeline_4 = factories.PipelineFactory.create(type="sql", table_name="schema.table_4")
+
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+
+    source_dataset = factories.MasterDataSetFactory.create()
+    factories.SourceTableFactory(
+        dataset=source_dataset, database=metadata_db, schema="schema", table="table_1"
+    )
+    factories.SourceTableFactory(
+        dataset=source_dataset, database=metadata_db, schema="schema", table="table_3"
+    )
+    source_dataset.data_catalogue_editors.add(user)
+
+    resp_1 = client.post(reverse("pipelines:stop", args=(pipeline_1.id,)), follow=True)
+    assert "Pipeline stopped successfully" in resp_1.content.decode(resp_1.charset)
+
+    resp_2 = client.post(reverse("pipelines:stop", args=(pipeline_2.id,)), follow=True)
+    assert "Pipeline stopped successfully" not in resp_2.content.decode(resp_2.charset)
+
+    resp_3 = client.post(reverse("pipelines:stop", args=(pipeline_3.id,)), follow=True)
+    assert "Pipeline stopped successfully" not in resp_3.content.decode(resp_3.charset)
+
+    resp_4 = client.post(reverse("pipelines:stop", args=(pipeline_4.id,)), follow=True)
+    assert "Pipeline stopped successfully" not in resp_4.content.decode(resp_4.charset)

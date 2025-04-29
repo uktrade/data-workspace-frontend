@@ -55,21 +55,19 @@
                         {% endif %}
                     </dt>
                     <dd class="govuk-summary-list__actions">
-                      {% if can_edit %}
-                        {% with object.dag_details.last_run.state as state %}
-                          {% if state == "queued" or state == "running" %}
-                            <form action="{% url 'pipelines:stop' object.id %}" method="POST">
-                              {% csrf_token %}
-                              <button class="govuk-button govuk-button--warning" data-module="govuk-button" type="submit">Stop</button>
-                            </form>
-                          {% else %}
-                            <form action="{% url 'pipelines:run' object.id %}" method="POST">
-                              {% csrf_token %}
-                              <button class="govuk-button" data-module="govuk-button" type="submit">Run</button>
-                            </form>
-                          {% endif %}
-                        {% endwith %}
-                      {% endif %}
+                      {% with object.dag_details.last_run.state as state %}
+                        {% if state == "queued" or state == "running" %}
+                          <form action="{% url 'pipelines:stop' object.id %}" method="POST">
+                            {% csrf_token %}
+                            <button class="govuk-button govuk-button--warning" data-module="govuk-button" type="submit">Stop</button>
+                          </form>
+                        {% else %}
+                          <form action="{% url 'pipelines:run' object.id %}" method="POST">
+                            {% csrf_token %}
+                            <button class="govuk-button" data-module="govuk-button" type="submit">Run</button>
+                          </form>
+                        {% endif %}
+                      {% endwith %}
                       <strong class="govuk-tag govuk-tag--grey" style="font-size: 0.7em" title="{{ object.get_schedule_display }}">
                         {{ object.schedule }}
                       </strong>
