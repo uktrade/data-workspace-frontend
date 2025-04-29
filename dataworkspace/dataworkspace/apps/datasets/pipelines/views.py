@@ -69,8 +69,6 @@ class PipelineCreateView(IsAdminMixin, CreateView):
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        if "sql" in form.errors:
-            messages.error(self.request, "Please fix the SQL errors before continuing.")
         return super().form_invalid(form)
 
     def get_context_data(self, **kwargs):
@@ -112,8 +110,6 @@ class PipelineUpdateView(IsAdminMixin, UpdateView):
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        if "sql" in form.errors:
-            messages.error(self.request, "Please fix the SQL errors before continuing.")
         return super().form_invalid(form)
 
     def get_context_data(self, **kwargs):
