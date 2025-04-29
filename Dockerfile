@@ -45,7 +45,6 @@ RUN apt-get update && \
 
 COPY requirements.txt requirements.txt
 COPY etc /etc
-COPY dataworkspace /dataworkspace
 
 RUN python3 -m pip install -r requirements.txt
 
@@ -56,8 +55,6 @@ COPY --from=builder ./app/stats ./dataworkspace/dataworkspace/static/js/stats
 
 FROM base AS test
 
-COPY requirements-dev.txt requirements-dev.txt
-COPY setup.cfg setup.cfg
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -72,7 +69,12 @@ RUN apt-get update && \
     rm -rf /tmp/* && \
     rm -rf /var/lib/apt/lists/*
 
+COPY setup.cfg setup.cfg
+COPY requirements-dev.txt requirements-dev.txt
 RUN pip3 install -r requirements-dev.txt
+
+COPY test /test
+COPY dataworkspace /dataworkspace
 
 RUN \
     mkdir /test-results && \
@@ -80,18 +82,16 @@ RUN \
 
 USER django
 
-COPY test /test
-
 FROM test AS dev
 
 USER root
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends nodejs npm && \
-    rm -rf /tmp/* && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN npm install --global --unsafe-perm nodemon
+#RUN apt-get update && \
+#    apt-get install -y --no-install-recommends nodejs npm && \
+#    rm -rf /tmp/* && \
+#    rm -rf /var/lib/apt/lists/*
+#
+#RUN npm install --global --unsafe-perm nodemon
 
 USER django
 
