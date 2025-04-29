@@ -47,8 +47,7 @@ COPY requirements.txt requirements.txt
 COPY etc /etc
 COPY dataworkspace /dataworkspace
 
-RUN python3 -m pip install --upgrade pip wheel pip-tools && \
-    python3 -m pip install -r requirements.txt
+RUN python3 -m pip install -r requirements.txt
 
 # Leave this statement at the end, as it is dependant on the builder layer completing. Having this
 # COPY statement will block this layer building, so placing at the end will let the installs above finish
