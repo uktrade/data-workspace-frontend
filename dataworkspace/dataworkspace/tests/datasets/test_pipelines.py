@@ -1,9 +1,11 @@
 import pytest
+from django.test import Client
 from django.urls import reverse
 from mock import mock
 
 from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.tests import factories
+from dataworkspace.tests.common import get_http_sso_data
 
 
 @pytest.mark.django_db
@@ -352,3 +354,39 @@ def test_query_fails_to_run(mock_sync, staff_client):
         follow=True,
     )
     assert b"Error running query" in resp.content
+
+
+@pytest.mark.django_db
+def test_superuser_can_see_pipelines():
+    pipeline_1 = factories.PipelineFactory.create(type="sharepoint", table_name="schema.table_1")
+    pipeline_2 = factories.PipelineFactory.create(type="sql", table_name="schema.table_2")
+
+    user = factories.UserFactory.create(is_superuser=True)
+    client = Client(**get_http_sso_data(user))
+
+    resp = client.get(reverse("pipelines:index"))
+    assert resp.status_code == 200
+
+    content = resp.content.decode(resp.charset)
+    assert "You do not have access to any pipelines." not in content
+    assert "Add new pipeline" in content
+    assert pipeline_1.table_name in content
+    assert pipeline_2.table_name in content
+
+
+@pytest.mark.django_db
+def test_non_superuser_cannot_see_pipelines():
+    pipeline_1 = factories.PipelineFactory.create(type="sharepoint", table_name="schema.table_1")
+    pipeline_2 = factories.PipelineFactory.create(type="sql", table_name="schema.table_2")
+
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+
+    resp = client.get(reverse("pipelines:index"))
+    assert resp.status_code == 200
+
+    content = resp.content.decode(resp.charset)
+    assert "You do not have access to any pipelines." in content
+    assert "Add new pipeline" not in content
+    assert pipeline_1.table_name not in content
+    assert pipeline_2.table_name not in content

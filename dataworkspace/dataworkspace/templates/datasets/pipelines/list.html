@@ -17,12 +17,14 @@
         <div class="govuk-grid-column-full">
             <h1 class="govuk-heading-xl">Pipelines</h1>
             <dl class="govuk-summary-list">
+                {% if can_add_pipeline %}
                 <div class="govuk-summary-list__row">
                     <dt class="govuk-summary-list__value">
                     <a class="govuk-link" href="{% url 'pipelines:create' %}">Add new pipeline</a>
                     </dt>
                     <dd class="govuk-summary-list__actions"></dd>
                 </div>
+                {% endif %}
                 {% for object in object_list %}
                 <div class="govuk-summary-list__row">
                     <dt class="govuk-summary-list__value">
@@ -71,6 +73,13 @@
                         {{ object.type }}
                       </strong>
                     </dd>
+                </div>
+                {% empty %}
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__value">
+                      You do not have access to any pipelines.
+                    </dt>
+                    <dd class="govuk-summary-list__actions"></dd>
                 </div>
                 {% endfor %}
             </dl>
