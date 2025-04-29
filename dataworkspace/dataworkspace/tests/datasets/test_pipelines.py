@@ -392,8 +392,30 @@ def test_non_superuser_cannot_see_pipelines():
     assert pipeline_2.table_name not in content
 
 
+def set_catalogue_editor(source_dataset, user):
+    source_dataset.data_catalogue_editors.add(user)
+
+
+def set_iam(source_dataset, user):
+    source_dataset.information_asset_manager = user
+
+
+def set_iao(source_dataset, user):
+    source_dataset.information_asset_owner = user
+
+
 @pytest.mark.django_db
-def test_catalogue_editor_can_only_see_their_own_sharepoint_pipelines(metadata_db):
+@pytest.mark.parametrize(
+    "give_user_management_access_to_dataset",
+    [
+        set_catalogue_editor,
+        set_iam,
+        set_iao,
+    ],
+)
+def test_non_admin_user_can_only_see_their_own_sharepoint_pipelines(
+    metadata_db, give_user_management_access_to_dataset
+):
     pipeline_1 = factories.PipelineFactory.create(type="sharepoint", table_name="schema.table_1")
     pipeline_2 = factories.PipelineFactory.create(type="sharepoint", table_name="schema.table_2")
     pipeline_3 = factories.PipelineFactory.create(type="sql", table_name="schema.table_3")
@@ -409,7 +431,8 @@ def test_catalogue_editor_can_only_see_their_own_sharepoint_pipelines(metadata_d
     factories.SourceTableFactory(
         dataset=source_dataset, database=metadata_db, schema="schema", table="table_3"
     )
-    source_dataset.data_catalogue_editors.add(user)
+    give_user_management_access_to_dataset(source_dataset, user)
+    source_dataset.save()
 
     resp = client.get(reverse("pipelines:index"))
     assert resp.status_code == 200
@@ -429,8 +452,18 @@ def test_catalogue_editor_can_only_see_their_own_sharepoint_pipelines(metadata_d
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize(
+    "give_user_management_access_to_dataset",
+    [
+        set_catalogue_editor,
+        set_iam,
+        set_iao,
+    ],
+)
 @mock.patch("dataworkspace.apps.datasets.pipelines.views.run_pipeline")
-def test_catalogue_editor_can_run_their_own_sharepoint_pipelines(mock_run, metadata_db):
+def test_non_admin_user_can_run_their_own_sharepoint_pipelines(
+    mock_run, metadata_db, give_user_management_access_to_dataset
+):
     pipeline_1 = factories.PipelineFactory.create(type="sharepoint", table_name="schema.table_1")
     pipeline_2 = factories.PipelineFactory.create(type="sharepoint", table_name="schema.table_2")
     pipeline_3 = factories.PipelineFactory.create(type="sql", table_name="schema.table_3")
@@ -446,7 +479,8 @@ def test_catalogue_editor_can_run_their_own_sharepoint_pipelines(mock_run, metad
     factories.SourceTableFactory(
         dataset=source_dataset, database=metadata_db, schema="schema", table="table_3"
     )
-    source_dataset.data_catalogue_editors.add(user)
+    give_user_management_access_to_dataset(source_dataset, user)
+    source_dataset.save()
 
     resp_1 = client.post(reverse("pipelines:run", args=(pipeline_1.id,)), follow=True)
     assert "Pipeline triggered successfully" in resp_1.content.decode(resp_1.charset)
@@ -462,8 +496,18 @@ def test_catalogue_editor_can_run_their_own_sharepoint_pipelines(mock_run, metad
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize(
+    "give_user_management_access_to_dataset",
+    [
+        set_catalogue_editor,
+        set_iam,
+        set_iao,
+    ],
+)
 @mock.patch("dataworkspace.apps.datasets.pipelines.views.stop_pipeline")
-def test_catalogue_editor_can_stop_their_own_sharepoint_pipelines(mock_stop, metadata_db):
+def test_non_admin_user_can_stop_their_own_sharepoint_pipelines(
+    mock_stop, metadata_db, give_user_management_access_to_dataset
+):
     pipeline_1 = factories.PipelineFactory.create(type="sharepoint", table_name="schema.table_1")
     pipeline_2 = factories.PipelineFactory.create(type="sharepoint", table_name="schema.table_2")
     pipeline_3 = factories.PipelineFactory.create(type="sql", table_name="schema.table_3")
@@ -479,7 +523,8 @@ def test_catalogue_editor_can_stop_their_own_sharepoint_pipelines(mock_stop, met
     factories.SourceTableFactory(
         dataset=source_dataset, database=metadata_db, schema="schema", table="table_3"
     )
-    source_dataset.data_catalogue_editors.add(user)
+    give_user_management_access_to_dataset(source_dataset, user)
+    source_dataset.save()
 
     resp_1 = client.post(reverse("pipelines:stop", args=(pipeline_1.id,)), follow=True)
     assert "Pipeline stopped successfully" in resp_1.content.decode(resp_1.charset)

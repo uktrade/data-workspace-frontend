@@ -28,8 +28,11 @@ logger = logging.getLogger("app")
 
 def filter_user_pipelines(user, pipelines_qs):
     if not user.is_superuser:
-        # Find all the table names that the user is catalogue editor for...
-        source_datasets = user.data_catalogue_edit_datasets.all()
+        # Find all the table names that the user is catalogue editor/IAM/IAO for...
+        source_datasets_ce = user.data_catalogue_edit_datasets.all()
+        source_datasets_iam = user.info_asset_managed_datasets.all()
+        source_datasets_iao = user.info_asset_owned_datasets.all()
+        source_datasets = source_datasets_ce | source_datasets_iam | source_datasets_iao
         source_tables = SourceTable.objects.filter(dataset__in=source_datasets)
         # and filter for pipelines that populate those tables
         pipeline_table_names = [
