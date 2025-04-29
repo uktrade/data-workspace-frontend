@@ -2,6 +2,7 @@ import logging
 
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
+from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -123,15 +124,28 @@ class PipelineUpdateView(IsAdminMixin, UpdateView):
         return context
 
 
-class PipelineListView(IsAdminMixin, ListView):
+class PipelineListView(ListView):
     model = Pipeline
     template_name = "datasets/pipelines/list.html"
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # If the pipelines is not a superuser, make the queryset of pipeliens completely empty.
+        # This is expected to become more complex in later changes, e.g. to only show pipelines
+        # that the current user has specific permissions for
+        if not self.request.user.is_superuser:
+            queryset = queryset.filter(Q(pk__in=[]))
+
+        return queryset
+
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
+
         if not context["object_list"].exists():
             return context
 
+        context["can_add_pipeline"] = self.request.user.is_superuser
         derived_dags = {}
         try:
             derived_dags = list_pipelines()

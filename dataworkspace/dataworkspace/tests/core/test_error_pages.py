@@ -169,16 +169,6 @@ def test_other_users_query_results(user):
 
 
 @pytest.mark.django_db
-def test_non_admin_pipeline_access(user):
-    client = Client(raise_request_exception=False, **get_http_sso_data(user))
-    response = client.get(reverse("pipelines:index"))
-    assert response.status_code == 403
-    assert "You do not have permission to access the Pipeline builder" in response.content.decode(
-        response.charset
-    )
-
-
-@pytest.mark.django_db
 def test_visualisations_permission_denied(user):
     client = Client(raise_request_exception=False, **get_http_sso_data(user))
     response = client.get(reverse("visualisations:root"))
