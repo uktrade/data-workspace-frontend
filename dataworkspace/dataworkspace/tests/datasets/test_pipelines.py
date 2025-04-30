@@ -404,6 +404,10 @@ def set_iao(source_dataset, user):
     source_dataset.information_asset_owner = user
 
 
+def escape_quote_html(string):
+    return string.replace('"', "&quot;")
+
+
 @pytest.mark.django_db
 @pytest.mark.parametrize(
     "give_user_management_access_to_dataset",
@@ -413,13 +417,32 @@ def set_iao(source_dataset, user):
         set_iao,
     ],
 )
+@pytest.mark.parametrize(
+    "quote",
+    [
+        lambda schema, table: f"{schema}.{table}",
+        lambda schema, table: f'{schema}."{table}"',
+        lambda schema, table: f'"{schema}".{table}',
+        lambda schema, table: f'"{schema}"."{table}"',
+    ],
+)
 def test_non_admin_user_can_only_see_their_own_sharepoint_pipelines(
-    metadata_db, give_user_management_access_to_dataset
+    metadata_db,
+    give_user_management_access_to_dataset,
+    quote,
 ):
-    pipeline_1 = factories.PipelineFactory.create(type="sharepoint", table_name="schema.table_1")
-    pipeline_2 = factories.PipelineFactory.create(type="sharepoint", table_name="schema.table_2")
-    pipeline_3 = factories.PipelineFactory.create(type="sql", table_name="schema.table_3")
-    pipeline_4 = factories.PipelineFactory.create(type="sql", table_name="schema.table_4")
+    pipeline_1 = factories.PipelineFactory.create(
+        type="sharepoint", table_name=quote("schema", "table_1")
+    )
+    pipeline_2 = factories.PipelineFactory.create(
+        type="sharepoint", table_name=quote("schema", "table_2")
+    )
+    pipeline_3 = factories.PipelineFactory.create(
+        type="sql", table_name=quote("schema", "table_3")
+    )
+    pipeline_4 = factories.PipelineFactory.create(
+        type="sql", table_name=quote("schema", "table_4")
+    )
 
     user = factories.UserFactory.create(is_superuser=False)
     client = Client(**get_http_sso_data(user))
@@ -440,10 +463,10 @@ def test_non_admin_user_can_only_see_their_own_sharepoint_pipelines(
     content = resp.content.decode(resp.charset)
     assert "You do not have access to any pipelines." not in content
     assert "Add new pipeline" not in content
-    assert pipeline_1.table_name in content
-    assert pipeline_2.table_name not in content
-    assert pipeline_3.table_name not in content
-    assert pipeline_4.table_name not in content
+    assert escape_quote_html(pipeline_1.table_name) in content
+    assert escape_quote_html(pipeline_2.table_name) not in content
+    assert escape_quote_html(pipeline_3.table_name) not in content
+    assert escape_quote_html(pipeline_4.table_name) not in content
 
     assert "Edit" not in content
     assert "Delete" not in content
@@ -460,14 +483,34 @@ def test_non_admin_user_can_only_see_their_own_sharepoint_pipelines(
         set_iao,
     ],
 )
+@pytest.mark.parametrize(
+    "quote",
+    [
+        lambda schema, table: f"{schema}.{table}",
+        lambda schema, table: f'{schema}."{table}"',
+        lambda schema, table: f'"{schema}".{table}',
+        lambda schema, table: f'"{schema}"."{table}"',
+    ],
+)
 @mock.patch("dataworkspace.apps.datasets.pipelines.views.run_pipeline")
 def test_non_admin_user_can_run_their_own_sharepoint_pipelines(
-    mock_run, metadata_db, give_user_management_access_to_dataset
+    mock_run,
+    metadata_db,
+    give_user_management_access_to_dataset,
+    quote,
 ):
-    pipeline_1 = factories.PipelineFactory.create(type="sharepoint", table_name="schema.table_1")
-    pipeline_2 = factories.PipelineFactory.create(type="sharepoint", table_name="schema.table_2")
-    pipeline_3 = factories.PipelineFactory.create(type="sql", table_name="schema.table_3")
-    pipeline_4 = factories.PipelineFactory.create(type="sql", table_name="schema.table_4")
+    pipeline_1 = factories.PipelineFactory.create(
+        type="sharepoint", table_name=quote("schema", "table_1")
+    )
+    pipeline_2 = factories.PipelineFactory.create(
+        type="sharepoint", table_name=quote("schema", "table_2")
+    )
+    pipeline_3 = factories.PipelineFactory.create(
+        type="sql", table_name=quote("schema", "table_3")
+    )
+    pipeline_4 = factories.PipelineFactory.create(
+        type="sql", table_name=quote("schema", "table_4")
+    )
 
     user = factories.UserFactory.create(is_superuser=False)
     client = Client(**get_http_sso_data(user))
@@ -504,14 +547,34 @@ def test_non_admin_user_can_run_their_own_sharepoint_pipelines(
         set_iao,
     ],
 )
+@pytest.mark.parametrize(
+    "quote",
+    [
+        lambda schema, table: f"{schema}.{table}",
+        lambda schema, table: f'{schema}."{table}"',
+        lambda schema, table: f'"{schema}".{table}',
+        lambda schema, table: f'"{schema}"."{table}"',
+    ],
+)
 @mock.patch("dataworkspace.apps.datasets.pipelines.views.stop_pipeline")
 def test_non_admin_user_can_stop_their_own_sharepoint_pipelines(
-    mock_stop, metadata_db, give_user_management_access_to_dataset
+    mock_stop,
+    metadata_db,
+    give_user_management_access_to_dataset,
+    quote,
 ):
-    pipeline_1 = factories.PipelineFactory.create(type="sharepoint", table_name="schema.table_1")
-    pipeline_2 = factories.PipelineFactory.create(type="sharepoint", table_name="schema.table_2")
-    pipeline_3 = factories.PipelineFactory.create(type="sql", table_name="schema.table_3")
-    pipeline_4 = factories.PipelineFactory.create(type="sql", table_name="schema.table_4")
+    pipeline_1 = factories.PipelineFactory.create(
+        type="sharepoint", table_name=quote("schema", "table_1")
+    )
+    pipeline_2 = factories.PipelineFactory.create(
+        type="sharepoint", table_name=quote("schema", "table_2")
+    )
+    pipeline_3 = factories.PipelineFactory.create(
+        type="sql", table_name=quote("schema", "table_3")
+    )
+    pipeline_4 = factories.PipelineFactory.create(
+        type="sql", table_name=quote("schema", "table_4")
+    )
 
     user = factories.UserFactory.create(is_superuser=False)
     client = Client(**get_http_sso_data(user))
