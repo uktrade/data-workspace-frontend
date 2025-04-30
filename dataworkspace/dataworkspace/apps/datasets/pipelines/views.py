@@ -12,7 +12,7 @@ from django.views.generic.list import ListView
 from requests import RequestException
 
 from dataworkspace.apps.core.errors import PipelineBuilderPermissionDeniedError
-from dataworkspace.apps.datasets.models import Pipeline
+from dataworkspace.apps.datasets.models import Pipeline, SourceTable
 from dataworkspace.apps.datasets.pipelines.forms import PipelineTypeForm, SQLPipelineEditForm
 from dataworkspace.apps.datasets.pipelines.utils import (
     delete_pipeline_from_dataflow,
@@ -26,10 +26,34 @@ from dataworkspace.apps.explorer.schema import get_user_schema_info
 logger = logging.getLogger("app")
 
 
+def filter_user_pipelines(user, pipelines_qs):
+    if not user.is_superuser:
+        # Find all the table names that the user is catalogue editor for...
+        source_datasets = user.data_catalogue_edit_datasets.all()
+        source_tables = SourceTable.objects.filter(dataset__in=source_datasets)
+        # and filter for pipelines that populate those tables
+        pipeline_table_names = [
+            f"{source_table.schema}.{source_table.table}" for source_table in source_tables
+        ]
+        pipelines_qs = pipelines_qs.filter(table_name__in=pipeline_table_names, type="sharepoint")
+
+    return pipelines_qs
+
+
 class IsAdminMixin(UserPassesTestMixin):
     def test_func(self):
         if not self.request.user.is_superuser:
             raise PipelineBuilderPermissionDeniedError()
+        return True
+
+
+class IsAdminOrEditorMixin(UserPassesTestMixin):
+    def test_func(self):
+        pipelines_qs = Pipeline.objects.filter(id=self.kwargs["pk"])
+        user_pipelines = filter_user_pipelines(self.request.user, pipelines_qs)
+        if not user_pipelines.exists():
+            raise PipelineBuilderPermissionDeniedError()
+
         return True
 
 
@@ -123,15 +147,22 @@ class PipelineUpdateView(IsAdminMixin, UpdateView):
         return context
 
 
-class PipelineListView(IsAdminMixin, ListView):
+class PipelineListView(ListView):
     model = Pipeline
     template_name = "datasets/pipelines/list.html"
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = filter_user_pipelines(self.request.user, queryset)
+        return queryset
+
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
+
         if not context["object_list"].exists():
             return context
 
+        context["can_edit"] = self.request.user.is_superuser
         derived_dags = {}
         try:
             derived_dags = list_pipelines()
@@ -166,7 +197,7 @@ class PipelineDeleteView(IsAdminMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class PipelineRunView(IsAdminMixin, View):
+class PipelineRunView(IsAdminOrEditorMixin, View):
     model = Pipeline
     success_url = reverse_lazy("pipelines:index")
 
@@ -186,7 +217,7 @@ class PipelineRunView(IsAdminMixin, View):
         return HttpResponseRedirect(reverse("pipelines:index"))
 
 
-class PipelineStopView(IsAdminMixin, View):
+class PipelineStopView(IsAdminOrEditorMixin, View):
     model = Pipeline
     success_url = reverse_lazy("pipelines:index")
 
