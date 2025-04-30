@@ -420,6 +420,8 @@ def test_non_admin_user_can_only_see_their_own_sharepoint_pipelines(
     pipeline_2 = factories.PipelineFactory.create(type="sharepoint", table_name="schema.table_2")
     pipeline_3 = factories.PipelineFactory.create(type="sql", table_name="schema.table_3")
     pipeline_4 = factories.PipelineFactory.create(type="sql", table_name="schema.table_4")
+    quoted_pipeline = factories.PipelineFactory.create(type="sharepoint", table_name='"schema"."table_5"')
+
 
     user = factories.UserFactory.create(is_superuser=False)
     client = Client(**get_http_sso_data(user))
@@ -430,6 +432,9 @@ def test_non_admin_user_can_only_see_their_own_sharepoint_pipelines(
     )
     factories.SourceTableFactory(
         dataset=source_dataset, database=metadata_db, schema="schema", table="table_3"
+    )
+    factories.SourceTableFactory(
+        dataset=source_dataset, database=metadata_db, schema="schema", table="table_5"
     )
     give_user_management_access_to_dataset(source_dataset, user)
     source_dataset.save()
@@ -444,6 +449,7 @@ def test_non_admin_user_can_only_see_their_own_sharepoint_pipelines(
     assert pipeline_2.table_name not in content
     assert pipeline_3.table_name not in content
     assert pipeline_4.table_name not in content
+    assert quoted_pipeline.table_name in content
 
     assert "Edit" not in content
     assert "Delete" not in content

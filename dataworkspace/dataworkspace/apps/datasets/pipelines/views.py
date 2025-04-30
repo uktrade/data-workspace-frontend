@@ -2,6 +2,8 @@ import logging
 
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
+from django.db.models import F, Value
+from django.db.models.functions import Replace
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -38,7 +40,13 @@ def filter_user_pipelines(user, pipelines_qs):
         pipeline_table_names = [
             f"{source_table.schema}.{source_table.table}" for source_table in source_tables
         ]
-        pipelines_qs = pipelines_qs.filter(table_name__in=pipeline_table_names, type="sharepoint")
+        # pipeline table names can contain double quotes, so replace if exists
+        pipelines_qs = pipelines_qs.annotate(
+            clean_table_name=Replace(F("table_name"), Value('"'), Value(''))
+        ).filter(
+            clean_table_name__in=pipeline_table_names,
+            type="sharepoint"
+        )
 
     return pipelines_qs
 
