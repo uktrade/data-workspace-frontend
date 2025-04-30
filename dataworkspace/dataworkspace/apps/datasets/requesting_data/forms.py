@@ -59,7 +59,7 @@ class DatasetDescriptionsForm(GOVUKDesignSystemForm):
         cleaned_data = super().clean()
         description = cleaned_data["description"]
         if len(description.split(" ")) < 30:
-            raise ValidationError("The description must be minimum 30 words")
+            raise ValidationError("The description must be a minimum 30 words")
         else:
             return cleaned_data
 
@@ -131,7 +131,7 @@ class DatasetLicenceForm(GOVUKDesignSystemForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        licence_required = cleaned_data.get("licence_required", None)
+        licence_required = cleaned_data.get("licence_required")
         if licence_required == "yes" and cleaned_data["licence"] == "":
             raise ValidationError("Please enter a URL")
         return cleaned_data
@@ -181,7 +181,7 @@ class DatasetPersonalDataForm(GOVUKDesignSystemForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        personal_data_required = cleaned_data.get("personal_data_required", None)
+        personal_data_required = cleaned_data.get("personal_data_required")
         if personal_data_required == "yes" and cleaned_data["personal_data"] == "":
             raise ValidationError("Please enter what personal data it contains")
         return cleaned_data
@@ -210,7 +210,7 @@ class DatasetSpecialPersonalDataForm(GOVUKDesignSystemForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        special_personal_data_required = cleaned_data.get("special_personal_data_required", None)
+        special_personal_data_required = cleaned_data.get("special_personal_data_required")
         if special_personal_data_required == "yes" and cleaned_data["special_personal_data"] == "":
             raise ValidationError("Please enter what special category personal data it contains")
         return cleaned_data
@@ -295,7 +295,7 @@ class DatasetUserRestrictionsForm(GOVUKDesignSystemForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        user_restrictions_required = cleaned_data.get("user_restrictions_required", None)
+        user_restrictions_required = cleaned_data.get("user_restrictions_required")
         if user_restrictions_required == "yes" and cleaned_data["user_restrictions"] == "":
             raise ValidationError("Please provide information on the user restrictions")
         return cleaned_data
