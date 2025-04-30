@@ -44,7 +44,7 @@ class DatasetDescriptionsForm(GOVUKDesignSystemForm):
 
     description = GOVUKDesignSystemTextareaField(
         label="Describe this dataset",
-        help_text="This must contain enough detail to ensure non - experts can understand it's contents. Minimum 30 words.",
+        help_text="This must contain enough detail to ensure non - experts can understand its contents. Minimum 30 words.",
         required=True,
         widget=GOVUKDesignSystemTextareaWidget(
             heading="h2",
