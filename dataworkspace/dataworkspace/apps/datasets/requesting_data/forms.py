@@ -84,7 +84,7 @@ class DatasetInformationAssetManagerForm(forms.Form):
     information_asset_manager = forms.CharField(
         required=True,
         label="Name of Information Asset Manager (IAM)",
-        help_text="IAMs have overall responsibility for managing the data, access requests and any changes.",
+        help_text="IAMs have responsibility for managing the data, access requests and any changes.",
     )
 
     def clean(self):
