@@ -46,7 +46,7 @@ describe('Requesting a dataset', () => {
       }).type('Test describe this dataset');
       cy.findByRole('button', { name: 'Continue' }).click();
       cy.findByRole('link', {
-        name: 'The description must be minimum 30 words'
+        name: 'The description must be a minimum 30 words'
       }).should('be.visible');
       cy.findByRole('textbox', {
         name: 'Describe this dataset'
