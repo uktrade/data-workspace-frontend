@@ -1,0 +1,55 @@
+{% extends '_main.html' %}
+
+{% load waffle_tags %}
+
+{% block page_title %}Request a new dataset - {{ block.super }}{% endblock page_title %}
+{% block breadcrumbs %}
+<a href="{% url 'support' %}" class="govuk-back-link">Back</a>
+{% endblock %}
+{% block content %}
+
+<h1 class="govuk-heading-l">Adding data</h1>
+    <h2 class="govuk-heading-m">Add a new catalogue item</h2>
+    <p class="govuk-body">Publish a new catalogue item to Data Workspace. </p>
+    <a href="{% url 'add-new-dataset' %}" role="button" draggable="false" class="govuk-button govuk-button--start" data-module="govuk-button">
+    Add new catalogue item
+    </a>    
+    <h2 class="govuk-heading-m">Catalogue items in progress</h2>
+    {% if requests|length == 0 %}
+        <p class="govuk-body">You do not have any catalogue pages in progress.</p>
+    {% else %}
+        <p class="govuk-body">Below is a list of catalogue pages that you've begun to create. You can resume progress of adding this catalogue page by pressing the resume link within that listing.</p>
+            {% for name, request in requests.items %}
+                {% include 'partials/requesting_data_journeys.html' %}
+            {% endfor %}
+    {% endif %}
+
+
+{% block footer_scripts %}
+
+  <script nonce="{{ request.csp_nonce }}">
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll(".showDialog").forEach((button) => {
+            button.addEventListener("click", () => {
+                const dialogId = button.getAttribute("data-dialog-id")
+                console.log("dialogId:", dialogId)
+                const favDialog = document.querySelector(`[data-dialog-id="${dialogId}"]`)
+                favDialog.showModal()
+            })
+            })
+        document.querySelectorAll(".favDialog").forEach((favDialog)=> {
+            const confirmBtn = favDialog.querySelector(".confirmBtn")
+            const dialogId = favDialog.getAttribute("data-dialog-id")
+            confirmBtn.addEventListener("click", (event) => {
+            event.preventDefault()
+            favDialog.close()
+            location.href = `requesting-data/delete-requesting-dataset-journey/${dialogId}`
+        })         
+        }) 
+    })
+  </script>
+  {% endblock footer_scripts %}
+
+
+
+{% endblock %}

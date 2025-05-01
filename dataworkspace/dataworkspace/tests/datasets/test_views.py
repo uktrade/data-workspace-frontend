@@ -39,12 +39,12 @@ from dataworkspace.tests import factories
 from dataworkspace.tests.common import MatchUnorderedMembers, get_http_sso_data
 from dataworkspace.tests.conftest import get_client, get_user_data
 from dataworkspace.tests.factories import (
+    AccessRequestFactory,
     UserFactory,
     VisualisationCatalogueItemFactory,
     VisualisationLinkFactory,
     VisualisationUserPermissionFactory,
 )
-from dataworkspace.tests.request_access.factories import AccessRequestFactory
 
 
 def test_eligibility_criteria_list(client):

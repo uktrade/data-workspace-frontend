@@ -1,0 +1,59 @@
+<style>
+.favDialog {
+  padding: 30px 30px 15px 30px;
+}
+.govuk-button-group {
+  padding-bottom: 0px;
+}
+.modal-header {
+  text-align: left;
+}
+</style>
+
+<div class="govuk-summary-card">
+  <div class="govuk-summary-card__title-wrapper">
+    <h2 class="govuk-summary-card__title">
+      {{ request.name }} 
+    </h2>
+    <ul class="govuk-summary-card__actions">
+      <li class="govuk-summary-card__action">
+        <a class="govuk-link" href="{% url "requesting-data-tracker" request.uuid %}" >Resume<span class="govuk-visually-hidden"></span></a>
+      </li>
+      <li class="govuk-summary-card__action">
+        <dialog class ="favDialog" data-dialog-id="{{ request.id }}">
+          <form>
+              <h2 class= "govuk-heading-l modal-header"> Are you sure you want to delete your progress for {{ request.name }}?</h2>
+              <div class="govuk-button-group">
+                <button class="govuk-button govuk-button--warning confirmBtn" value="default">Delete</button>
+                <button class = "govuk-button govuk-button--secondary" value="cancel" formmethod="dialog">Cancel</button>
+              </div>
+          </form>
+        </dialog>
+        <a class="govuk-link showDialog" data-dialog-id="{{ request.id }}">Delete<span class="govuk-visually-hidden"></span></a>
+      </li>
+      </li>
+    </ul>
+  </div>
+  <div class="govuk-summary-card__content">
+    <dl class="govuk-summary-list">
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">
+          Date Started
+        </dt>
+        <dd class="govuk-summary-list__value">
+          {{ request.created_date }}
+        </dd>
+      </div>
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">
+          Progress
+        </dt>
+        <dd class="govuk-summary-list__value">
+          Completed steps {{ request.progress }} out of 3
+        </dd>
+      </div>
+    </dl>
+  </div>
+</div>
+
+

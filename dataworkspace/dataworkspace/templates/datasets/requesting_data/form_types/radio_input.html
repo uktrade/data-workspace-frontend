@@ -1,0 +1,101 @@
+{% extends '_main.html' %}
+
+{% load waffle_tags %}
+
+{% block page_title %}Request a new dataset - {{ block.super }}{% endblock page_title %}
+{% block breadcrumbs %}
+<a href="{{ backlink }}" class="govuk-back-link">Back</a>
+{% endblock %}
+{% block content %}
+
+  {% if form.errors %}
+    <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
+      <h2 class="govuk-error-summary__title" id="error-summary-title">
+        There is a problem
+      </h2>
+      <div class="govuk-error-summary__body">
+        <ul class="govuk-list govuk-error-summary__list">
+        {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+                <li>
+                <a href="#id_{{ field }}">{{ error }}</a>
+                </li>
+            {% endfor %}
+        {% endfor %}
+        </ul>
+      </div>
+    </div>
+  {% endif %}
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+      {{ wizard.management_form }}
+
+        <input type="hidden" id="hidden-radio-input" name="{{step}}-{{radio_field}}" value="">
+
+        <div class="govuk-form-group">
+          <fieldset class="govuk-fieldset" aria-describedby="hint">
+            <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+              <h1 class="govuk-fieldset__heading">
+                {{stage}}
+              </h1>
+            </legend>
+              <p class="govuk-body">Step {{ wizard.steps.index|add:1 }} of {{ wizard.steps.count }}</p>
+            <div class="govuk-label govuk-label--m govuk-!-static-margin-0">
+              {{radio_label}}
+            </div>
+            <div class="govuk-hint">
+              {{radio_help_text}}
+            </div>
+            <p class="govuk-body">
+              <a href="{{ link }}" class="govuk-link">{{ link_text }}</a>
+            </p>
+            <div class="govuk-radios" data-module="govuk-radios">
+              <div class="govuk-radios__item">
+                <input class="govuk-radios__input" id="{{radio_field}}-yes" type="radio" name="{{radio_field}}-radio" value="yes">
+                <label class="govuk-label govuk-radios__label" for="{{radio_field}}-yes">
+                  Yes
+                </label>
+              </div>
+              <div class="govuk-radios__conditional govuk-radios__conditional--hidden" id="conditional-input">
+                <div class="govuk-form-group">
+                  <label class="govuk-label" for="{{radio_field}}-input">
+                    {{input_label}}
+                  </label>
+                  <input class="govuk-input" id="{{radio_field}}-input" name="{{step}}-{{input_field}}">
+                </div>
+              </div>
+              <div class="govuk-radios__item">
+                <input class="govuk-radios__input" id="{{radio_field}}-no" type="radio" name="{{radio_field}}-radio" value="no">
+                <label class="govuk-label govuk-radios__label" for="{{radio_field}}-no">
+                  No
+                </label>
+              </div>
+            </div>
+          </fieldset>
+        </div>
+
+        <button type="submit" class="govuk-button" data-module="govuk-button">
+          Continue
+        </button>
+  </form>
+
+  <script nonce="{{ request.csp_nonce }}">
+    document.addEventListener('DOMContentLoaded', () => {
+      const yesButton = document.getElementsByClassName("govuk-radios__input")[0].addEventListener("click", showInput);
+      const noButton = document.getElementsByClassName("govuk-radios__input")[1].addEventListener("click", hideInput);
+      const input = document.querySelector("#conditional-input")
+      const hiddenInput = document.querySelector("#hidden-radio-input")
+
+      function showInput() {
+        input.classList.remove('govuk-radios__conditional--hidden');
+        hiddenInput.value = "yes"
+      };
+      function hideInput() {
+        input.classList.add('govuk-radios__conditional--hidden');
+        hiddenInput.value = "no"
+      };
+    });
+  </script>
+{% endblock %}
+
