@@ -254,6 +254,8 @@ class RequestingCataloguePageBaseWizardView(NamedUrlSessionWizardView, FormPrevi
     def get_template(self, step):
         if step in self.radio_input_pages:
             return "datasets/requesting_data/form_types/radio_input.html"
+        if step in "intended-access":
+            return "datasets/requesting_data/form_types/radio_input_access.html"
         if step in self.user_search_pages:
             return "datasets/requesting_data/form_types/user_search.html"
         if step == "security-classification":
@@ -319,6 +321,22 @@ class RequestingCataloguePageBaseWizardView(NamedUrlSessionWizardView, FormPrevi
             context["radio_help_text"] = current_form.fields[radio_field].help_text
             context["input_field"] = input_field
             context["input_label"] = current_form.fields[input_field].label
+
+        if step == "intended-access":
+            context["step"] = step
+            current_form = self.get_form(step=step)
+            everyone_field = list(current_form.fields.keys())[0]
+            department_input_field = list(current_form.fields.keys())[1]
+            critera_input_field = list(current_form.fields.keys())[2]
+
+            context["everyone_field"] = everyone_field
+            context["everyone_field_label"] = current_form.fields[everyone_field].label
+
+            context["department_input_field"] = department_input_field
+            context["department_input_label"] = current_form.fields[department_input_field].label
+
+            context["critera_input_field"] = critera_input_field
+            context["critera_input_label"] = current_form.fields[critera_input_field].label
 
         elif step == "summary":
             context["summary"] = self.get_summary_context()
@@ -407,8 +425,6 @@ class RequestingCataloguePageTitleAndDescriptionWizardView(RequestingCataloguePa
 
         return context
 
-    # self.process_step(form)
-
     def done(self, form_list, **kwargs):
         requesting_catalogue_page = RequestingDataset.objects.get(
             id=self.request.session["requesting_catalogue_page"]
@@ -446,7 +462,7 @@ class RequestingCataloguePageAccessRestrictionsWizardView(RequestingCataloguePag
     ]
 
     all_params = [
-        "intended_access",
+        # "intended_access",
         "user_restrictions",
     ]
 

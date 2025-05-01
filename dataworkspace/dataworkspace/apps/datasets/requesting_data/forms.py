@@ -253,16 +253,42 @@ class DatasetUpdateFrequencyForm(GOVUKDesignSystemForm):
 
 
 class DatasetIntendedAccessForm(GOVUKDesignSystemForm):
-    intended_access = GOVUKDesignSystemRadioField(
+    data_access = forms.CharField(
+        label="Who can have access to this data?",
         required=True,
-        choices=[("yes", "Yes"), ("no", "No")],
-        label="Should access on Data Workspace be open to all users by request?",
-        widget=GOVUKDesignSystemRadiosWidget(
+        widget=GOVUKDesignSystemTextWidget(),
+    )
+
+    particular_departments = GOVUKDesignSystemCharField(
+        help_text="What department(s) should have access to this data? We grant access according to email address suffixes e.g. DBT use the @ businessandtrade.gov.uk suffix.",  # pylint: disable=line-too-long
+        required=False,
+        widget=GOVUKDesignSystemTextareaWidget(
             heading="h2",
             label_size="m",
             label_is_heading=True,
+            attrs={"rows": 5},
+            extra_label_classes="govuk-!-static-margin-0",
         ),
     )
+
+    specific_criteria = GOVUKDesignSystemCharField(
+        help_text="Provide a clear list of eligibility criteria and indicate whether all or any criteria must be met. This criteria will be shown to users when they request access.",  # pylint: disable=line-too-long
+        required=False,
+        widget=GOVUKDesignSystemTextareaWidget(
+            heading="h2",
+            label_size="m",
+            label_is_heading=True,
+            attrs={"rows": 5},
+            extra_label_classes="govuk-!-static-margin-0",
+        ),
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        special_personal_data_required = cleaned_data.get("special_personal_data_required", None)
+        if special_personal_data_required == "yes" and cleaned_data["special_personal_data"] == "":
+            raise ValidationError("Please enter what special category personal data it contains")
+        return cleaned_data
 
 
 class DatasetUserRestrictionsForm(GOVUKDesignSystemForm):
