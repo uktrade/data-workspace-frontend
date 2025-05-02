@@ -389,8 +389,8 @@ class CollectionUsersView(FormView):
                 membership = CollectionUserMembership.objects.create(
                     collection=collection,
                     user=get_user_model().objects.get(
-                        email=form.cleaned_data["email"]
-                    ).first().profile.sso_status== "active",
+                        profile__sso_status="active", email=form.cleaned_data["email"]
+                    ),
                     created_by=self.request.user,
                 )
                 log_event(
