@@ -22,7 +22,7 @@
 {% block content %}
   {{ schema_tables|json_script:"schema_tables" }}
   <div class="govuk-grid-row">
-    <div>
+    <div class="govuk-grid-column-three-quarters">
       <h1 class="govuk-heading-xl">
         {% if form.instance.id %}Edit{% else %}New{% endif %} pipeline
       </h1>
