@@ -389,7 +389,7 @@ class CollectionUsersView(FormView):
                 membership = CollectionUserMembership.objects.create(
                     collection=collection,
                     user=get_user_model().objects.get(
-                        email=form.cleaned_data["email"], is_active=True
+                        profile__sso_status="active", email=form.cleaned_data["email"]
                     ),
                     created_by=self.request.user,
                 )

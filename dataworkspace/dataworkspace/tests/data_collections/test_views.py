@@ -566,6 +566,8 @@ def test_add_user_not_the_owner(client, user):
 def test_add_user_success(mock_send_email, client, user):
     c = factories.CollectionFactory.create(name="test-collections", owner=user)
     user2 = factories.UserFactory()
+    user2.profile.sso_status = "active"
+    user2.profile.save()
     member_count = CollectionUserMembership.objects.all().count()
     response = client.post(
         reverse(
