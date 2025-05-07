@@ -21,7 +21,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views import View
 from django.views.generic import FormView
-from requests import HTTPError, request
+from requests import HTTPError
 import waffle
 
 from dataworkspace.apps.applications.models import ApplicationInstance, VisualisationTemplate
