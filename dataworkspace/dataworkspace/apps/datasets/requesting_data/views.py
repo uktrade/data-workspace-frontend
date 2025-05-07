@@ -333,7 +333,6 @@ class RequestingCataloguePageBaseWizardView(NamedUrlSessionWizardView, FormPrevi
             context["everyone_field_label"] = current_form.fields[everyone_field].label
 
             context["department_input_field"] = department_input_field
-            print("HERE", current_form.fields[department_input_field])
             context["department_input_help_text"] = current_form.fields[department_input_field].help_text
 
             context["critera_input_field"] = critera_input_field
