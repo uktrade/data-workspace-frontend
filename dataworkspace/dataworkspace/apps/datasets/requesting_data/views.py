@@ -135,7 +135,6 @@ class RequestingDataTrackerView(FormView):
                 "stage_three_complete",
             ],
         )
-        print("DATA DICT:::", data_dict)
         data_dict["enquiries_contact"] = requesting_dataset.enquiries_contact
         data_dict["information_asset_manager"] = requesting_dataset.information_asset_manager
         data_dict["information_asset_owner"] = requesting_dataset.information_asset_owner
@@ -151,7 +150,7 @@ class RequestingDataTrackerView(FormView):
         zendesk_ticket_id = create_support_request(
             self.request.user,
             User.objects.get(id=requesting_dataset.user).email,
-            ["A new dataset has been requested."],
+            "A new dataset has been requested.",
             tag="data_request",
         )
 
@@ -421,7 +420,7 @@ class RequestingDataAboutThisDataWizardView(RequestingDatasetBaseWizardView):
             id=self.request.session["requesting_dataset"]
         )
         requesting_dataset.user = self.request.user.id
-        if requesting_dataset.name == None:
+        if requesting_dataset.name is None:
             requesting_dataset.name = "Untitled"
         requesting_dataset = self.add_fields(form_list, requesting_dataset, self.notes_fields)
         requesting_dataset.stage_two_complete = True
@@ -481,7 +480,7 @@ class RequestingDataAccessRestrictionsWizardView(RequestingDatasetBaseWizardView
             id=self.request.session["requesting_dataset"]
         )
         requesting_dataset.user = self.request.user.id
-        if requesting_dataset.name == None:
+        if requesting_dataset.name is None:
             requesting_dataset.name = "Untitled"
         requesting_dataset = self.add_fields(form_list, requesting_dataset, self.notes_fields)
         requesting_dataset.stage_three_complete = True
