@@ -499,5 +499,5 @@ class RequestingDatasetSubmission(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["zendesk_ticket_id"] = self.kwargs.get("zendesk_ticket_id")
+        context["ticket_id"] = self.kwargs.get("zendesk_ticket_id")
         return context
