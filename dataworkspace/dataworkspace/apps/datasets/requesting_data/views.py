@@ -49,7 +49,7 @@ class AddingData(TemplateView):
                 progress += 1
             if request.stage_three_complete:
                 progress += 1
-            requests[request.name] = {
+            requests[request.id] = {
                 "id": request.id,
                 "name": request.name,
                 "created_date": request.created_date,
@@ -419,6 +419,8 @@ class RequestingDataAboutThisDataWizardView(RequestingDatasetBaseWizardView):
         requesting_dataset = RequestingDataset.objects.get(
             id=self.request.session["requesting_dataset"]
         )
+        requesting_dataset.user = self.request.user.id
+        requesting_dataset.name = "Untitled"
         requesting_dataset = self.add_fields(form_list, requesting_dataset, self.notes_fields)
         requesting_dataset.stage_two_complete = True
         requesting_dataset.save()
@@ -476,6 +478,8 @@ class RequestingDataAccessRestrictionsWizardView(RequestingDatasetBaseWizardView
         requesting_dataset = RequestingDataset.objects.get(
             id=self.request.session["requesting_dataset"]
         )
+        requesting_dataset.user = self.request.user.id
+        requesting_dataset.name = "Untitled"
         requesting_dataset = self.add_fields(form_list, requesting_dataset, self.notes_fields)
         requesting_dataset.stage_three_complete = True
         requesting_dataset.save()
