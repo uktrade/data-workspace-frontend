@@ -21,7 +21,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views import View
 from django.views.generic import FormView
-from requests import HTTPError, request
+from requests import HTTPError
 import waffle
 
 from dataworkspace.apps.applications.models import ApplicationInstance, VisualisationTemplate
@@ -216,9 +216,8 @@ class SupportView(FormView):
     def form_valid(self, form):
         cleaned = form.cleaned_data
         support_Type = cleaned["support_type"]
-
         if support_Type == form.SupportTypes.NEW_DATASET:
-            if waffle.flag_is_active(request, settings.REQUESTING_DATA):
+            if waffle.flag_is_active(self.request, settings.REQUESTING_DATA):
                 return HttpResponseRedirect(reverse("adding-data"))
             return HttpResponseRedirect(
                 f'{reverse("add-dataset-request")}?email={cleaned["email"]}'
