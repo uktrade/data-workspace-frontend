@@ -120,7 +120,7 @@ class RequestingDataTrackerView(FormView):
 
     def form_valid(self, form):
         requesting_dataset = RequestingDataset.objects.get(
-            id=form.cleaned_data["requesting_dataset"]
+            id=form.cleaned_data["requesting_dataset"],
         )
         data_dict = model_to_dict(
             requesting_dataset,
@@ -150,7 +150,7 @@ class RequestingDataTrackerView(FormView):
         zendesk_ticket_id = create_support_request(
             self.request.user,
             User.objects.get(id=requesting_dataset.user).email,
-            ["A new dataset has been requested."],
+            "A new dataset has been requested.",
             tag="data_request",
         )
 
@@ -420,7 +420,8 @@ class RequestingDataAboutThisDataWizardView(RequestingDatasetBaseWizardView):
             id=self.request.session["requesting_dataset"]
         )
         requesting_dataset.user = self.request.user.id
-        requesting_dataset.name = "Untitled"
+        if requesting_dataset.name is None:
+            requesting_dataset.name = "Untitled"
         requesting_dataset = self.add_fields(form_list, requesting_dataset, self.notes_fields)
         requesting_dataset.stage_two_complete = True
         requesting_dataset.save()
@@ -479,7 +480,8 @@ class RequestingDataAccessRestrictionsWizardView(RequestingDatasetBaseWizardView
             id=self.request.session["requesting_dataset"]
         )
         requesting_dataset.user = self.request.user.id
-        requesting_dataset.name = "Untitled"
+        if requesting_dataset.name is None:
+            requesting_dataset.name = "Untitled"
         requesting_dataset = self.add_fields(form_list, requesting_dataset, self.notes_fields)
         requesting_dataset.stage_three_complete = True
         requesting_dataset.save()
@@ -494,3 +496,8 @@ class RequestingDataAccessRestrictionsWizardView(RequestingDatasetBaseWizardView
 
 class RequestingDatasetSubmission(TemplateView):
     template_name = "datasets/requesting_data/submission.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["zendesk_ticket_id"] = self.kwargs["zendesk_ticket_id"]
+        return context
