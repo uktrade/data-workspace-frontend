@@ -147,17 +147,18 @@ class RequestingDataTrackerView(FormView):
 
         RequestingDataset.objects.filter(id=requesting_dataset.id).delete()
 
-        zendesk_ticket_id = create_support_request(
-            self.request.user,
-            User.objects.get(id=requesting_dataset.user).email,
-            "A new dataset has been requested.",
-            tag="data_request",
-        )
+        # zendesk_ticket_id = create_support_request(
+        #     self.request.user,
+        #     User.objects.get(id=requesting_dataset.user).email,
+        #     "A new dataset has been requested.",
+        #     tag="data_request",
+        # )
 
         return HttpResponseRedirect(
             reverse(
                 "requesting-data-submission",
-                kwargs={"zendesk_ticket_id": zendesk_ticket_id},
+                kwargs={"ticket_id": "1234"},
+                # kwargs={"zendesk_ticket_id": zendesk_ticket_id},
             )
         )
 
@@ -499,5 +500,5 @@ class RequestingDatasetSubmission(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["ticket_id"] = self.kwargs.get("zendesk_ticket_id")
+        context["ticket_id"] = self.kwargs.get("ticket_id")
         return context

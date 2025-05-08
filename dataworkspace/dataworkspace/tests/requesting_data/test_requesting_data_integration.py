@@ -182,3 +182,12 @@ class TestRequestingData(TestCase):
             url_name="user-restrictions",
             radio_label="Should access be restricted to certain user types?",
         )
+
+    def test_zendesk_ticket_creation(self):
+        response = self.client.get(reverse("requesting-data-submission", args={("1234")}))
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        zendesk_ticket = soup.find("div", {"class": "govuk-panel__body"}).get_text(strip=True)
+        header = soup.find("h2").contents[0]
+        assert "Your reference number1234" in zendesk_ticket
+        assert "What happens next?" in header
+        assert response.status_code == 200
