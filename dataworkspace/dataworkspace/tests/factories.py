@@ -85,6 +85,27 @@ class MasterDataSetFactory(DataSetFactory):
     type = DataSetType.MASTER
 
 
+class RequestingDataSetFactory(factory.django.DjangoModelFactory):
+    # grouping = factory.SubFactory(DataGroupingFactory)
+    name = factory.fuzzy.FuzzyText()
+    slug = factory.fuzzy.FuzzyText(length=10)
+    short_description = factory.fuzzy.FuzzyText(length=10)
+    description = factory.fuzzy.FuzzyText(length=30)
+    published = False
+    deleted = False
+    type = DataSetType.MASTER
+    information_asset_owner = factory.SubFactory(UserFactory)
+    information_asset_manager = factory.SubFactory(UserFactory)
+    enquiries_contact = factory.SubFactory(UserFactory)
+    # licence_required = "no"
+    # personal_data_required = "no"
+    # special_personal_data_required = "no"
+    # user_restrictions_required = "no"
+
+    class Meta:
+        model = "datasets.RequestingDataset"
+
+
 class DataSetUserPermissionFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory(UserFactory)
     dataset = factory.SubFactory(DataSetFactory)
