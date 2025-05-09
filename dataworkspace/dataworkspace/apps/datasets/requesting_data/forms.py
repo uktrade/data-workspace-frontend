@@ -21,6 +21,7 @@ class DatasetNameForm(GOVUKDesignSystemForm):
     name = GOVUKDesignSystemCharField(
         label="What is the name of the dataset?",
         required=True,
+        error_messages={"required": "You must provide a name."},
         widget=GOVUKDesignSystemTextWidget(
             label_is_heading=True,
             label_size="m",
@@ -33,6 +34,7 @@ class DatasetDescriptionsForm(GOVUKDesignSystemForm):
         label="Summarise this dataset",
         help_text="Please provide a brief description of what it contains.",
         required=True,
+        error_messages={"required": "You must provide a short description"},
         widget=GOVUKDesignSystemTextareaWidget(
             heading="h2",
             label_size="m",
@@ -252,6 +254,7 @@ class DatasetUpdateFrequencyForm(GOVUKDesignSystemForm):
 class DatasetIntendedAccessForm(GOVUKDesignSystemForm):
     intended_access = GOVUKDesignSystemRadioField(
         required=True,
+        error_messages={"required": "You must provide intended access"},
         choices=[("yes", "Yes"), ("no", "No")],
         label="Should access on Data Workspace be open to all users by request?",
         widget=GOVUKDesignSystemRadiosWidget(

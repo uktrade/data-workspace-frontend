@@ -182,3 +182,51 @@ class TestRequestingData(TestCase):
             url_name="user-restrictions",
             radio_label="Should access be restricted to certain user types?",
         )
+
+
+@pytest.mark.django_db
+class TestTrackerPage(TestCase):
+    def setUp(self):
+        self.user = factories.UserFactory.create(is_superuser=False)
+        self.client = Client(**get_http_sso_data(self.user))
+        self.requesting_dataset = factories.RequestingDataSetFactory.create()
+        self.requesting_dataset.stage_one_complete = True
+        self.requesting_dataset.stage_two_complete = True
+        self.requesting_dataset.save()
+        session = self.client.session
+        session["requesting_dataset"] = self.requesting_dataset.id
+        session.save()
+
+    def test_tracker_page_displays_submit_button_when_all_sections_are_complete(self):
+        self.requesting_dataset.stage_three_complete = True
+        self.requesting_dataset.save()
+        response = self.client.get(
+            reverse("requesting-data-tracker", args={(self.requesting_dataset.id)}),
+            HTTP_REFERER="/requesting-data/summary-information/summary",
+        )
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        button = soup.find_all("button")[1].get_text(strip=True)
+        # button only show when all three sections are complete
+        assert "Submit" in button
+        assert response.status_code == 200
+
+    def test_tracker_page_does_not_display_submit_button_when_not_all_sections_are_complete(self):
+        self.requesting_dataset.save()
+        response = self.client.get(
+            reverse("requesting-data-tracker", args={(self.requesting_dataset.id)}),
+            HTTP_REFERER="/requesting-data/summary-information/summary",
+        )
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        button = soup.find_all("button")
+        # button does not show when not all three sections are complete
+        assert "Submit" not in button
+        assert response.status_code == 200
+
+    def test_zendesk_ticket_creation(self):
+        response = self.client.get(reverse("requesting-data-submission", args={("1234")}))
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        zendesk_ticket = soup.find("div", {"class": "govuk-panel__body"}).get_text(strip=True)
+        header = soup.find("h2").contents[0]
+        assert "Your reference number1234" in zendesk_ticket
+        assert "What happens next?" in header
+        assert response.status_code == 200

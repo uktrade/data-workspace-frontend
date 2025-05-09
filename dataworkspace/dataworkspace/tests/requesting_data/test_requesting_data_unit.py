@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse
 
+import mock
 import pytest
 
 from dataworkspace.tests import factories
@@ -376,3 +377,36 @@ class RequestingDataDeleteTestCase(TestCase):
             reverse("delete-requesting-dataset-journey", args=[requesting_dataset.id])
         )
         assert response.status_code == 302
+
+
+@pytest.mark.django_db
+class TestTrackerViewSubmission(TestCase):
+    def setUp(self):
+        self.user = factories.UserFactory.create(is_superuser=False)
+        self.client = Client(**get_http_sso_data(self.user))
+        self.requesting_dataset = factories.RequestingDataSetFactory.create(user=self.user.id)
+
+    @mock.patch("dataworkspace.apps.datasets.requesting_data.views.create_support_request")
+    def test_create_tagged_support_request(self, mock_create_request):
+        mock_create_request.return_value = 999
+
+        # pylint: disable=attribute-defined-outside-init
+        response = self.client.post(
+            reverse("requesting-data-tracker", args={(self.requesting_dataset.id)}),
+            data={
+                "requesting_dataset": self.requesting_dataset.id,
+                "user": self.user,
+                "email": self.user.email,
+                "message": "A new dataset has been requested.",
+                "tag": "data_request",
+                "requester": self.user,
+            },
+        )
+        assert "/requesting-data/submission/999" in response.url
+
+        mock_create_request.assert_called_once_with(
+            user=mock.ANY,
+            email=self.user.email,
+            message="A new dataset has been requested.",
+            tag="data_request",
+        )
