@@ -98,10 +98,6 @@ class RequestingDataSetFactory(factory.django.DjangoModelFactory):
     information_asset_owner = factory.SubFactory(UserFactory)
     information_asset_manager = factory.SubFactory(UserFactory)
     enquiries_contact = factory.SubFactory(UserFactory)
-    # licence_required = "no"
-    # personal_data_required = "no"
-    # special_personal_data_required = "no"
-    # user_restrictions_required = "no"
 
     class Meta:
         model = "datasets.RequestingDataset"
