@@ -32,7 +32,7 @@ describe('Requesting a dataset', () => {
       }).should('be.visible');
       cy.findByRole('button', { name: 'Continue' }).click();
       cy.findByRole('link', {
-        name: 'This field is required.'
+        name: 'You must provide a name.'
       }).should('be.visible');
       cy.findByRole('textbox', {
         name: 'What is the name of the dataset?'

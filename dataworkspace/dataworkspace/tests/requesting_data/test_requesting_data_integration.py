@@ -238,7 +238,7 @@ class TestTrackerViewSubmission(BaseTestCase):
     @mock.patch("dataworkspace.apps.datasets.requesting_data.views.create_support_request")
     def test_create_tagged_support_request(self, mock_create_request):
         mock_create_request.return_value = 999
-        self.requesting_dataset = factories.RequestingDataSetFactory.create()
+        self.requesting_dataset = factories.RequestingDataSetFactory.create()  # pylint: disable=attribute-defined-outside-init
         self.user = factories.UserFactory.create(is_superuser=False)
         self.requesting_dataset.user = self.user.id
         self.requesting_dataset.stage_one_complete = True
