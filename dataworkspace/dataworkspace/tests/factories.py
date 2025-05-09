@@ -89,6 +89,7 @@ class RequestingDataSetFactory(factory.django.DjangoModelFactory):
     # grouping = factory.SubFactory(DataGroupingFactory)
     name = factory.fuzzy.FuzzyText()
     slug = factory.fuzzy.FuzzyText(length=10)
+    user = "1"
     short_description = factory.fuzzy.FuzzyText(length=10)
     description = factory.fuzzy.FuzzyText(length=30)
     published = False

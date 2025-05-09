@@ -145,9 +145,9 @@ class RequestingDataTrackerView(FormView):
         dataset.sensitivity.set(requesting_dataset.sensitivity.all())
         dataset.save()
 
-        zendesk_ticket_id = create_support_request(
+        ticket_id = create_support_request(
             user=self.request.user,
-            user_email=User.objects.get(id=requesting_dataset.user).email,
+            email=User.objects.get(id=requesting_dataset.user).email,
             message="A new dataset has been requested.",
             tag="data_request",
         )
@@ -157,7 +157,7 @@ class RequestingDataTrackerView(FormView):
         return HttpResponseRedirect(
             reverse(
                 "requesting-data-submission",
-                kwargs={"zendesk_ticket_id": zendesk_ticket_id},
+                kwargs={"ticket_id": ticket_id},
             )
         )
 
