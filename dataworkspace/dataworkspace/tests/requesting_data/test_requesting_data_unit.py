@@ -2,7 +2,6 @@ from http import HTTPStatus
 from unittest.mock import patch
 from unittest import TestCase
 
-from bs4 import BeautifulSoup
 from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse
@@ -11,7 +10,7 @@ import mock
 import pytest
 
 from dataworkspace.tests import factories
-from dataworkspace.tests.common import BaseTestCase, get_http_sso_data
+from dataworkspace.tests.common import get_http_sso_data
 from dataworkspace.apps.datasets.models import RequestingDataset, SensitivityType
 from dataworkspace.apps.datasets.requesting_data.forms import (
     DatasetDescriptionsForm,
