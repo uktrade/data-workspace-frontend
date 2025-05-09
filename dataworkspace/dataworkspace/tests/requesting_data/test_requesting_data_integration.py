@@ -202,7 +202,10 @@ class TestTrackerPage(TestCase):
     def test_tracker_page_displays_submit_button_when_all_sections_are_complete(self):
         self.requesting_dataset.stage_three_complete = True
         self.requesting_dataset.save()
-        response = self.client.get(reverse("requesting-data-tracker", args={(self.requesting_dataset.id)}), HTTP_REFERER="/requesting-data/summary-information/summary")
+        response = self.client.get(
+            reverse("requesting-data-tracker", args={(self.requesting_dataset.id)}),
+            HTTP_REFERER="/requesting-data/summary-information/summary",
+        )
         soup = BeautifulSoup(response.content.decode(response.charset))
         button = soup.find_all("button")[1].get_text(strip=True)
         # button only show when all three sections are complete
@@ -211,7 +214,10 @@ class TestTrackerPage(TestCase):
 
     def test_tracker_page_does_not_display_submit_button_when_not_all_sections_are_complete(self):
         self.requesting_dataset.save()
-        response = self.client.get(reverse("requesting-data-tracker", args={(self.requesting_dataset.id)}), HTTP_REFERER="/requesting-data/summary-information/summary")
+        response = self.client.get(
+            reverse("requesting-data-tracker", args={(self.requesting_dataset.id)}),
+            HTTP_REFERER="/requesting-data/summary-information/summary",
+        )
         soup = BeautifulSoup(response.content.decode(response.charset))
         button = soup.find_all("button")
         # button does not show when not all three sections are complete
@@ -239,8 +245,7 @@ class TestTrackerViewSubmission(BaseTestCase):
         self.requesting_dataset.stage_two_complete = True
         self.requesting_dataset.stage_three_complete = True
         response = self._authenticated_post(
-            reverse("requesting-data-tracker",
-                    args={(self.requesting_dataset.id)}),
+            reverse("requesting-data-tracker", args={(self.requesting_dataset.id)}),
             data={
                 "requesting_dataset": self.requesting_dataset.id,
                 "user": self.user,
@@ -256,5 +261,8 @@ class TestTrackerViewSubmission(BaseTestCase):
         assert "Your reference number999" in zendesk_ticket
         assert "What happens next?" in header
         mock_create_request.assert_called_once_with(
-            user=mock.ANY, email="bob.testerson@test.com", message="A new dataset has been requested.", tag="data_request"
+            user=mock.ANY,
+            email="bob.testerson@test.com",
+            message="A new dataset has been requested.",
+            tag="data_request",
         )
