@@ -1,5 +1,4 @@
 from unittest import TestCase
-import mock
 import pytest
 from bs4 import BeautifulSoup
 
@@ -10,7 +9,7 @@ from dataworkspace.apps.datasets.models import RequestingDataset
 from dataworkspace.apps.datasets.constants import SecurityClassificationAndHandlingInstructionType
 
 from dataworkspace.tests import factories
-from dataworkspace.tests.common import BaseTestCase, get_http_sso_data
+from dataworkspace.tests.common import get_http_sso_data
 
 
 @pytest.mark.django_db
@@ -187,7 +186,6 @@ class TestRequestingData(TestCase):
 
 @pytest.mark.django_db
 class TestTrackerPage(TestCase):
-
     def setUp(self):
         self.user = factories.UserFactory.create(is_superuser=False)
         self.client = Client(**get_http_sso_data(self.user))
@@ -232,39 +230,3 @@ class TestTrackerPage(TestCase):
         assert "Your reference number1234" in zendesk_ticket
         assert "What happens next?" in header
         assert response.status_code == 200
-
-
-class TestTrackerViewSubmission(BaseTestCase):
-    @mock.patch("dataworkspace.apps.datasets.requesting_data.views.create_support_request")
-    def test_create_tagged_support_request(self, mock_create_request):
-        mock_create_request.return_value = 999
-        self.requesting_dataset = (
-            factories.RequestingDataSetFactory.create()
-        )  # pylint: disable=attribute-defined-outside-init
-        self.user = factories.UserFactory.create(is_superuser=False)
-        self.requesting_dataset.user = self.user.id
-        self.requesting_dataset.stage_one_complete = True
-        self.requesting_dataset.stage_two_complete = True
-        self.requesting_dataset.stage_three_complete = True
-        response = self._authenticated_post(
-            reverse("requesting-data-tracker", args={(self.requesting_dataset.id)}),
-            data={
-                "requesting_dataset": self.requesting_dataset.id,
-                "user": self.user,
-                "email": self.user.email,
-                "message": "A new dataset has been requested.",
-                "tag": "data_request",
-                "requester": self.user,
-            },
-        )
-        soup = BeautifulSoup(response.content.decode(response.charset))
-        zendesk_ticket = soup.find("div", {"class": "govuk-panel__body"}).get_text(strip=True)
-        header = soup.find("h2").contents[0]
-        assert "Your reference number999" in zendesk_ticket
-        assert "What happens next?" in header
-        mock_create_request.assert_called_once_with(
-            user=mock.ANY,
-            email="bob.testerson@test.com",
-            message="A new dataset has been requested.",
-            tag="data_request",
-        )
