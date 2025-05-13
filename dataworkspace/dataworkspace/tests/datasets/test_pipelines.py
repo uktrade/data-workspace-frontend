@@ -372,6 +372,8 @@ def test_superuser_can_see_pipelines():
     assert "Add new pipeline" in content
     assert pipeline_1.table_name in content
     assert pipeline_2.table_name in content
+    assert f'id="{ pipeline_1.table_name }"' in content
+    assert f'id="{ pipeline_2.table_name }"' in content
 
 
 @pytest.mark.django_db
@@ -464,6 +466,7 @@ def test_non_admin_user_can_only_see_their_own_sharepoint_pipelines(
     assert "You do not have access to any pipelines." not in content
     assert "Add new pipeline" not in content
     assert escape_quote_html(pipeline_1.table_name) in content
+    assert f'id="{ escape_quote_html(pipeline_1.table_name) }"' in content
     assert escape_quote_html(pipeline_2.table_name) not in content
     assert escape_quote_html(pipeline_3.table_name) not in content
     assert escape_quote_html(pipeline_4.table_name) not in content
