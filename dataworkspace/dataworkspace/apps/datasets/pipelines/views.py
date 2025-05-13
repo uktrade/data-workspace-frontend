@@ -26,10 +26,6 @@ from dataworkspace.apps.explorer.schema import get_user_schema_info
 logger = logging.getLogger("app")
 
 
-def quote(identifier):
-    return '"' + identifier.replace('"', '""') + '"'
-
-
 def filter_user_pipelines(user, pipelines_qs):
     if not user.is_superuser:
         # Find all the table names that the user is catalogue editor/IAM/IAO for...
@@ -40,17 +36,10 @@ def filter_user_pipelines(user, pipelines_qs):
         source_tables = SourceTable.objects.filter(dataset__in=source_datasets)
         # and filter for pipelines that populate those tables. It's a bit awkward because the
         # piplines allow both quoted and non-quoted names
-        pipeline_table_names = [
-            possibly_quoted_name
-            for source_table in source_tables
-            for possibly_quoted_name in [
-                source_table.schema + "." + source_table.table,
-                source_table.schema + "." + quote(source_table.table),
-                quote(source_table.schema) + "." + source_table.table,
-                quote(source_table.schema) + "." + quote(source_table.table),
-            ]
-        ]
-        pipelines_qs = pipelines_qs.filter(table_name__in=pipeline_table_names, type="sharepoint")
+        pipelines_qs = pipelines_qs.filter(
+            table_name__in=Pipeline.possible_pipeline_table_names(source_tables),
+            type="sharepoint",
+        )
 
     return pipelines_qs
 
