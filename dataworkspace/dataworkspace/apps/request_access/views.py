@@ -1,4 +1,5 @@
 import logging
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
@@ -9,7 +10,6 @@ from django.urls import resolve, reverse
 from django.views.generic import CreateView, DetailView, FormView, UpdateView
 
 from dataworkspace import zendesk
-from dataworkspace.notify import EmailSendFailureException, send_email
 from dataworkspace.apps.accounts.models import Profile
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.utils import is_user_email_domain_valid
@@ -23,6 +23,7 @@ from dataworkspace.apps.request_access.forms import (  # pylint: disable=import-
     StataAccessForm,
     ToolsAccessRequestForm,
 )
+from dataworkspace.notify import EmailSendFailureException, send_email
 
 logger = logging.getLogger("app")
 
@@ -55,7 +56,8 @@ class DatasetAccessRequest(CreateView):
             codename="start_all_applications",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         ).exists()
-
+        user_has_dataset_access = False
+        # requesting dataset
         if "dataset_uuid" in self.kwargs:
             catalogue_item = find_dataset(self.kwargs["dataset_uuid"], request.user)
             user_has_dataset_access = (
@@ -63,20 +65,27 @@ class DatasetAccessRequest(CreateView):
                 if catalogue_item.type != DataSetType.REFERENCE
                 else None
             )
+            # already has access to dataset
+            if user_has_dataset_access:
+                return HttpResponseRedirect(
+                    reverse(
+                        "datasets:dataset_detail",
+                        kwargs={"dataset_uuid": self.kwargs["dataset_uuid"]},
+                    )
+                )
         else:
-            catalogue_item = None
-            user_has_dataset_access = True
-
-        if user_has_dataset_access and not user_has_tools_access:
-            access_request = models.AccessRequest.objects.create(
-                requester=self.request.user,
-                catalogue_item_id=catalogue_item.id if catalogue_item else None,
-            )
-            return HttpResponseRedirect(
-                reverse("request-access:tools", kwargs={"pk": access_request.pk})
-            )
-        elif user_has_dataset_access and user_has_tools_access:
-            return render(request, "request_access/you_have_access.html")
+            # requesting tools
+            if not user_has_tools_access:
+                access_request = models.AccessRequest.objects.create(
+                    requester=self.request.user,
+                    catalogue_item_id=catalogue_item.id if catalogue_item else None,
+                )
+                return HttpResponseRedirect(
+                    reverse("request-access:tools", kwargs={"pk": access_request.pk})
+                )
+            # already has access to tools
+            elif user_has_tools_access:
+                return render(request, "request_access/you_have_access.html")
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
