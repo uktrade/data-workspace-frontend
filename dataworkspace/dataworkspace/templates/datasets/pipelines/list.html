@@ -28,7 +28,7 @@
                 {% for object in object_list %}
                 <div class="govuk-summary-list__row">
                     <dt class="govuk-summary-list__value">
-                        <h2>{{ object.table_name }}</h2>
+                        <h2 id="{{ object.table_name }}">{{ object.table_name }}</h2>
                         {% with object.dag_details as dag %}
                           {% if dag is None %}
                             <p>Error fetching information for this pipeline</p>
