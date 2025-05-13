@@ -15,7 +15,6 @@ from dataworkspace.forms import (
     GOVUKDesignSystemModelForm,
     GOVUKDesignSystemRadioField,
     GOVUKDesignSystemRadiosWidget,
-    GOVUKDesignSystemSelectWidget,
     GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
     GOVUKDesignSystemTextWidget,
@@ -60,8 +59,8 @@ class BasePipelineCreateForm(GOVUKDesignSystemModelForm):
     schedule = GOVUKDesignSystemChoiceField(
         label="Schedule to run the pipeline on",
         choices=PipelineScheduleType.choices,
-        widget=GOVUKDesignSystemSelectWidget(
-            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        widget=GOVUKDesignSystemRadiosWidget(
+            label_is_heading=False, extra_label_classes="govuk-body govuk-!-font-weight-bold"
         ),
     )
     custom_schedule = GOVUKDesignSystemCharField(
