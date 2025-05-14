@@ -20,16 +20,21 @@
 <div class="govuk-hint">To request data, you need to complete the following process:</div>
 <ul class="govuk-task-list">
   <li class="govuk-task-list__item govuk-task-list__item--with-link">
+    {% if stage_one_complete %}
+    <div class="govuk-task-list__name-and-hint">
+      <a class="govuk-link govuk-task-list__link" href="{% url 'requesting-data-summary-information-step' 'summary' %}" aria-describedby="company-details-1-status">
+        Summary information
+      </a>
+    </div>
+      <div class="govuk-task-list__status" id="company-details-1-status">
+        Completed
+      </div>
+    {% else %}
     <div class="govuk-task-list__name-and-hint">
       <a class="govuk-link govuk-task-list__link" href="{% url 'requesting-data-summary-information-step' 'name' %}" aria-describedby="company-details-1-status">
         Summary information
       </a>
     </div>
-    {% if stage_one_complete %}
-      <div class="govuk-task-list__status" id="company-details-1-status">
-        Completed
-      </div>
-    {% else %}
       <div class="govuk-task-list__status" id="company-details-2-status">
         <strong class="govuk-tag govuk-tag--blue">
           Incomplete
@@ -37,17 +42,22 @@
       </div>
     {% endif %}
   </li>
-  <li class="govuk-task-list__item govuk-task-list__item--with-link">
+    <li class="govuk-task-list__item govuk-task-list__item--with-link">
+    {% if stage_two_complete %}
     <div class="govuk-task-list__name-and-hint">
-      <a class="govuk-link govuk-task-list__link" href="{% url 'requesting-data-about-this-data-step' 'security-classification' %}" aria-describedby="company-details-2-status">
+      <a class="govuk-link govuk-task-list__link" href="{% url 'requesting-data-about-this-data-step' 'summary' %}" aria-describedby="company-details-1-status">
         About the data
       </a>
     </div>
-    {% if stage_two_complete %}
       <div class="govuk-task-list__status" id="company-details-1-status">
         Completed
       </div>
     {% else %}
+    <div class="govuk-task-list__name-and-hint">
+      <a class="govuk-link govuk-task-list__link" href="{% url 'requesting-data-about-this-data-step' 'security-classification' %}" aria-describedby="company-details-1-status">
+        About the data
+      </a>
+    </div>
       <div class="govuk-task-list__status" id="company-details-2-status">
         <strong class="govuk-tag govuk-tag--blue">
           Incomplete
@@ -55,17 +65,22 @@
       </div>
     {% endif %}
   </li>
-  <li class="govuk-task-list__item govuk-task-list__item--with-link">
+<li class="govuk-task-list__item govuk-task-list__item--with-link">
+    {% if stage_three_complete %}
     <div class="govuk-task-list__name-and-hint">
-      <a class="govuk-link govuk-task-list__link" href="{% url 'requesting-data-access-restrictions-step' 'intended-access' %}" aria-describedby="company-details-3-hint company-details-3-status">
+      <a class="govuk-link govuk-task-list__link" href="{% url 'requesting-data-access-restrictions-step' 'summary' %}" aria-describedby="company-details-1-status">
         Access restrictions
       </a>
     </div>
-    {% if stage_three_complete %}
       <div class="govuk-task-list__status" id="company-details-1-status">
         Completed
       </div>
     {% else %}
+    <div class="govuk-task-list__name-and-hint">
+      <a class="govuk-link govuk-task-list__link" href="{% url 'requesting-data-access-restrictions-step' 'intended-access' %}" aria-describedby="company-details-1-status">
+        Access restrictions
+      </a>
+    </div>
       <div class="govuk-task-list__status" id="company-details-2-status">
         <strong class="govuk-tag govuk-tag--blue">
           Incomplete
