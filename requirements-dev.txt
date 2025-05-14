@@ -6,27 +6,29 @@
 #
 aiohappyeyeballs==2.3.5
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   aiohttp
 aiohttp==3.11.7
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   elasticsearch
 aiopg==1.4.0
     # via -r requirements-dev.in
 aiosignal==1.3.1
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   aiohttp
 amqp==5.1.1
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   kombu
 appdirs==1.4.4
     # via pyppeteer
+appnope==0.1.4
+    # via ipython
 asgiref==3.7.2
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   django
 astroid==2.8.6
     # via pylint
@@ -36,14 +38,15 @@ async-generator==1.10
     # via
     #   trio
     #   trio-websocket
-async-timeout==4.0.2
+async-timeout==4.0.3
     # via
+    #   -r requirements.txt
     #   aiohttp
     #   aiopg
     #   redis
 attrs==20.2.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   aiohttp
     #   flake8-bugbear
     #   jsonschema
@@ -51,47 +54,47 @@ attrs==20.2.0
     #   pytest
     #   trio
 aws-requests-auth==0.4.3
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 backcall==0.2.0
     # via ipython
 beautifulsoup4==4.11.1
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 billiard==4.1.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   celery
 black==24.3.0
     # via -r requirements-dev.in
 bleach==3.3.0
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 boto3==1.24.45
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   smart-open
     #   tabulator
 botocore==1.27.45
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   boto3
     #   s3transfer
 cached-property==1.5.2
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   tableschema
 cachetools==4.1.1
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   zenpy
 celery==5.3.4
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   celery-redbeat
     #   django-celery-results
 celery-redbeat==2.1.1
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 certifi==2024.7.4
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   elastic-apm
     #   elasticsearch
     #   requests
@@ -99,19 +102,19 @@ certifi==2024.7.4
     #   sentry-sdk
 cffi==1.15.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   cryptography
 chardet==3.0.4
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   tabulator
 charset-normalizer==3.1.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   requests
 click==8.1.7
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   black
     #   celery
     #   click-didyoumean
@@ -123,22 +126,22 @@ click==8.1.7
     #   tabulator
 click-didyoumean==0.3.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   celery
 click-plugins==1.1.1
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   celery
 click-repl==0.2.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   celery
 colorama==0.4.6
     # via djlint
 coverage==5.4
     # via pytest-cov
 cryptography==44.0.1
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 debugpy==1.2.1
     # via -r requirements-dev.in
 decorator==4.4.2
@@ -147,7 +150,7 @@ dj-database-url==0.5.0
     # via -r requirements.txt
 django==4.2.20
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   django-admin-inline-paginator
     #   django-admin-sortable2
     #   django-appconf
@@ -159,75 +162,80 @@ django==4.2.20
     #   django-debug-toolbar
     #   django-dynamic-models-readonly
     #   django-extensions
+    #   django-formtools
     #   django-js-asset
     #   django-redis
     #   django-staff-sso-client
     #   djangorestframework
 django-admin-inline-paginator==0.4.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
     #   -r requirements-dev.in
+    #   -r requirements.txt
 django-admin-sortable2==2.1.10
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 django-appconf==1.0.4
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   django-compressor
 django-better-admin-arrayfield==1.3.0
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 django-celery-results==2.5.1
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 django-ckeditor==6.7.1
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 django-compressor==2.4
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 django-csp==3.7
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 django-csp-helpers==0.7.1
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 django-db-connection-pool[postgresql]==1.2.4
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 django-debug-toolbar==3.2.1
     # via -r requirements-dev.in
 django-dynamic-models-readonly==0.1.1
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 django-environ==0.4.5
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 django-extensions==3.2.3
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
+django-formtools==2.5.1
+    # via
+    #   -r requirements-dev.in
+    #   -r requirements.txt
 django-js-asset==2.2.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   django-ckeditor
 django-maintenance-mode==0.21.0
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 django-redis==5.4.0
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 django-staff-sso-client==4.2.1
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 django-waffle==2.0.0
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 django-webpack-loader==1.4.1
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 djangorestframework==3.15.2
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 djlint==0.1.4
     # via -r requirements-dev.in
 docopt==0.6.2
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   notifications-python-client
 ecs-logging==0.5.0
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 elastic-apm==6.12.0
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 elasticsearch[async]==7.11.0
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 escapejson==1.0
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 et-xmlfile==1.0.1
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   openpyxl
 exceptiongroup==1.2.2
     # via pytest
@@ -247,35 +255,34 @@ freezegun==1.1.0
     # via -r requirements-dev.in
 frozenlist==1.3.3
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   aiohttp
     #   aiosignal
 geoalchemy2==0.8.4
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
-gevent==23.9.1
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
-greenlet==3.0.1
+    # via -r requirements.txt
+gevent==25.5.1
+    # via -r requirements.txt
+greenlet==3.2.2
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   gevent
-    #   sqlalchemy
 h11==0.13.0
     # via wsproto
 hawk-server-asyncio==0.0.13
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 idna==3.7
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   requests
     #   trio
     #   yarl
 ijson==3.1.3
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   tabulator
 importlib-metadata==8.2.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   pyppeteer
     #   python-arango
 iniconfig==1.1.1
@@ -288,46 +295,46 @@ ipython-genutils==0.2.0
     # via traitlets
 isodate==0.6.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   tableschema
 isort==4.3.21
     # via pylint
 jdcal==1.4.1
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   openpyxl
 jedi==0.18.0
     # via ipython
 jmespath==0.10.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   boto3
     #   botocore
 jsonlines==2.0.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   tabulator
 jsonschema==3.2.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   tableschema
 kaleido==0.2.1
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 kombu==5.3.2
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   celery
 lazy-object-proxy==1.4.3
     # via astroid
 linear-tsv==1.1.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   tabulator
 lxml==4.9.1
     # via -r requirements-dev.in
 markupsafe==2.1.2
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   werkzeug
 matplotlib-inline==0.1.3
     # via ipython
@@ -339,37 +346,37 @@ mock==4.0.3
     # via -r requirements-dev.in
 mohawk==1.1.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
     #   -r requirements-dev.in
+    #   -r requirements.txt
 multidict==4.7.6
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   aiohttp
     #   yarl
 mypy-extensions==0.4.3
     # via black
 notifications-python-client==6.3.0
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 oauthlib==3.2.2
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   requests-oauthlib
 openpyxl==3.0.6
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   tabulator
 outcome==1.1.0
     # via trio
 packaging==22.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   black
     #   bleach
     #   pytest
 parso==0.8.1
     # via jedi
 paste==3.4.3
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 pathspec==0.9.0
     # via black
 pep517==0.10.0
@@ -379,7 +386,7 @@ pexpect==4.8.0
 pg-sync-roles==0.0.44
     # via -r requirements.txt
 pglast==3.18
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 pickleshare==0.7.5
     # via ipython
 pip-tools==6.6.2
@@ -389,27 +396,27 @@ platformdirs==2.4.0
     #   black
     #   pylint
 plotly==5.6.0
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 pluggy==0.13.1
     # via pytest
 prompt-toolkit==3.0.38
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   click-repl
     #   ipython
     #   remote-pdb-client
 propcache==0.2.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   aiohttp
     #   yarl
 psutil==5.7.2
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 psycogreen==1.0.2
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 psycopg2==2.9.6
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   django-db-connection-pool
 psycopg2-binary==2.9.6
     # via aiopg
@@ -421,7 +428,7 @@ pycodestyle==2.7.0
     # via flake8
 pycparser==2.20
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   cffi
 pydevd-pycharm==211.7142.13
     # via -r requirements-dev.in
@@ -433,7 +440,7 @@ pygments==2.15.0
     # via ipython
 pyjwt==2.4.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   notifications-python-client
     #   python-arango
 pylint==2.11.1
@@ -449,7 +456,7 @@ pyppeteer==0.2.6
     # via -r requirements-dev.in
 pyrsistent==0.17.3
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   jsonschema
 pysocks==1.7.1
     # via urllib3
@@ -470,11 +477,11 @@ pytest-timeout==1.4.2
     # via -r requirements-dev.in
 python-arango==7.5.8
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
     #   -r requirements-dev.in
+    #   -r requirements.txt
 python-dateutil==2.8.2
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   botocore
     #   celery
     #   celery-redbeat
@@ -483,24 +490,24 @@ python-dateutil==2.8.2
     #   tableschema
     #   zenpy
 python-dotenv==0.12.0
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 python-fsutil==0.13.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   django-maintenance-mode
 pytz==2021.3
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   zenpy
 pyyaml==6.0.1
     # via djlint
 rcssmin==1.0.6
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   django-compressor
 redis==4.5.4
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   celery-redbeat
     #   django-redis
 regex==2023.12.25
@@ -511,7 +518,7 @@ remote-pdb-client==1.0.4
     # via -r requirements-dev.in
 requests==2.32.3
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   aws-requests-auth
     #   notifications-python-client
     #   python-arango
@@ -525,28 +532,28 @@ requests-mock==1.8.0
     # via -r requirements-dev.in
 requests-oauthlib==1.3.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   django-staff-sso-client
 requests-toolbelt==1.0.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   python-arango
 rfc3986==1.4.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   tableschema
 rjsmin==1.1.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   django-compressor
 s3transfer==0.6.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   boto3
 selenium==4.4.3
     # via -r requirements-dev.in
 sentry-sdk==2.8.0
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 six==1.15.0
     # via
     #   -r requirements.txt
@@ -567,42 +574,42 @@ six==1.15.0
     #   tenacity
     #   zenpy
 smart-open[s3]==6.4.0
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 sniffio==1.2.0
     # via trio
 sortedcontainers==2.4.0
     # via trio
 soupsieve==2.3.2.post1
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   beautifulsoup4
 sqlalchemy==2.0.12
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   django-db-connection-pool
     #   geoalchemy2
     #   pg-sync-roles
     #   tabulator
 sqlparams==6.0.1
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   django-db-connection-pool
 sqlparse==0.5.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   django
     #   django-debug-toolbar
 stack-data==0.6.2
     # via ipython
 tableschema==1.20.0
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 tabulator==1.53.1
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   tableschema
 tenacity==6.2.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   celery-redbeat
     #   plotly
 text-unidecode==1.3
@@ -630,7 +637,7 @@ trio-websocket==0.9.2
     # via selenium
 typing-extensions==4.5.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   asgiref
     #   astroid
     #   black
@@ -639,16 +646,16 @@ typing-extensions==4.5.0
     #   sqlalchemy
 tzdata==2023.3
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   celery
 unicodecsv==0.14.1
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   tableschema
     #   tabulator
 urllib3[socks]==1.26.19
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   botocore
     #   elastic-apm
     #   elasticsearch
@@ -659,22 +666,22 @@ urllib3[socks]==1.26.19
     #   sentry-sdk
 vine==5.0.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   amqp
     #   celery
     #   kombu
 wcwidth==0.2.5
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   prompt-toolkit
 webencodings==0.5.1
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   bleach
 websockets==9.1
     # via pyppeteer
 werkzeug==3.0.6
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 wheel==0.38.1
     # via pip-tools
 wrapt==1.12.1
@@ -683,27 +690,27 @@ wsproto==1.1.0
     # via trio-websocket
 xlrd==2.0.1
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   tabulator
 xlsxwriter==1.2.8
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 yarl==1.18.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   aiohttp
 zenpy==2.0.21
-    # via -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    # via -r requirements.txt
 zipp==3.19.2
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   importlib-metadata
 zope-event==4.5.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   gevent
 zope-interface==5.1.0
     # via
-    #   -r /Users/jamesrobinson/work/data-workspace-frontend/requirements.txt
+    #   -r requirements.txt
     #   gevent
 
 # The following packages are considered to be unsafe in a requirements file:
