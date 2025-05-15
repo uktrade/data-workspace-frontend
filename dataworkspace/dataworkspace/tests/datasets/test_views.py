@@ -270,7 +270,7 @@ def expected_search_result(catalogue_item, **kwargs):
     return result
 
 
-def test_find_datasets_combines_results(client): #Test update
+def test_find_datasets_combines_results(client):
     factories.DataSetFactory.create(published=False, name="Unpublished search dataset")
     ds = factories.DataSetFactory.create(published=True, name="A search dataset")
     rds = factories.ReferenceDatasetFactory.create(
@@ -289,7 +289,7 @@ def test_find_datasets_combines_results(client): #Test update
     expected_results = [
         expected_search_result(ds, has_access=False, data_type=DataSetType.DATACUT),
         expected_search_result(rds, data_type=DataSetType.REFERENCE),
-        expected_search_result(vis, data_type=DataSetType.VISUALISATION),
+        expected_search_result(vis, data_type=DataSetType.VISUALISATION, has_access=False),
     ]
 
     for expected in expected_results:
@@ -1674,7 +1674,6 @@ class DatasetsCommon:
 
 
 class TestMasterDatasetDetailView(DatasetsCommon):
-
     @pytest.mark.django_db
     def test_master_dataset_detail_page_shows_related_data_cuts(self, staff_client, metadata_db):
         master = self._create_master()
@@ -2018,7 +2017,7 @@ class TestVisualisationsDetailView:
         user = UserFactory.create()
         vis = VisualisationCatalogueItemFactory.create(
             user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
-            visualisation_template__host_basename="visualisation"
+            visualisation_template__host_basename="visualisation",
         )
 
         VisualisationUserPermissionFactory.create(visualisation=vis, user=user)
@@ -5360,7 +5359,6 @@ class TestDatasetAddAuthorisedUserView:
 
 @pytest.mark.django_db
 class TestDatasetEditPermissionsSummaryView:
-
     def setUp(self, email="bob.testerten@contact-email.com"):
         self.user = factories.UserFactory.create(is_superuser=True)
         self.client = Client(**get_http_sso_data(self.user))
