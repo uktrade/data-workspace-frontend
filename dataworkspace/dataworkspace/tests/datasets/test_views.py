@@ -4453,6 +4453,55 @@ class TestVisualisationCatalogueItemEditView:
 class TestDatasetManagerViews:
     @override_flag(settings.DATA_UPLOADER_UI_FLAG, active=True)
     @pytest.mark.django_db
+    def test_linked_to_pipeline_page(self, client, user):
+        dataset_1 = factories.MasterDataSetFactory.create(
+            published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+        )
+        source_1 = factories.SourceTableFactory.create(
+            dataset=dataset_1, schema="test", table="table1"
+        )
+
+        dataset_2 = factories.MasterDataSetFactory.create(
+            published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+        )
+        source_2 = factories.SourceTableFactory.create(
+            dataset=dataset_2, schema="test", table="table2"
+        )
+
+        url_1 = reverse("datasets:manager:manage-source-table", args=(dataset_1.id, source_1.id))
+        dataset_1.information_asset_manager = user
+        dataset_1.save()
+
+        url_2 = reverse("datasets:manager:manage-source-table", args=(dataset_2.id, source_2.id))
+        dataset_2.information_asset_manager = user
+        dataset_2.save()
+
+        response = client.get(url_1)
+        assert response.status_code == 200
+        content = response.content.decode(response.charset)
+        assert "Manage pipeline" not in content
+
+        factories.PipelineFactory.create(type="sharepoint", table_name="schema.table1")
+        response = client.get(url_1)
+        content = response.content.decode(response.charset)
+        assert "Manage pipeline" not in content
+
+        factories.PipelineFactory.create(type="sql", table_name="test.table1")
+        response = client.get(url_1)
+        content = response.content.decode(response.charset)
+        assert "Manage pipeline" not in content
+
+        factories.PipelineFactory.create(type="sharepoint", table_name="test.table2")
+        response = client.get(url_2)
+        content = response.content.decode(response.charset)
+        assert "Manage pipeline" in content
+
+        # The pipelines page has elements with the ID of the pipeline,
+        # And we assert that we link to the right pipeline.
+        assert "#test.table2" in content
+
+    @override_flag(settings.DATA_UPLOADER_UI_FLAG, active=True)
+    @pytest.mark.django_db
     def test_update_restore_page(self, client, user):
         UploadedTable.objects.create(
             schema="test",

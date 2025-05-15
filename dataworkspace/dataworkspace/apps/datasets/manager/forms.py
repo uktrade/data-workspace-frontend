@@ -22,7 +22,7 @@ class SourceTableUploadForm(GOVUKDesignSystemForm):
         widget=GOVUKDesignSystemFileInputWidget(
             label_is_heading=True,
             heading="h2",
-            heading_class="govuk-heading-s",
+            heading_class="govuk-heading-m",
             extra_label_classes="govuk-!-font-weight-bold",
             show_selected_file=True,
             attrs={"accept": "text/csv"},

@@ -3006,6 +3006,31 @@ class Pipeline(TimeStampedUserModel):
     def __str__(self):
         return self.dag_id
 
+    @staticmethod
+    def possible_pipeline_table_names(source_tables):
+        """
+        Returns all possible pipeline names that populate the passed source tables.
+
+        This works around the historical awkwardness resulting from the fact that source tables
+        are defined by separate schema and table names, but pipelines are defined by combined
+        possibly-quoted fully qualified table names, i.e. schema.table, "schema".table, schema."table"
+        or "schema"."table"
+        """
+
+        def quote(identifier):
+            return '"' + identifier.replace('"', '""') + '"'
+
+        return [
+            possibly_quoted_name
+            for source_table in source_tables
+            for possibly_quoted_name in [
+                source_table.schema + "." + source_table.table,
+                source_table.schema + "." + quote(source_table.table),
+                quote(source_table.schema) + "." + source_table.table,
+                quote(source_table.schema) + "." + quote(source_table.table),
+            ]
+        ]
+
     @property
     def dag_id(self):
         # Strip double quotes from the table name to:

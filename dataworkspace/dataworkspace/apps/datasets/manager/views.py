@@ -31,6 +31,7 @@ from dataworkspace.apps.datasets.manager.forms import (
     SourceTableUploadForm,
 )
 from dataworkspace.apps.datasets.views import EditBaseView
+from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.apps.your_files.models import UploadedTable
 
 
@@ -53,6 +54,14 @@ class DatasetManageSourceTableView(WaffleFlagMixin, EditBaseView, FormView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["source"] = self._get_source()
+        ctx["pipeline"] = (
+            Pipeline.objects.all()
+            .filter(
+                table_name__in=Pipeline.possible_pipeline_table_names((ctx["source"],)),
+                type="sharepoint",
+            )
+            .first()
+        )
         return ctx
 
     def form_valid(self, form):
