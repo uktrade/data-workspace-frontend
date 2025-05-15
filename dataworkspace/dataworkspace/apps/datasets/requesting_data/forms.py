@@ -256,7 +256,7 @@ class DatasetIntendedAccessForm(GOVUKDesignSystemForm):
     data_access = forms.CharField(
         label="Who can have access to this data?",
         required=True,
-        widget=GOVUKDesignSystemTextWidget(),
+        widget=GOVUKDesignSystemTextareaWidget(),
         error_messages={"required": "You must provide access restrictions"},
 
     )
@@ -268,7 +268,7 @@ class DatasetIntendedAccessForm(GOVUKDesignSystemForm):
             heading="h2",
             label_size="m",
             label_is_heading=True,
-            attrs={"rows": 5},
+            attrs={"rows": 10},
             extra_label_classes="govuk-!-static-margin-0",
         ),
     )
@@ -280,7 +280,7 @@ class DatasetIntendedAccessForm(GOVUKDesignSystemForm):
             heading="h2",
             label_size="m",
             label_is_heading=True,
-            attrs={"rows": 5},
+            attrs={"rows": 10},
             extra_label_classes="govuk-!-static-margin-0",
         ),
     )

@@ -218,7 +218,7 @@ class SupportView(FormView):
         support_Type = cleaned["support_type"]
 
         if support_Type == form.SupportTypes.NEW_DATASET:
-            if waffle.flag_is_active(request, settings.REQUESTING_DATA):
+            if waffle.flag_is_active(self.request, settings.REQUESTING_DATA):
                 return HttpResponseRedirect(reverse("adding-catalogue-page"))
             return HttpResponseRedirect(
                 f'{reverse("add-dataset-request")}?email={cleaned["email"]}'

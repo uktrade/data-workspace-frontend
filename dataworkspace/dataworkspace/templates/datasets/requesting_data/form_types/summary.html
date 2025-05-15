@@ -33,8 +33,7 @@
 
 <h1 class="govuk-heading-l">{{ stage }}</h1>
 
-<h2 class="govuk-heading-m">Your answers</h2>
-
+<h2 class="govuk-heading-m">Your blah </h2>
 <form method="post" nonvalidate>
     {%csrf_token%}
         {{ wizard.management_form }}
@@ -56,6 +55,8 @@
                         <a class="govuk-link" href="{% url 'requesting-data-about-this-data-step' key %}">Change<span class="govuk-visually-hidden"></span></a>
                     {% elif stage == "Access Restrictions" %}
                         <a class="govuk-link" href="{% url 'requesting-data-access-restrictions-step' key %}">Change<span class="govuk-visually-hidden"></span></a>
+                    {% elif stage == "Governance" %}
+                        <a class="govuk-link" href="{% url 'requesting-data-governance-step' key %}">Change<span class="govuk-visually-hidden"></span></a>
                     {% endif %}
                 </dd>
             </div>

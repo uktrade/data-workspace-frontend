@@ -140,6 +140,8 @@ class RequestingCataloguePageTrackerView(FormView):
         return context
 
     def form_valid(self, form):
+        print("IN HERE!!!!")
+        print("form.cleaned_data:::", form.cleaned_data)
         requesting_catalogue_page = RequestingDataset.objects.get(
             id=form.cleaned_data["requesting_catalogue_page"]
         )
@@ -169,19 +171,19 @@ class RequestingCataloguePageTrackerView(FormView):
         dataset.sensitivity.set(requesting_catalogue_page.sensitivity.all())
         dataset.save()
 
-        RequestingDataset.objects.filter(id=requesting_catalogue_page.id).delete()
-
-        zendesk_ticket_id = create_support_request(
-            self.request.user,
-            User.objects.get(id=requesting_catalogue_page.user).email,
-            ["A new dataset has been requested."],
+        ticket_id = create_support_request(
+            user=self.request.user,
+            email=User.objects.get(id=requesting_catalogue_page.user).email,
+            message="A new dataset has been requested.",
             tag="data_request",
         )
+
+        RequestingDataset.objects.filter(id=requesting_catalogue_page.id).delete()
 
         return HttpResponseRedirect(
             reverse(
                 "requesting-data-submission",
-                kwargs={"zendesk_ticket_id": zendesk_ticket_id},
+                kwargs={"ticket_id": ticket_id},
             )
         )
 
@@ -303,6 +305,28 @@ class RequestingCataloguePageBaseWizardView(NamedUrlSessionWizardView, FormPrevi
                 )
         return summary_list
 
+    def get_completed_summary_context(self, requesting_catalogue_page):
+        summary_list = []
+        questions = {}
+        for name, form_item in self.form_list.items():  # pylint: disable=no-member
+            for name, field in form_item.base_fields.items():
+                questions[name] = field.label
+        keys = []
+        for key in self.all_params:
+            for step, form in self.form_list.items():
+                if step in keys:
+                    continue
+            summary_list.append(
+                {
+                    key: {
+                        "question": questions[key],
+                        "answer": getattr(requesting_catalogue_page, key, None),
+                    },
+                },
+            )
+            keys.append(step)
+        return summary_list
+
     def get_base_context(self, context, requesting_catalogue_page, stage, step):
         if step in ["name", "security-classification", "intended-access"]:
             context["backlink"] = reverse(
@@ -338,9 +362,6 @@ class RequestingCataloguePageBaseWizardView(NamedUrlSessionWizardView, FormPrevi
             context["critera_input_field"] = critera_input_field
             context["critera_input_help_text"] = current_form.fields[critera_input_field].help_text
 
-        elif step == "summary":
-            context["summary"] = self.get_summary_context()
-
         if step in self.user_search_pages:
             current_form = self.get_form(step=step)
             field = list(current_form.fields.keys())[0]
@@ -356,33 +377,6 @@ class RequestingCataloguePageBaseWizardView(NamedUrlSessionWizardView, FormPrevi
         elif "start_over" in self.request.POST:
             self.storage.extra_data["action"] = "start_over"
         return super().process_step(form)
-
-    def done(self, form_list, stage, **kwargs):
-        requesting_catalogue_page = RequestingDataset.objects.get(
-            id=self.request.session["requesting_catalogue_page"]
-        )
-        action = self.storage.extra_data.get("action")
-        if action == "submit":
-            requesting_catalogue_page.user = self.request.user.id
-            requesting_catalogue_page.stage = True
-            requesting_catalogue_page = self.add_fields(form_list, requesting_catalogue_page)
-            requesting_catalogue_page.save()
-
-            return HttpResponseRedirect(
-                reverse(
-                    "requesting-data-tracker",
-                    kwargs={"requesting_catalogue_page_id": requesting_catalogue_page.id},
-                )
-            )
-        elif action == "start_over":
-            requesting_catalogue_page.stage = False
-            self.storage.reset()
-            return HttpResponseRedirect(
-                reverse(
-                    "requesting-data-tracker",
-                    kwargs={"requesting_catalogue_page_id": requesting_catalogue_page.id},
-                )
-            )
 
 
 class RequestingCataloguePageTitleAndDescriptionWizardView(RequestingCataloguePageBaseWizardView):
@@ -408,6 +402,13 @@ class RequestingCataloguePageTitleAndDescriptionWizardView(RequestingCataloguePa
         )
         context["stage"] = "Title and Description"
         step = self.steps.current
+        if (
+            requesting_catalogue_page.stage_one_complete
+            and "/requesting-data/tracker/" in self.request.META["HTTP_REFERER"]
+        ):
+            context["summary"] = self.get_completed_summary_context(requesting_catalogue_page)
+        else:
+            context["summary"] = self.get_summary_context()
         self.get_base_context(context, requesting_catalogue_page, "title-and-description", step)
 
         if step == "descriptions":
@@ -430,7 +431,24 @@ class RequestingCataloguePageTitleAndDescriptionWizardView(RequestingCataloguePa
             id=self.request.session["requesting_catalogue_page"]
         )
         action = self.storage.extra_data.get("action")
-        if action == "submit":
+        print("action:::", action)
+        print("requesting_catalogue_page.stage_one_complete:::", requesting_catalogue_page.stage_one_complete)
+        print("HTTP_REFERER::::", self.request.META["HTTP_REFERER"])
+        if requesting_catalogue_page.stage_one_complete and action == "submit":
+            print("in this loop that checks for stage one ")
+            requesting_catalogue_page = self.add_fields(form_list, requesting_catalogue_page)
+            requesting_catalogue_page.save()
+            print("now redirecting!!")
+            self.storage.reset()
+
+            return HttpResponseRedirect(
+                reverse(
+                    "requesting-data-tracker",
+                    kwargs={"requesting_catalogue_page_id": requesting_catalogue_page.id},
+                )
+            )
+
+        elif action == "submit":
             requesting_catalogue_page.user = self.request.user.id
             requesting_catalogue_page.stage_one_complete = True
             requesting_catalogue_page = self.add_fields(form_list, requesting_catalogue_page)
@@ -451,7 +469,11 @@ class RequestingCataloguePageTitleAndDescriptionWizardView(RequestingCataloguePa
                     kwargs={"requesting_catalogue_page_id": requesting_catalogue_page.id},
                 )
             )
-
+        return HttpResponseRedirect(
+                reverse(
+                    "requesting-data-tracker",
+                    kwargs={"requesting_catalogue_page_id": requesting_catalogue_page.id},
+                ))
 
 class RequestingCataloguePageAccessRestrictionsWizardView(RequestingCataloguePageBaseWizardView):
 
@@ -481,6 +503,15 @@ class RequestingCataloguePageAccessRestrictionsWizardView(RequestingCataloguePag
         )
         step = self.steps.current
         context["stage"] = "Access Restrictions"
+
+        if (
+            requesting_catalogue_page.stage_two_complete
+            and "/requesting-data/tracker/" in self.request.META["HTTP_REFERER"]
+        ):
+            context["summary"] = self.get_completed_summary_context(requesting_catalogue_page)
+        else:
+            context["summary"] = self.get_summary_context()
+
         self.get_base_context(context, requesting_catalogue_page, "title-and-description", step)
 
         if self.steps.current == "intended-access":
@@ -554,7 +585,15 @@ class RequestingCataloguePageGovernanceWizardView(RequestingCataloguePageBaseWiz
             id=self.request.session["requesting_catalogue_page"]
         )
         step = self.steps.current
-        context["stage"] = "Access Restrictions"
+        context["stage"] = "Governance"
+        if (
+            requesting_catalogue_page.stage_three_complete
+            and "/requesting-data/tracker/" in self.request.META["HTTP_REFERER"]
+        ):
+            context["summary"] = self.get_completed_summary_context(requesting_catalogue_page)
+        else:
+            context["summary"] = self.get_summary_context()
+
         self.get_base_context(context, requesting_catalogue_page, "title-and-description", step)
 
         if self.steps.current == "intended-access":
@@ -626,6 +665,14 @@ class RequestingCataloguePageAboutThisDataWizardView(RequestingCataloguePageBase
         )
         context["stage"] = "About This Data"
         step = self.steps.current
+        if (
+            requesting_catalogue_page.stage_four_complete
+            and "/requesting-data/tracker/" in self.request.META["HTTP_REFERER"]
+        ):
+            context["summary"] = self.get_completed_summary_context(requesting_catalogue_page)
+        else:
+            context["summary"] = self.get_summary_context()
+
         self.get_base_context(context, requesting_catalogue_page, "title-and-description", step)
         if step == "special-personal-data":
             context["link_text"] = "Find out more information about special category personal data"
@@ -663,3 +710,8 @@ class RequestingCataloguePageAboutThisDataWizardView(RequestingCataloguePageBase
 
 class RequestingCataloguePageSubmission(TemplateView):
     template_name = "datasets/requesting_data/submission.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["ticket_id"] = self.kwargs.get("ticket_id")
+        return context

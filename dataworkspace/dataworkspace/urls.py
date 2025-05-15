@@ -201,7 +201,7 @@ urlpatterns = [
         name="requesting-data-tracker",
     ),
     path(
-        "requesting-data/submission/",
+        "requesting-data/submission/<str:ticket_id>",
         RequestingCataloguePageSubmission.as_view(),
         name="requesting-data-submission",
     ),
