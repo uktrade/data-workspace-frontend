@@ -33,14 +33,17 @@
 
 <h1 class="govuk-heading-l">{{ stage }}</h1>
 
-<h2 class="govuk-heading-m">Your answers</h2>
+<h2 class="govuk-heading-m">Your {{ summary}}</h2>
 
 <form method="post" nonvalidate>
     {%csrf_token%}
         {{ wizard.management_form }}
         {{ wizard.form.management_form }}
+
     {% for answers in summary %} 
-    {% for key, qa  in answers.items %}
+    {% for key, qa  in answers.items %}    
+    {{ summary }}
+    
         <dl class="govuk-summary-list">
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
