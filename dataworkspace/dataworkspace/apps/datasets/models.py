@@ -2685,7 +2685,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     user_access_type = models.CharField(
         max_length=64,
         choices=UserAccessType.choices,
-        default=UserAccessType.REQUIRES_AUTHENTICATION,
+        default=UserAccessType.REQUIRES_AUTHORIZATION,
     )
     events = GenericRelation(EventLog)
     datasets = models.ManyToManyField(DataSet, related_name="related_visualisations", blank=True)

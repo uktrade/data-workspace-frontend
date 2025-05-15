@@ -289,7 +289,7 @@ def test_find_datasets_combines_results(client):
     expected_results = [
         expected_search_result(ds, has_access=False, data_type=DataSetType.DATACUT),
         expected_search_result(rds, data_type=DataSetType.REFERENCE),
-        expected_search_result(vis, data_type=DataSetType.VISUALISATION),
+        expected_search_result(vis, data_type=DataSetType.VISUALISATION, has_access=False),
     ]
 
     for expected in expected_results:
@@ -414,7 +414,7 @@ def test_find_datasets_filters_by_query(client):
             rds,
             data_type=DataSetType.REFERENCE,
         ),
-        expected_search_result(vis, data_type=DataSetType.VISUALISATION),
+        expected_search_result(vis, data_type=DataSetType.VISUALISATION, has_access=False),
     ]
 
     assert len(results) == 3
@@ -474,7 +474,7 @@ def test_find_datasets_filters_visualisations_by_data_type(client):
     assert response.status_code == 200
     expected_results = [
         expected_search_result(ds, has_access=False),
-        expected_search_result(vis, data_type=DataSetType.VISUALISATION),
+        expected_search_result(vis, data_type=DataSetType.VISUALISATION, has_access=False),
     ]
 
     results = list(response.context["datasets"])
@@ -530,6 +530,7 @@ def test_find_datasets_filters_by_source(client):
         expected_search_result(
             vis,
             source_tag_ids=[source.id],
+            has_access=False,
             data_type=DataSetType.VISUALISATION,
         ),
     ]
@@ -591,6 +592,7 @@ def test_find_datasets_filters_by_topic(client):
         ),
         expected_search_result(
             vis,
+            has_access=False,
             topic_tag_ids=[topic.id],
             data_type=DataSetType.VISUALISATION,
         ),
@@ -652,6 +654,7 @@ def test_find_datasets_filters_by_publisher(client):
         ),
         expected_search_result(
             vis,
+            has_access=False,
             publisher_tag_ids=[publisher.id],
             data_type=DataSetType.VISUALISATION,
         ),
@@ -678,7 +681,7 @@ def test_find_datasets_order_by_name_asc(sort_field, client):
     assert list(response.context["datasets"]) == [
         expected_search_result(ds1, has_access=False),
         expected_search_result(rds, data_type=DataSetType.REFERENCE),
-        expected_search_result(vis, data_type=DataSetType.VISUALISATION),
+        expected_search_result(vis, data_type=DataSetType.VISUALISATION, has_access=False),
     ]
 
 
@@ -1671,7 +1674,6 @@ class DatasetsCommon:
 
 
 class TestMasterDatasetDetailView(DatasetsCommon):
-
     @pytest.mark.django_db
     def test_master_dataset_detail_page_shows_related_data_cuts(self, staff_client, metadata_db):
         master = self._create_master()
@@ -2014,8 +2016,14 @@ class TestVisualisationsDetailView:
     def test_shows_links_to_visualisations(self):
         user = UserFactory.create()
         vis = VisualisationCatalogueItemFactory.create(
-            visualisation_template__host_basename="visualisation"
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+            visualisation_template__host_basename="visualisation",
         )
+
+        VisualisationUserPermissionFactory.create(visualisation=vis, user=user)
+        vis.has_access = True
+        vis.save()
+
         link1 = VisualisationLinkFactory.create(
             visualisation_type="QUICKSIGHT",
             visualisation_catalogue_item=vis,
@@ -5351,7 +5359,6 @@ class TestDatasetAddAuthorisedUserView:
 
 @pytest.mark.django_db
 class TestDatasetEditPermissionsSummaryView:
-
     def setUp(self, email="bob.testerten@contact-email.com"):
         self.user = factories.UserFactory.create(is_superuser=True)
         self.client = Client(**get_http_sso_data(self.user))
