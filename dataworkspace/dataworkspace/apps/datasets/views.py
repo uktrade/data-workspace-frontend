@@ -2103,6 +2103,7 @@ class DataSetReviewAccess(EditBaseView, FormView):
         context["full_name"] = f"{user.first_name} {user.last_name}"
         context["email"] = user.email
         access_request = AccessRequest.objects.filter(requester=user_id).latest("created_date")
+        context["access_request"] = access_request
         context["is_eligible"] = access_request.eligibility_criteria_met
         context["reason_for_access"] = access_request.reason_for_access
         context["obj_edit_url"] = (
