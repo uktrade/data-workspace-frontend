@@ -6,6 +6,7 @@ from mock import mock
 from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
+from dataworkspace.apps.datasets.constants import PipelineScheduleType
 
 
 @pytest.mark.django_db
@@ -374,6 +375,41 @@ def test_superuser_can_see_pipelines():
     assert pipeline_2.table_name in content
     assert f'id="{ pipeline_1.table_name }"' in content
     assert f'id="{ pipeline_2.table_name }"' in content
+
+
+@pytest.mark.parametrize(
+    "schedule,custom_schedule,expected_value",
+    [
+        (PipelineScheduleType.ONCE, "", "Runs manually"),
+        (PipelineScheduleType.DAILY, "", "Runs daily at midnight"),
+        (PipelineScheduleType.WEEKLY, "", "Runs on Sundays at midnight"),
+        (PipelineScheduleType.MONTHLY, "", "Runs on the first of every month at midnight"),
+        (PipelineScheduleType.YEARLY, "", "Runs every January 1st at midnight"),
+        (PipelineScheduleType.FRIDAYS, "", "Runs on Fridays at midnight"),
+        (
+            PipelineScheduleType.CUSTOM,
+            "* 12 * 5 *",
+            "Runs every minute, between 12:00\xa0PM and 12:59\xa0PM, only in May",
+        ),
+    ],
+)
+@pytest.mark.django_db
+def test_superuser_can_see_schedules(schedule, custom_schedule, expected_value):
+    factories.PipelineFactory.create(
+        type="sharepoint",
+        table_name="schema.table_1",
+        schedule=schedule,
+        custom_schedule=custom_schedule,
+    )
+
+    user = factories.UserFactory.create(is_superuser=True)
+    client = Client(**get_http_sso_data(user))
+
+    resp = client.get(reverse("pipelines:index"))
+    assert resp.status_code == 200
+
+    content = resp.content.decode(resp.charset)
+    assert expected_value in content
 
 
 @pytest.mark.django_db

@@ -14,6 +14,7 @@ from typing import List, Optional
 
 import waffle
 from botocore.exceptions import ClientError
+from cron_descriptor import get_description
 from django import forms
 from django.apps import apps
 from django.conf import settings
@@ -3049,6 +3050,30 @@ class Pipeline(TimeStampedUserModel):
 
     def get_absolute_url(self):
         return reverse(f"pipelines:edit-{self.type}", args=(self.id,))
+
+    def get_schedule_display(self):
+        if self.schedule == PipelineScheduleType.ONCE:
+            schedule_display = "Runs manually"
+        elif self.schedule == PipelineScheduleType.DAILY:
+            schedule_display = "Runs daily at midnight"
+        elif self.schedule == PipelineScheduleType.WEEKLY:
+            schedule_display = "Runs on Sundays at midnight"
+        elif self.schedule == PipelineScheduleType.FRIDAYS:
+            schedule_display = "Runs on Fridays at midnight"
+        elif self.schedule == PipelineScheduleType.MONTHLY:
+            schedule_display = "Runs on the first of every month at midnight"
+        elif self.schedule == PipelineScheduleType.YEARLY:
+            schedule_display = "Runs every January 1st at midnight"
+        elif self.schedule == PipelineScheduleType.CUSTOM:
+            description = (
+                get_description(self.custom_schedule)
+                .replace(" AM", "\xa0AM")
+                .replace(" PM", "\xa0PM")
+            )
+            schedule_display = "Runs " + description[0].lower() + description[1:]
+        else:
+            schedule_display = self.schedule
+        return schedule_display
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if self.id is not None and (
