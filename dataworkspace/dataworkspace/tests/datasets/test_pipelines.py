@@ -428,7 +428,7 @@ def escape_quote_html(string):
         lambda schema, table: f'"{schema}"."{table}"',
     ],
 )
-def test_non_admin_user_can_only_see_their_own_sharepoint_pipelines(
+def test_non_admin_user_can_only_see_their_own_sharepoint_and_sql_pipelines(
     metadata_db,
     give_user_management_access_to_dataset,
     quote,
@@ -468,7 +468,8 @@ def test_non_admin_user_can_only_see_their_own_sharepoint_pipelines(
     assert escape_quote_html(pipeline_1.table_name) in content
     assert f'id="{ escape_quote_html(pipeline_1.table_name) }"' in content
     assert escape_quote_html(pipeline_2.table_name) not in content
-    assert escape_quote_html(pipeline_3.table_name) not in content
+    assert escape_quote_html(pipeline_3.table_name) in content
+    assert f'id="{ escape_quote_html(pipeline_3.table_name) }"' in content
     assert escape_quote_html(pipeline_4.table_name) not in content
 
     assert "Edit" not in content
@@ -496,7 +497,7 @@ def test_non_admin_user_can_only_see_their_own_sharepoint_pipelines(
     ],
 )
 @mock.patch("dataworkspace.apps.datasets.pipelines.views.run_pipeline")
-def test_non_admin_user_can_run_their_own_sharepoint_pipelines(
+def test_non_admin_user_can_run_their_own_sharepoint_and_sql_pipelines(
     mock_run,
     metadata_db,
     give_user_management_access_to_dataset,
@@ -535,7 +536,7 @@ def test_non_admin_user_can_run_their_own_sharepoint_pipelines(
     assert "Pipeline triggered successfully" not in resp_2.content.decode(resp_2.charset)
 
     resp_3 = client.post(reverse("pipelines:run", args=(pipeline_3.id,)), follow=True)
-    assert "Pipeline triggered successfully" not in resp_3.content.decode(resp_3.charset)
+    assert "Pipeline triggered successfully" in resp_3.content.decode(resp_3.charset)
 
     resp_4 = client.post(reverse("pipelines:run", args=(pipeline_4.id,)), follow=True)
     assert "Pipeline triggered successfully" not in resp_4.content.decode(resp_4.charset)
@@ -560,7 +561,7 @@ def test_non_admin_user_can_run_their_own_sharepoint_pipelines(
     ],
 )
 @mock.patch("dataworkspace.apps.datasets.pipelines.views.stop_pipeline")
-def test_non_admin_user_can_stop_their_own_sharepoint_pipelines(
+def test_non_admin_user_can_stop_their_own_sharepoint_and_sql_pipelines(
     mock_stop,
     metadata_db,
     give_user_management_access_to_dataset,
@@ -599,7 +600,7 @@ def test_non_admin_user_can_stop_their_own_sharepoint_pipelines(
     assert "Pipeline stopped successfully" not in resp_2.content.decode(resp_2.charset)
 
     resp_3 = client.post(reverse("pipelines:stop", args=(pipeline_3.id,)), follow=True)
-    assert "Pipeline stopped successfully" not in resp_3.content.decode(resp_3.charset)
+    assert "Pipeline stopped successfully" in resp_3.content.decode(resp_3.charset)
 
     resp_4 = client.post(reverse("pipelines:stop", args=(pipeline_4.id,)), follow=True)
     assert "Pipeline stopped successfully" not in resp_4.content.decode(resp_4.charset)

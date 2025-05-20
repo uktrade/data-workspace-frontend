@@ -4466,14 +4466,14 @@ class TestDatasetManagerViews:
             published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
         )
         source_1 = factories.SourceTableFactory.create(
-            dataset=dataset_1, schema="test", table="table1"
+            dataset=dataset_1, schema="test", table="sql_table1"
         )
 
         dataset_2 = factories.MasterDataSetFactory.create(
             published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
         )
         source_2 = factories.SourceTableFactory.create(
-            dataset=dataset_2, schema="test", table="table2"
+            dataset=dataset_2, schema="test", table="sharepoint_table2"
         )
 
         url_1 = reverse("datasets:manager:manage-source-table", args=(dataset_1.id, source_1.id))
@@ -4489,24 +4489,28 @@ class TestDatasetManagerViews:
         content = response.content.decode(response.charset)
         assert "Manage pipeline" not in content
 
-        factories.PipelineFactory.create(type="sharepoint", table_name="schema.table1")
+        factories.PipelineFactory.create(type="sharepoint", table_name="schema.sql_table1")
         response = client.get(url_1)
         content = response.content.decode(response.charset)
         assert "Manage pipeline" not in content
 
-        factories.PipelineFactory.create(type="sql", table_name="test.table1")
+        factories.PipelineFactory.create(type="sql", table_name="test.sql_table1")
         response = client.get(url_1)
         content = response.content.decode(response.charset)
-        assert "Manage pipeline" not in content
+        assert "Manage pipeline" in content
 
-        factories.PipelineFactory.create(type="sharepoint", table_name="test.table2")
+        # The pipelines page has elements with the ID of the pipeline,
+        # And we assert that we link to the right pipeline.
+        assert "#test.sql_table1" in content
+
+        factories.PipelineFactory.create(type="sharepoint", table_name="test.sharepoint_table2")
         response = client.get(url_2)
         content = response.content.decode(response.charset)
         assert "Manage pipeline" in content
 
         # The pipelines page has elements with the ID of the pipeline,
         # And we assert that we link to the right pipeline.
-        assert "#test.table2" in content
+        assert "#test.sharepoint_table2" in content
 
     @override_flag(settings.DATA_UPLOADER_UI_FLAG, active=True)
     @pytest.mark.django_db

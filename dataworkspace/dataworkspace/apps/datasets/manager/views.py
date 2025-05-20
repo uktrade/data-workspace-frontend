@@ -58,7 +58,6 @@ class DatasetManageSourceTableView(WaffleFlagMixin, EditBaseView, FormView):
             Pipeline.objects.all()
             .filter(
                 table_name__in=Pipeline.possible_pipeline_table_names((ctx["source"],)),
-                type="sharepoint",
             )
             .first()
         )
