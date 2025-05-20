@@ -38,7 +38,6 @@ def filter_user_pipelines(user, pipelines_qs):
         # piplines allow both quoted and non-quoted names
         pipelines_qs = pipelines_qs.filter(
             table_name__in=Pipeline.possible_pipeline_table_names(source_tables),
-            type="sharepoint",
         )
 
     return pipelines_qs
