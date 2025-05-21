@@ -174,7 +174,6 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
         "licence",
         "personal-data",
         "special-personal-data",
-        "commercial-sensitive",
         "location-restrictions",
         "network-restrictions",
         "user-restrictions",
@@ -260,7 +259,9 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
             for name, field in form_item.base_fields.items():
                 questions[name] = field.label
         for step in self.storage.data["step_data"]:
+            print("step in self.storage.data[step_data]", step)
             for key, value in self.get_cleaned_data_for_step(step).items():
+                print("key", key, "value", value)
                 if key == "sensitivity":
                     continue
                 if key.replace("_", "-") in self.radio_input_pages and value == "":
@@ -275,6 +276,28 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
                         step: {"question": questions[key], "answer": value},
                     },
                 )
+        return summary_list
+
+    def get_compelted_summary_context(self, requesting_dataset):
+        summary_list = []
+        questions = {}
+        for name, form_item in self.form_list.items():  # pylint: disable=no-member
+            for name, field in form_item.base_fields.items():
+                questions[name] = field.label
+        keys = []
+        for key in self.all_params:
+            for step, form in self.form_list.items():
+                if step in keys:
+                    continue
+            summary_list.append(
+                {
+                    key: {
+                        "question": questions[key],
+                        "answer": getattr(requesting_dataset, key, None),
+                    },
+                },
+            )
+            keys.append(step)
         return summary_list
 
     def get_base_context(self, context, requesting_dataset, stage, step):
@@ -293,9 +316,6 @@ class RequestingDatasetBaseWizardView(NamedUrlSessionWizardView, FormPreview):
             context["radio_help_text"] = current_form.fields[radio_field].help_text
             context["input_field"] = input_field
             context["input_label"] = current_form.fields[input_field].label
-
-        elif step == "summary":
-            context["summary"] = self.get_summary_context()
 
         if step in self.user_search_pages:
             current_form = self.get_form(step=step)
@@ -338,6 +358,14 @@ class RequestingDataSummaryInformationWizardView(RequestingDatasetBaseWizardView
         )
         context["stage"] = "Summary Information"
         step = self.steps.current
+
+        if (
+            requesting_dataset.stage_one_complete
+            and "/requesting-data/tracker/" in self.request.META["HTTP_REFERER"]
+        ):
+            context["summary"] = self.get_compelted_summary_context(requesting_dataset)
+        else:
+            context["summary"] = self.get_summary_context()
         self.get_base_context(context, requesting_dataset, "summary-information", step)
 
         if step == "descriptions":
@@ -352,7 +380,6 @@ class RequestingDataSummaryInformationWizardView(RequestingDatasetBaseWizardView
             context["link"] = (
                 "https://data-services-help.trade.gov.uk/data-workspace/how-to/data-owner-basics/managing-data-key-tasks-and-responsibilities/"  # pylint: disable=line-too-long
             )
-
         return context
 
     def done(self, form_list, **kwargs):
@@ -387,14 +414,12 @@ class RequestingDataAboutThisDataWizardView(RequestingDatasetBaseWizardView):
         "government_security_classification",
         "personal_data",
         "special_personal_data",
-        "commercial_sensitive",
         "retention_policy",
         "update_frequency",
     ]
 
     notes_fields = [
         "special-personal-data",
-        "commercial-sensitive",
         "update-frequency",
     ]
 
@@ -406,8 +431,18 @@ class RequestingDataAboutThisDataWizardView(RequestingDatasetBaseWizardView):
         requesting_dataset = RequestingDataset.objects.get(
             id=self.request.session["requesting_dataset"]
         )
+
         context["stage"] = "About This Data"
         step = self.steps.current
+
+        if (
+            requesting_dataset.stage_two_complete
+            and "/requesting-data/tracker/" in self.request.META["HTTP_REFERER"]
+        ):
+            context["summary"] = self.get_compelted_summary_context(requesting_dataset)
+        else:
+            context["summary"] = self.get_summary_context()
+
         self.get_base_context(context, requesting_dataset, "summary-information", step)
         if step == "special-personal-data":
             context["link_text"] = "Find out more information about special category personal data"
@@ -465,6 +500,14 @@ class RequestingDataAccessRestrictionsWizardView(RequestingDatasetBaseWizardView
         )
         step = self.steps.current
         context["stage"] = "Access Restrictions"
+
+        if (
+            requesting_dataset.stage_three_complete
+            and "/requesting-data/tracker/" in self.request.META["HTTP_REFERER"]
+        ):
+            context["summary"] = self.get_compelted_summary_context(requesting_dataset)
+        else:
+            context["summary"] = self.get_summary_context()
         self.get_base_context(context, requesting_dataset, "summary-information", step)
 
         if self.steps.current == "intended-access":
