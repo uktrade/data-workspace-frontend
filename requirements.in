@@ -5,6 +5,7 @@ bleach
 boto3
 celery-redbeat
 celery
+cron-descriptor
 cryptography
 dj-database-url
 django-admin-inline-paginator
