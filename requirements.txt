@@ -84,7 +84,7 @@ cryptography==44.0.1
     # via -r requirements.in
 dj-database-url==0.5.0
     # via -r requirements.in
-django==4.2.20
+django==4.2.21
     # via
     #   -r requirements.in
     #   django-admin-inline-paginator
@@ -165,7 +165,9 @@ geoalchemy2==0.8.4
 gevent==25.5.1
     # via -r requirements.in
 greenlet==3.2.2
-    # via gevent
+    # via
+    #   gevent
+    #   sqlalchemy
 hawk-server-asyncio==0.0.13
     # via -r requirements.in
 idna==3.7
