@@ -1,5 +1,5 @@
 from django.forms import ValidationError, model_to_dict
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.views import View
 from django.views.generic import FormView, TemplateView
 from django.contrib.auth import get_user_model
@@ -426,21 +426,32 @@ class RequestingCataloguePageTitleAndDescriptionWizardView(RequestingCataloguePa
 
         return context
 
+    def dispatch(self, request, *args, **kwargs):
+        print("SELF:::", self)
+        requesting_catalogue_page =get_object_or_404(RequestingDataset,  id=self.request.session["requesting_catalogue_page"])
+        response = super().dispatch(request, *args, **kwargs)
+        print("response:::", response)
+        if requesting_catalogue_page.stage_one_complete and request.method == "GET":
+            for step_name, form_class in self.get_form_list().items():
+                if step_name == "summary":
+                    continue
+                step_data = {}
+                for param in self.all_params: 
+                    step_data[param] = getattr(requesting_catalogue_page, param)
+            self.storage.data = {"step_data": step_data, "step_files": {}, "step_errors": {}}
+            print("self.storage.data 2.0:::",self.storage.data["step_data"])
+            return self.storage.data
+        return response
+
     def done(self, form_list, **kwargs):
         requesting_catalogue_page = RequestingDataset.objects.get(
             id=self.request.session["requesting_catalogue_page"]
         )
         action = self.storage.extra_data.get("action")
-        print("action:::", action)
-        print("requesting_catalogue_page.stage_one_complete:::", requesting_catalogue_page.stage_one_complete)
-        print("HTTP_REFERER::::", self.request.META["HTTP_REFERER"])
+
         if requesting_catalogue_page.stage_one_complete and action == "submit":
-            print("in this loop that checks for stage one ")
             requesting_catalogue_page = self.add_fields(form_list, requesting_catalogue_page)
             requesting_catalogue_page.save()
-            print("now redirecting!!")
-            self.storage.reset()
-
             return HttpResponseRedirect(
                 reverse(
                     "requesting-data-tracker",
