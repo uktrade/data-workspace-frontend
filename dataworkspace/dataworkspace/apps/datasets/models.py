@@ -654,6 +654,7 @@ class RequestingDataset(DeletableTimestampedUserModel):
     stage_two_complete = models.BooleanField(default=False)
     stage_three_complete = models.BooleanField(default=False)
     stage_four_complete = models.BooleanField(default=False)
+    wizard_data = models.JSONField(default=dict)
 
 
 class DataSetUserPermission(models.Model):

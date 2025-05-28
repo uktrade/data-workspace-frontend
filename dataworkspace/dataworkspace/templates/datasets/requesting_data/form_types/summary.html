@@ -49,7 +49,7 @@
                     {{ qa.answer }}
                 </dd>
                 <dd class="govuk-summary-list__actions">
-                    {% if stage == "Summary Information" %}
+                    {% if stage == "Title and Description" %}
                         <a class="govuk-link" href="{% url 'requesting-data-title-and-description-step' key %}">Change<span class="govuk-visually-hidden"></span></a>
                     {% elif stage == "About This Data" %}
                         <a class="govuk-link" href="{% url 'requesting-data-about-this-data-step' key %}">Change<span class="govuk-visually-hidden"></span></a>

@@ -33,7 +33,7 @@
         <p class="govuk-body">You do not have any catalogue pages in progress.</p>
     {% else %}
         <p class="govuk-body">Below is a list of catalogue pages that you've begun to create. You can resume progress of adding this catalogue page by pressing the resume link within that listing.</p>
-            {% for name, request in requests.items %}
+            {% for id, request in requests.items %}
                 {% include 'partials/requesting_data_journeys.html' %}
             {% endfor %}
     {% endif %}

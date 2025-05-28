@@ -140,8 +140,6 @@ class RequestingCataloguePageTrackerView(FormView):
         return context
 
     def form_valid(self, form):
-        print("IN HERE!!!!")
-        print("form.cleaned_data:::", form.cleaned_data)
         requesting_catalogue_page = RequestingDataset.objects.get(
             id=form.cleaned_data["requesting_catalogue_page"]
         )
@@ -298,6 +296,7 @@ class RequestingCataloguePageBaseWizardView(NamedUrlSessionWizardView, FormPrevi
                         value = "Official"
                     if value == 2:
                         value = "Official-Sensitive"
+                    continue
                 summary_list.append(
                     {
                         step: {"question": questions[key], "answer": value},
@@ -315,6 +314,8 @@ class RequestingCataloguePageBaseWizardView(NamedUrlSessionWizardView, FormPrevi
         for key in self.all_params:
             for step, form in self.form_list.items():
                 if step in keys:
+                    continue
+                if "summary" in keys:
                     continue
             summary_list.append(
                 {
@@ -377,6 +378,12 @@ class RequestingCataloguePageBaseWizardView(NamedUrlSessionWizardView, FormPrevi
         elif "start_over" in self.request.POST:
             self.storage.extra_data["action"] = "start_over"
         return super().process_step(form)
+    
+    def get_storage_prefix(self):
+        requesting_catalogue_page = RequestingDataset.objects.get(
+            id=self.request.session.get("requesting_catalogue_page")
+        )
+        return f'wizard_{self.wizard_name}_{requesting_catalogue_page}'
 
 
 class RequestingCataloguePageTitleAndDescriptionWizardView(RequestingCataloguePageBaseWizardView):
@@ -426,32 +433,17 @@ class RequestingCataloguePageTitleAndDescriptionWizardView(RequestingCataloguePa
 
         return context
 
-    def dispatch(self, request, *args, **kwargs):
-        print("SELF:::", self)
-        requesting_catalogue_page =get_object_or_404(RequestingDataset,  id=self.request.session["requesting_catalogue_page"])
-        response = super().dispatch(request, *args, **kwargs)
-        print("response:::", response)
-        if requesting_catalogue_page.stage_one_complete and request.method == "GET":
-            for step_name, form_class in self.get_form_list().items():
-                if step_name == "summary":
-                    continue
-                step_data = {}
-                for param in self.all_params: 
-                    step_data[param] = getattr(requesting_catalogue_page, param)
-            self.storage.data = {"step_data": step_data, "step_files": {}, "step_errors": {}}
-            print("self.storage.data 2.0:::",self.storage.data["step_data"])
-            return self.storage.data
-        return response
-
     def done(self, form_list, **kwargs):
         requesting_catalogue_page = RequestingDataset.objects.get(
             id=self.request.session["requesting_catalogue_page"]
         )
         action = self.storage.extra_data.get("action")
-
+        requesting_catalogue_page.wizard_data["title_and_description"] = self.storage.data
+        requesting_catalogue_page.save()
         if requesting_catalogue_page.stage_one_complete and action == "submit":
             requesting_catalogue_page = self.add_fields(form_list, requesting_catalogue_page)
             requesting_catalogue_page.save()
+            
             return HttpResponseRedirect(
                 reverse(
                     "requesting-data-tracker",
@@ -480,11 +472,15 @@ class RequestingCataloguePageTitleAndDescriptionWizardView(RequestingCataloguePa
                     kwargs={"requesting_catalogue_page_id": requesting_catalogue_page.id},
                 )
             )
-        return HttpResponseRedirect(
-                reverse(
-                    "requesting-data-tracker",
-                    kwargs={"requesting_catalogue_page_id": requesting_catalogue_page.id},
-                ))
+
+    def dispatch(self, request, *args, **kwargs):
+        requesting_catalogue_page = get_object_or_404(RequestingDataset,  id=self.request.session["requesting_catalogue_page"])
+        response = super().dispatch(request, *args, **kwargs)
+        print("requesting_catalogue_page.wizard_data:::", requesting_catalogue_page.wizard_data)
+        if requesting_catalogue_page.stage_one_complete and not self.storage.data and requesting_catalogue_page.wizard_data.get("title_and_description"):
+            self.storage.data = requesting_catalogue_page.wizard_data["title_and_description"]
+            print("in the dispatch",self.storage.data)
+        return response
 
 class RequestingCataloguePageAccessRestrictionsWizardView(RequestingCataloguePageBaseWizardView):
 
