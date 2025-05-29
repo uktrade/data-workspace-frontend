@@ -77,7 +77,7 @@ class AddNewCataloguePage(TemplateView):
         return render(request, "datasets/requesting_data/add_new_dataset.html")
 
     def post(self, request, *args, **kwargs):
-        requesting_catalogue_page = RequestingDataset.objects.create()
+        requesting_catalogue_page = RequestingDataset.objects.create(name = "Untitled")
         self.kwargs["requesting_catalogue_page_id"] = requesting_catalogue_page.id
         return HttpResponseRedirect(
             reverse(
@@ -358,7 +358,9 @@ class RequestingCataloguePageBaseWizardView(NamedUrlSessionWizardView, FormPrevi
             context["everyone_field_label"] = current_form.fields[everyone_field].label
 
             context["department_input_field"] = department_input_field
-            context["department_input_help_text"] = current_form.fields[department_input_field].help_text
+            context["department_input_help_text"] = current_form.fields[
+                department_input_field
+            ].help_text
 
             context["critera_input_field"] = critera_input_field
             context["critera_input_help_text"] = current_form.fields[critera_input_field].help_text
@@ -377,13 +379,8 @@ class RequestingCataloguePageBaseWizardView(NamedUrlSessionWizardView, FormPrevi
             self.storage.extra_data["action"] = "submit"
         elif "start_over" in self.request.POST:
             self.storage.extra_data["action"] = "start_over"
+        print("super().process_step(form):::", super().process_step(form))
         return super().process_step(form)
-    
-    def get_storage_prefix(self):
-        requesting_catalogue_page = RequestingDataset.objects.get(
-            id=self.request.session.get("requesting_catalogue_page")
-        )
-        return f'wizard_{self.wizard_name}_{requesting_catalogue_page}'
 
 
 class RequestingCataloguePageTitleAndDescriptionWizardView(RequestingCataloguePageBaseWizardView):
@@ -416,6 +413,7 @@ class RequestingCataloguePageTitleAndDescriptionWizardView(RequestingCataloguePa
             context["summary"] = self.get_completed_summary_context(requesting_catalogue_page)
         else:
             context["summary"] = self.get_summary_context()
+
         self.get_base_context(context, requesting_catalogue_page, "title-and-description", step)
 
         if step == "descriptions":
@@ -437,24 +435,25 @@ class RequestingCataloguePageTitleAndDescriptionWizardView(RequestingCataloguePa
         requesting_catalogue_page = RequestingDataset.objects.get(
             id=self.request.session["requesting_catalogue_page"]
         )
+        
         action = self.storage.extra_data.get("action")
-        requesting_catalogue_page.wizard_data["title_and_description"] = self.storage.data
-        requesting_catalogue_page.save()
-        if requesting_catalogue_page.stage_one_complete and action == "submit":
-            requesting_catalogue_page = self.add_fields(form_list, requesting_catalogue_page)
+        print("action:::", action)
+        if action == "start_over":
+            requesting_catalogue_page.stage_two_complete = False
             requesting_catalogue_page.save()
-            
+            self.storage.reset()
+            print("in here")
             return HttpResponseRedirect(
                 reverse(
                     "requesting-data-tracker",
                     kwargs={"requesting_catalogue_page_id": requesting_catalogue_page.id},
                 )
             )
-
         elif action == "submit":
             requesting_catalogue_page.user = self.request.user.id
             requesting_catalogue_page.stage_one_complete = True
             requesting_catalogue_page = self.add_fields(form_list, requesting_catalogue_page)
+
             requesting_catalogue_page.save()
 
             return HttpResponseRedirect(
@@ -463,9 +462,10 @@ class RequestingCataloguePageTitleAndDescriptionWizardView(RequestingCataloguePa
                     kwargs={"requesting_catalogue_page_id": requesting_catalogue_page.id},
                 )
             )
-        elif action == "start_over":
-            requesting_catalogue_page.stage_one_complete = False
-            self.storage.reset()
+
+        elif requesting_catalogue_page.stage_one_complete and action == "submit":
+            requesting_catalogue_page = self.add_fields(form_list, requesting_catalogue_page)
+            requesting_catalogue_page.save()
             return HttpResponseRedirect(
                 reverse(
                     "requesting-data-tracker",
@@ -473,14 +473,20 @@ class RequestingCataloguePageTitleAndDescriptionWizardView(RequestingCataloguePa
                 )
             )
 
-    def dispatch(self, request, *args, **kwargs):
-        requesting_catalogue_page = get_object_or_404(RequestingDataset,  id=self.request.session["requesting_catalogue_page"])
-        response = super().dispatch(request, *args, **kwargs)
-        print("requesting_catalogue_page.wizard_data:::", requesting_catalogue_page.wizard_data)
-        if requesting_catalogue_page.stage_one_complete and not self.storage.data and requesting_catalogue_page.wizard_data.get("title_and_description"):
-            self.storage.data = requesting_catalogue_page.wizard_data["title_and_description"]
-            print("in the dispatch",self.storage.data)
-        return response
+        return HttpResponseRedirect(
+            reverse(
+                "requesting-data-tracker",
+                kwargs={"requesting_catalogue_page_id": requesting_catalogue_page.id},
+            )
+        )
+
+    # def dispatch(self, request, *args, **kwargs):
+    #     requesting_catalogue_page = get_object_or_404(RequestingDataset,  id=self.request.session["requesting_catalogue_page"])
+    #     response = super().dispatch(request, *args, **kwargs)
+    #     if requesting_catalogue_page.stage_one_complete:
+    #         self.storage.data = requesting_catalogue_page.wizard_data["title_and_description"]
+    #     return response
+
 
 class RequestingCataloguePageAccessRestrictionsWizardView(RequestingCataloguePageBaseWizardView):
 
@@ -539,7 +545,9 @@ class RequestingCataloguePageAccessRestrictionsWizardView(RequestingCataloguePag
         if action == "submit":
             requesting_catalogue_page.user = self.request.user.id
             requesting_catalogue_page.stage_two_complete = True
-            requesting_catalogue_page = self.add_fields(form_list, requesting_catalogue_page, self.notes_fields)
+            requesting_catalogue_page = self.add_fields(
+                form_list, requesting_catalogue_page, self.notes_fields
+            )
             requesting_catalogue_page.save()
 
             return HttpResponseRedirect(
@@ -550,6 +558,7 @@ class RequestingCataloguePageAccessRestrictionsWizardView(RequestingCataloguePag
             )
         elif action == "start_over":
             requesting_catalogue_page.stage_two_complete = False
+            requesting_catalogue_page.save()
             self.storage.reset()
             return HttpResponseRedirect(
                 reverse(
@@ -557,6 +566,13 @@ class RequestingCataloguePageAccessRestrictionsWizardView(RequestingCataloguePag
                     kwargs={"requesting_catalogue_page_id": requesting_catalogue_page.id},
                 )
             )
+
+    # def dispatch(self, request, *args, **kwargs):
+    #     requesting_catalogue_page = get_object_or_404(RequestingDataset,  id=self.request.session["requesting_catalogue_page"])
+    #     response = super().dispatch(request, *args, **kwargs)
+    #     if requesting_catalogue_page.stage_two_complete:
+    #         self.storage.data = requesting_catalogue_page.wizard_data["access_restrictions"]
+    #     return response
 
 
 class RequestingCataloguePageGovernanceWizardView(RequestingCataloguePageBaseWizardView):
@@ -618,10 +634,14 @@ class RequestingCataloguePageGovernanceWizardView(RequestingCataloguePageBaseWiz
             id=self.request.session["requesting_catalogue_page"]
         )
         action = self.storage.extra_data.get("action")
+        requesting_catalogue_page.wizard_data["governance"] = self.storage.data
+        requesting_catalogue_page.save()
         if action == "submit":
             requesting_catalogue_page.user = self.request.user.id
             requesting_catalogue_page.stage_three_complete = True
-            requesting_catalogue_page = self.add_fields(form_list, requesting_catalogue_page, self.notes_fields)
+            requesting_catalogue_page = self.add_fields(
+                form_list, requesting_catalogue_page, self.notes_fields
+            )
             requesting_catalogue_page.save()
 
             return HttpResponseRedirect(
@@ -639,6 +659,13 @@ class RequestingCataloguePageGovernanceWizardView(RequestingCataloguePageBaseWiz
                     kwargs={"requesting_catalogue_page_id": requesting_catalogue_page.id},
                 )
             )
+
+    # def dispatch(self, request, *args, **kwargs):
+    #     requesting_catalogue_page = get_object_or_404(RequestingDataset,  id=self.request.session["requesting_catalogue_page"])
+    #     response = super().dispatch(request, *args, **kwargs)
+    #     if requesting_catalogue_page.stage_three_complete:
+    #         self.storage.data = requesting_catalogue_page.wizard_data["governance"]
+    #     return response
 
 
 class RequestingCataloguePageAboutThisDataWizardView(RequestingCataloguePageBaseWizardView):
@@ -692,10 +719,14 @@ class RequestingCataloguePageAboutThisDataWizardView(RequestingCataloguePageBase
             id=self.request.session["requesting_catalogue_page"]
         )
         action = self.storage.extra_data.get("action")
+        requesting_catalogue_page.wizard_data["about_this_data"] = self.storage.data
+        requesting_catalogue_page.save()
         if action == "submit":
             requesting_catalogue_page.user = self.request.user.id
             requesting_catalogue_page.stage_four_complete = True
-            requesting_catalogue_page = self.add_fields(form_list, requesting_catalogue_page, self.notes_fields)
+            requesting_catalogue_page = self.add_fields(
+                form_list, requesting_catalogue_page, self.notes_fields
+            )
             requesting_catalogue_page.save()
 
             return HttpResponseRedirect(
@@ -713,6 +744,13 @@ class RequestingCataloguePageAboutThisDataWizardView(RequestingCataloguePageBase
                     kwargs={"requesting_catalogue_page_id": requesting_catalogue_page.id},
                 )
             )
+
+    # def dispatch(self, request, *args, **kwargs):
+    #     requesting_catalogue_page = get_object_or_404(RequestingDataset,  id=self.request.session["requesting_catalogue_page"])
+    #     response = super().dispatch(request, *args, **kwargs)
+    #     if requesting_catalogue_page.stage_four_complete:
+    #         self.storage.data = requesting_catalogue_page.wizard_data["about_this_data"]
+    #     return response
 
 
 class RequestingCataloguePageSubmission(TemplateView):

@@ -28,8 +28,8 @@
   <div class="govuk-width-container">
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-two-thirds">
+        <span class="govuk-caption-l">Question {{ wizard.steps.index|add:1 }} of {{ wizard.steps.count }}</span>
 <h1 class="govuk-heading-l">{{ stage }}</h1>
-  <p class="govuk-body">Step {{ wizard.steps.index|add:1 }} of {{ wizard.steps.count }}</p>
     <p class="govuk-body">
       <a href="{{ link }}" class="govuk-link">{{ link_text }}</a>
     </p>

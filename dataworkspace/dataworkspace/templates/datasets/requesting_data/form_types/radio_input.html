@@ -36,11 +36,11 @@
         <div class="govuk-form-group">
           <fieldset class="govuk-fieldset" aria-describedby="hint">
             <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+                      <span class="govuk-caption-l">Question {{ wizard.steps.index|add:1 }} of {{ wizard.steps.count }}</span>
               <h1 class="govuk-fieldset__heading">
                 {{stage}}
               </h1>
             </legend>
-              <p class="govuk-body">Step {{ wizard.steps.index|add:1 }} of {{ wizard.steps.count }}</p>
             <div class="govuk-label govuk-label--m govuk-!-static-margin-0">
               {{radio_label}}
             </div>

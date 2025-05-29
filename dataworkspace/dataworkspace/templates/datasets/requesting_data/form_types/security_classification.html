@@ -29,6 +29,8 @@
     </div>
   </div>
 {% endif %}
+              <span class="govuk-caption-l">Question {{ wizard.steps.index|add:1 }} of {{ wizard.steps.count }}</span>
+
 <h1 class="govuk-heading-l">{{stage}}</h1>
 <h2 class="govuk-heading-m">What is the security classification for this data?</h2>
 

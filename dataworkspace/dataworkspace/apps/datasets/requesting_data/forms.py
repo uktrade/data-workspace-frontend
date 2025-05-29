@@ -258,7 +258,6 @@ class DatasetIntendedAccessForm(GOVUKDesignSystemForm):
         required=True,
         widget=GOVUKDesignSystemTextareaWidget(),
         error_messages={"required": "You must provide access restrictions"},
-
     )
 
     particular_departments = GOVUKDesignSystemCharField(
@@ -289,7 +288,9 @@ class DatasetIntendedAccessForm(GOVUKDesignSystemForm):
         cleaned_data = super().clean()
         data_access = cleaned_data.get("data_access")
         if data_access == "department" and cleaned_data["particular_departments"] == "":
-            raise ValidationError("Please enter what department(s) should have access to this data.")
+            raise ValidationError(
+                "Please enter what department(s) should have access to this data."
+            )
         elif data_access == "criteria" and cleaned_data["specific_criteria"] == "":
             raise ValidationError("Please provide eligibility criteria.")
         return cleaned_data
